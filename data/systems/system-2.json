@@ -4,44 +4,52 @@
   "ordinal": 2,
   "name": "The Hand",
   "role": "Execution only",
-  "host": "Computer 2",
-  "duty_cycle": "Active market hours — Sun 22:00 to Fri 20:00 UTC",
+  "host": "GCP VM `trading-1` (europe-west1-b) — not a separate Computer 2",
+  "duty_cycle": "Process runs 24/7; broker submission gated to market hours and to SHADOW",
   "accent": "#4fd1a5",
-  "repository": "../system-2-execution-engine/ (separate module, deployed on Computer 2)",
+  "repository": "https://github.com/emmanuelebube13/system2Executor (private) — deployed at `/opt/scalablebrain/system2/system-2-execution-engine`",
   "code_root": "system-2-execution-engine/",
   "status": {
-    "state": "engineering-complete",
+    "state": "blocked",
     "as_of": "2026-08-22",
-    "note": "152/152 tests passing. The engine is ready; what is unproven is the transport around it — System 2 has not yet confirmed in writing which topic and subscription it consumes. ADR-001 would substantially expand its role to include live inference. The local copy in the System 1 tree is reference only and must not be run or edited from Computer 1."
+    "note": "The engine is running — `system2.service` on `trading-1`, up since 2026-08-20T15:09:02Z, serving `/status` on :8002, syncing and verifying artifacts, running live regime inference, feeding System 3 an account snapshot every 30 s. It cannot receive an order. The deployed `.env.system2` sets `QUEUE_LOCAL_PATH` to a Windows absolute path, which on the Linux host resolved to a literal filename in the working directory, so System 2 is bound to an empty private queue file while System 3 and the bridge use the shared one. `messages_seen: 0`, queue age 173,171 s against a 300 s limit. Recorded here rather than repaired on the host, because repairing a live trading VM is a separate, owner-approved change."
   },
   "summary": {
-    "technical": "System 2 is a deterministic execution engine with no autonomous risk authority. It synchronises verified model artifacts from GCS, runs live regime inference, consumes pre-sized approved orders from `AMS_Outbound_Queue`, places them on OANDA v20, manages open positions, and publishes fill confirmations back on `AMS_Inbound_Queue`. It never re-sizes an order and never decides to trade.",
-    "plain": "System 2 is the hands. It receives an instruction that already says exactly what to buy, how much, and where the stop goes — and it carries it out precisely. It is not allowed to have an opinion. If the instruction is missing or looks stale, it stops rather than improvising."
+    "technical": "System 2 is a deterministic execution engine with no autonomous risk authority. It synchronises verified model artifacts from GCS, runs live HMM regime inference against OANDA candles, consumes pre-sized approved orders, places them on OANDA v20, manages open positions, and publishes fill confirmations back to System 3. It never re-sizes an order and never decides to trade. Its transport is **not** Pub/Sub: it consumes the local-mode subscription `ams-outbound.executor` and publishes to `ams-inbound` / `ams-inbound.ams`, all of them topics in a shared SQLite durable queue. The Pub/Sub topics `AMS_Outbound_Queue` and `AMS_Inbound_Queue` are provisioned and have never been read or written by this system.",
+    "plain": "System 2 is the hands. It receives an instruction that already says exactly what to buy, how much, and where the stop goes, and it carries it out precisely. It is not allowed to have an opinion. The important correction: the postbox it collects instructions from is not the cloud mailbox everyone assumed — it is a shared file on one machine. And right now it is opening the wrong file, so the postbox it checks is empty no matter what anyone posts."
   },
   "facts": [
     {
+      "label": "Host",
+      "value": "GCP VM `trading-1`, europe-west1-b"
+    },
+    {
       "label": "Broker",
-      "value": "OANDA v20 REST"
+      "value": "OANDA v20 REST, **practice**, `EXEC_SHADOW=true`"
     },
     {
       "label": "Datastore",
-      "value": "Own local PostgreSQL — no dependency on Computer 1"
+      "value": "Own local PostgreSQL 18 on the VM — verified"
     },
     {
       "label": "Artifact sync",
-      "value": "`latest.json` poll, ~15 min"
+      "value": "`latest.json` poll, **300 s** — not 15 min"
     },
     {
       "label": "Slippage budget",
-      "value": "2 pips — flag or reject beyond"
+      "value": "2 pips — confirmed"
     },
     {
       "label": "Staleness rule",
-      "value": "Queue age > 5 min → PAUSED"
+      "value": "Queue age over 300 s in-session → PAUSED — confirmed"
+    },
+    {
+      "label": "Emergency STOP",
+      "value": "SIGTERM/SIGINT or `state/control/STOP` — **not** SIGUSR1"
     },
     {
       "label": "Tests",
-      "value": "152 / 152"
+      "value": "308 passed, 1 skipped of 309 — not 152"
     }
   ],
   "sections": [
@@ -51,60 +59,102 @@
       "kind": "ingestion",
       "body": {
         "technical": [
-          "System 2 has three inbound streams and treats each one as untrusted until verified.",
-          "**Artifacts.** It polls `latest.json` in GCS roughly every 15 minutes, downloads the referenced immutable prefix, recomputes SHA256 against the manifest, and only then performs an atomic swap of the local model cache. A checksum mismatch aborts the swap and leaves the previous model serving. Because System 1 flips the pointer *last*, a partially uploaded bundle is never reachable.",
-          "**Live candles.** It streams prices from OANDA and runs HMM inference locally with persistence smoothing, so a live regime label exists even when Computer 1 is asleep. This is inference against a frozen model — System 2 never fits anything.",
-          "**Orders.** It polls `AMS_Outbound_Queue` for orders that System 3 has already approved *and sized*. Each carries an `idempotency_key` which is mapped directly onto the OANDA client request ID, making a replayed message a broker-side no-op rather than a second position."
+          "System 2 has three inbound streams and treats each one as untrusted until verified. Two of the three work today; the order stream does not.",
+          "**Artifacts — working.** `s2-downloader.service` polls `gs://scalable-brain-artifacts/latest.json` every **300 s** (`MODEL_POLL_INTERVAL_SEC`, logged as `interval_sec: 300` at loop start), downloads the referenced immutable prefix, recomputes SHA256 against the manifest, and only then flips the `active` symlink. Verified end to end on 2026-08-21T16:30:05Z, activating `2026-08-21T16-29-15Z-372f6956_gk-d614163c`. A withdrawal manifest (`status: \"withdrawn\"`) is a distinct code path from a parse failure, so an instruction to stop can no longer be mistaken for a network blip.",
+          "**Live candles — working.** `OandaCandleSource` fetches completed mid candles (`price=M`, `complete` only) on demand; `REGIME_CANDLE_LOOKBACK` defaults to 120 bars. Inference is forward-only against the shipped HMM with causal persistence smoothing. Sixteen instrument/granularity cells were labelled in the minute this page was verified.",
+          "**Orders — blocked.** `outbound_consumer` polls the subscription `ams-outbound.executor` through `LocalDurableBackend`, a SQLite table where the topic is a column value. The deployed `QUEUE_LOCAL_PATH` is a Windows path, so System 2 opened an empty database beside its own source tree instead of the shared one. It has consumed nothing since seq 170952 (`s3-hb-2026-08-20T15:08:48Z`); the first stranded message is seq 170957, timestamped 36 seconds after the process restarted."
         ],
         "plain": [
-          "Three things arrive here, and each is checked before it is believed.",
-          "The model package is downloaded and weighed against the receipt that came with it. If the weights disagree, the download is thrown away and the old model keeps working — a corrupted delivery can never take the system down.",
-          "Live prices arrive continuously and are used to work out what the market is doing right now, using the model that was shipped rather than inventing a new one.",
-          "And orders arrive already finalised: instrument, direction, size, stop. Each carries a reference number, so if the same order arrives twice it is recognised and ignored instead of doubling the position."
+          "Three things arrive here, and each is checked before it is believed. Two of the three are arriving correctly.",
+          "The model package is downloaded and weighed against the receipt that came with it. If the weights disagree the download is thrown away and the old model keeps working. This was watched happening on 21 August.",
+          "Live prices arrive on request and are used to work out what the market is doing right now, using the model that was shipped rather than inventing a new one.",
+          "Orders are the broken one. They are meant to arrive in a shared file that both machines can open. A Windows folder path was written into the settings of a Linux machine, so instead of opening the shared file System 2 quietly created a brand new empty one next to itself and has been checking that ever since. Nothing has been lost, because nothing has been sent — but if the risk officer approved a trade this minute, the hands would never hear about it."
         ]
       },
       "tables": [
         {
-          "title": "Inbound streams",
+          "title": "Inbound streams, as verified on 2026-08-22",
           "columns": [
             "Stream",
-            "Source",
+            "Source, exactly",
             "Verification",
-            "Failure behaviour"
+            "State"
           ],
           "rows": [
             [
               "Model bundle",
               "GCS `latest.json`",
-              "SHA256 vs manifest",
-              "Abort swap, keep serving previous"
+              "SHA256 vs manifest, atomic symlink swap",
+              "**Working** — activated 2026-08-21T16:30:05Z"
             ],
             [
               "Live candles",
-              "OANDA v20 stream",
-              "Gap / staleness check",
-              "Regime label goes stale → pause"
+              "OANDA v20 candles endpoint, `price=M`",
+              "Completed candles only; insufficient history holds the last label",
+              "**Working** — 16 cells labelled"
             ],
             [
               "Approved orders",
-              "`AMS_Outbound_Queue`",
-              "Schema + `idempotency_key`",
-              "Queue age > 5 min → PAUSED"
+              "local subscription `ams-outbound.executor` (SQLite queue)",
+              "Schema, `idempotency_key` dedupe, TTL",
+              "**Blocked** — bound to the wrong queue file"
             ],
             [
               "Emergency STOP",
-              "SIGUSR1 or authenticated API",
-              "Signature check",
-              "Flattens positions with **no** queue dependency"
+              "SIGTERM / SIGINT / `state/control/STOP` sentinel",
+              "Filesystem or signal, no queue dependency",
+              "**Working** — reachable with the queue down"
             ]
           ]
+        },
+        {
+          "title": "Transport names — the written answer to G-001",
+          "columns": [
+            "Direction",
+            "Name in use today",
+            "Pub/Sub equivalent",
+            "Ever used?"
+          ],
+          "rows": [
+            [
+              "Consume approved orders",
+              "`ams-outbound.executor` (local SQLite topic)",
+              "`AMS_Outbound_Queue_sub`",
+              "No — zero pull requests in 7 days"
+            ],
+            [
+              "Publish fills",
+              "`ams-inbound`",
+              "`AMS_Inbound_Queue`",
+              "No — zero publishes in 25 days"
+            ],
+            [
+              "Publish close events",
+              "`ams-inbound.ams`",
+              "`AMS_Inbound_Queue`",
+              "No"
+            ],
+            [
+              "Scored signals",
+              "not consumed by System 2 at all",
+              "`scored_signal_queue_sub` — System 3's",
+              "n/a"
+            ]
+          ],
+          "note": "Names are env-overridable (`OUTBOUND_QUEUE_NAME`, `INBOUND_QUEUE_NAME`, `S3_CLOSE_TOPIC`), so a Pub/Sub cutover is configuration rather than code — but it must move System 2, System 3 and the bridge in one change, because `build_queue()` returns a single backend for every topic."
         }
       ],
       "callouts": [
         {
+          "tone": "bad",
+          "title": "Answering directly: yes, the whole order path is a file-based queue",
+          "technical": "`QUEUE_PROVIDER=local` on all three processes. There is no Pub/Sub consumer anywhere in System 2. Cloud Monitoring `subscription/pull_request_count` has no time series at all for `AMS_Outbound_Queue_sub` over seven days, against 55,347 pull requests on `scored_signal_queue_sub` in the same window. If System 1 flips its publisher to `AMS_Outbound_Queue`, nothing on this side will ever see it.",
+          "plain": "The question was whether any part of this still reads a file instead of the cloud queue. All of it does. The cloud queues exist and are empty, and nobody here has ever looked in them."
+        },
+        {
           "tone": "info",
           "title": "Why the emergency stop bypasses the queue",
-          "technical": "Every other control path depends on the message bus. If the bus is the thing that is broken, a queue-delivered kill switch is useless exactly when it is needed. STOP is therefore delivered out-of-band via signal or direct authenticated call.",
+          "technical": "Every other control path depends on the message bus. If the bus is the thing that is broken, a queue-delivered kill switch is useless exactly when it is needed. STOP is therefore a process signal or a filesystem sentinel — `touch state/control/STOP` works with the queue, the network and GCS all down.",
           "plain": "The fire alarm is not wired through the same phone line as everything else. If the phone line is what failed, you still need the alarm to work."
         }
       ]
@@ -115,70 +165,80 @@
       "kind": "pipeline",
       "body": {
         "technical": [
-          "The engine is intentionally thin. Its correctness property is *determinism*: given the same approved order and the same broker state, the resulting broker call must be identical. There is no sizing arithmetic, no signal scoring, no risk evaluation anywhere in this process.",
+          "The engine is intentionally thin. Its correctness property is *determinism*: given the same approved order and the same broker state, the resulting broker call must be identical. There is no sizing arithmetic, no signal scoring and no risk evaluation anywhere in this process. Local signal production was removed on 2026-08-15 — the `/signal` endpoint now returns `removed` with a reason, and System 2 originates nothing.",
+          "`EXEC_SHADOW` and `exec_mode` are orthogonal and resolved in one place, and the production path refuses to default: an absent `EXEC_SHADOW` aborts startup rather than guessing. It is `true` on the host, so the pipeline constructs the order and stops short of submitting it.",
           "Position management is the one place System 2 acts on its own — but only within instructions it was given. Trailing stops, time-based exits and take-profit confirmations execute against parameters that arrived with the order, not parameters it computed."
         ],
         "plain": [
-          "This part is deliberately dumb, and that is the feature. The fewer decisions it makes, the fewer ways it can be wrong.",
-          "It does look after trades once they are open — moving a stop, closing at a deadline — but only following instructions that came with the order. It never decides that a trade deserves more room."
+          "This part is deliberately dumb, and that is the feature. The fewer decisions it makes, the fewer ways it can be wrong. It used to have a small opinion of its own; that was deleted in August and the door was welded shut.",
+          "It is also currently in a rehearsal mode where it works out the exact order and then deliberately does not send it. That switch has no default — if nobody states which mode they want, the program refuses to start rather than guess.",
+          "It does look after trades once they are open, moving a stop or closing at a deadline, but only following instructions that came with the order. It never decides a trade deserves more room."
         ]
       },
       "stages": [
         {
           "code": "EXEC-A",
           "name": "Artifact downloader + verifier",
-          "module": "Artifact sync service",
+          "module": "`s2-downloader.service`",
           "output": "Verified local model cache",
-          "technical": "Poll pointer, download immutable prefix, SHA256 verify, atomic swap.",
-          "plain": "Collects the sealed model box, checks the seal, and swaps it in all at once."
+          "technical": "Poll `latest.json` every 300 s, download the immutable prefix, SHA256 verify each file, atomic symlink swap, retain `last_good`. A withdrawal is a separate exception from a parse error.",
+          "plain": "Collects the sealed model box every five minutes, checks the seal, and swaps it in all at once — keeping the previous one in case the new one is bad."
         },
         {
           "code": "EXEC-B",
           "name": "Live regime detector",
-          "module": "HMM inference on live candles",
+          "module": "`artifact_sync.live_regime`",
           "output": "Current regime label + probabilities",
-          "technical": "Forward-only inference with persistence smoothing against the shipped HMM. No fitting.",
-          "plain": "Works out what kind of market it is right now, using the ruleset that was shipped to it."
+          "technical": "Forward-only inference with causal persistence smoothing against the shipped HMM. Never fits. **Known defect:** the bundle is loaded once at process start and never refreshed, so it is currently serving `2026-08-17T09-28-46Z-d593220a`, two swaps behind the activated set.",
+          "plain": "Works out what kind of market it is right now using the shipped ruleset. It picks up that ruleset when it starts and then never checks for a newer one, so it is running on a copy from five days ago."
         },
         {
           "code": "EXEC-C",
           "name": "Queue consumer",
-          "module": "`AMS_Outbound_Queue` consumer",
+          "module": "`ams-outbound.executor` consumer",
           "output": "Validated order intents",
-          "technical": "Schema-validate, deduplicate on `idempotency_key`, reject anything older than the staleness budget.",
-          "plain": "Opens the incoming orders, checks they are well-formed and recent, and throws away duplicates."
+          "technical": "Schema-validate, deduplicate on `idempotency_key`, ack-drop anything past its TTL, park new orders when the safety monitor is PAUSED. **Currently receiving nothing** — wrong queue file.",
+          "plain": "Opens the incoming orders, checks they are well-formed and recent, and throws away duplicates. It is opening an empty drawer."
         },
         {
           "code": "EXEC-D",
           "name": "OANDA broker adapter",
-          "module": "Broker adapter",
+          "module": "`broker.oanda_adapter`",
           "output": "Filled or rejected orders",
-          "technical": "Maps `idempotency_key` to the client request ID, enforces a 2-pip slippage budget, confirms stop and take-profit attachment.",
-          "plain": "Actually places the trade, and refuses it if the price has already moved more than two pips against the plan."
+          "technical": "Maps `idempotency_key` to the client request ID, enforces a 2-pip slippage budget (`SLIPPAGE_TOLERANCE_PIPS`, default 2.0), and refuses a fill with no broker-side stop as `NO_STOP_UNSAFE`.",
+          "plain": "Actually places the trade, refuses it if the price has already moved more than two pips against the plan, and refuses to leave a position sitting there without a stop attached."
         },
         {
           "code": "EXEC-E",
           "name": "Position manager",
-          "module": "Active position management",
-          "output": "Stop moves, exits",
-          "technical": "Executes trailing stops, duration gates and time-based exits from parameters carried on the order.",
-          "plain": "Babysits the open trades according to the instructions they arrived with."
+          "module": "`execution.pipeline` + `close_tracker`",
+          "output": "Stop moves, exits, close attribution",
+          "technical": "Executes trailing stops, duration gates and time-based exits from parameters carried on the order, and attributes broker-side closes (SL / TP / trailing) back to a cause.",
+          "plain": "Babysits the open trades according to the instructions they arrived with, and records why each one ended."
         },
         {
           "code": "EXEC-F",
           "name": "Fill confirmation producer",
-          "module": "`AMS_Inbound_Queue` producer",
+          "module": "`ams-inbound` producer + durable outbox",
           "output": "Fill and close events",
-          "technical": "Publishes fills, partial fills, rejections and closes back to System 3 so the account state machine stays truthful.",
-          "plain": "Reports back what actually happened, so the risk manager is never guessing about the account."
+          "technical": "Publishes fills, partial fills, rejections and closes back to System 3. Undelivered events are held in an outbox and retried — no fill is dropped because the queue was unreachable.",
+          "plain": "Reports back what actually happened. If the pipe is down it keeps the report in its pocket and re-sends later rather than losing it."
         },
         {
           "code": "EXEC-G",
-          "name": "Telemetry API + dashboard",
-          "module": "FastAPI + React",
-          "output": "Read-only observability surface",
-          "technical": "Read-side KPI, trades, risk, regimes and model views. Telemetry is System 2's surface — the retired layer 5 moved here.",
-          "plain": "The screen you look at to see what is going on. Read-only: you cannot trade from it."
+          "name": "Telemetry API + health surface",
+          "module": "FastAPI on :8002",
+          "output": "Read-only observability",
+          "technical": "`/status`, `/health`, `/regime`, `/signal`. Read-side only — no trade can be initiated from it. `gatekeeper` currently reports `unavailable — no approval-rate provider wired`, which is honest rather than a false all-clear.",
+          "plain": "The screen you look at to see what is going on. Read-only: you cannot trade from it. Where it has no real number it says so instead of showing a comforting one."
+        },
+        {
+          "code": "EXEC-H",
+          "name": "Account snapshot relay",
+          "module": "`s2s3-bridge.service`",
+          "output": "AccountSnapshot every ~60 s",
+          "technical": "System 2's built EXEC tasks contain no snapshot producer, so the bridge reads System 2's own credentials and publishes OANDA practice truth to `ams-inbound.ams`. Without it System 3's equity is 0 and Layer B rejects everything. System 3 still never sees the broker key.",
+          "plain": "Somebody has to tell the risk officer what the account is worth. That job was never built into System 2, so a small helper does it — reading the balance with System 2's key and passing on only the numbers."
         }
       ]
     },
@@ -188,40 +248,47 @@
       "kind": "interfaces",
       "body": {
         "technical": [
-          "System 2 is the only component in the platform holding a broker credential capable of placing an order. System 3, which decides *whether* to trade, deliberately never holds that key — separating the authority to decide from the ability to act."
+          "System 2 is the only component in the platform holding a broker credential capable of placing an order. System 3, which decides *whether* to trade, deliberately never holds that key — separating the authority to decide from the ability to act.",
+          "The account is OANDA practice `101-002-38449021-001`, CAD, balance 84,013.70, lifetime P/L −15,954.17, zero open trades as of 2026-08-22T15:15Z."
         ],
         "plain": [
-          "This is the only machine that can actually move money. The machine that decides whether to move money cannot, and the machine that can does not decide. Neither can act alone."
+          "This is the only machine that can actually move money. The machine that decides whether to move money cannot, and the machine that can does not decide. Neither can act alone.",
+          "The account it is pointed at is a practice account with about 84,000 Canadian dollars in it, nothing open, and a lifetime loss of about 16,000."
         ]
       },
       "tables": [
         {
-          "title": "Published interfaces",
+          "title": "Published interfaces, with what is actually flowing",
           "columns": [
             "Interface",
-            "Transport",
-            "Consumer"
+            "Transport in use",
+            "Consumer",
+            "Flowing?"
           ],
           "rows": [
             [
               "Fill / close confirmations",
-              "Pub/Sub `AMS_Inbound_Queue`",
-              "System 3"
+              "local `ams-inbound` / `ams-inbound.ams`",
+              "System 3",
+              "No fills to publish — nothing has traded"
             ],
             [
               "Account snapshot",
-              "Internal API, every 30 s",
-              "System 3"
+              "bridge → `ams-inbound.ams`, every ~60 s",
+              "System 3",
+              "**Yes** — 2,601 reconciled, last one 29 s ago"
             ],
             [
               "Broker orders",
-              "OANDA v20 REST",
-              "The market"
+              "OANDA v20 REST, practice, SHADOW",
+              "The market",
+              "No — SHADOW constructs and stops"
             ],
             [
               "Telemetry",
-              "FastAPI `/api/v1/*`",
-              "Operator dashboard"
+              "FastAPI `/status`, `/health`, `/regime`, `/signal` on :8002",
+              "Operator dashboard, ops watchdog",
+              "**Yes**"
             ]
           ]
         }
@@ -235,38 +302,62 @@
         {
           "id": "GAP-S2-01",
           "severity": "high",
-          "title": "Consuming transport unconfirmed",
-          "text": "System 2 has not stated which topic and subscription it consumes. If any part of its path still polls a file-based queue it can never receive anything, because System 1 moved from a local directory to Pub/Sub. A written confirmation is the open ask."
+          "title": "System 2 is bound to the wrong queue file and can receive nothing",
+          "text": "The deployed `.env.system2` sets `QUEUE_LOCAL_PATH` to a Windows absolute path. On the Linux host that is not a path, it is a filename, so `LocalDurableBackend` created an empty SQLite database inside `/opt/scalablebrain/system2/system-2-execution-engine/` while System 3 and the bridge use `/opt/scalablebrain/shared/queue/queue.db`. Since the 2026-08-20T15:09:02Z restart, 5,587 messages have stranded on `ams-outbound.executor` — all of them System 3 heartbeats, so **no approved order has been lost**, and only because System 3 has approved none since 2026-08-14. Fix is a one-line env change plus a startup assertion that the resolved queue path is absolute and already exists. Not applied from here: it is a live trading host and that change belongs to its owner."
         },
         {
           "id": "GAP-S2-02",
           "severity": "high",
-          "title": "A silent inbound queue raises no alarm",
-          "text": "System 1's producer sat broken for weeks, having never emitted a message, and nothing downstream noticed. Silence on an inbound queue during market hours should be an alert, not an unremarkable state."
+          "title": "Nothing on this side has ever touched Pub/Sub",
+          "text": "`QUEUE_PROVIDER=local` everywhere. `AMS_Outbound_Queue_sub` has no `pull_request_count` time series at all over 7 days, and `AMS_Inbound_Queue` has no publishes in 25 days. The names are env-overridable so cutover is config, but it must move System 2, System 3 and the bridge together — `build_queue()` returns one backend for every topic, so flipping one process alone disconnects the other two."
         },
         {
           "id": "GAP-S2-03",
           "severity": "high",
-          "title": "ADR-001 would substantially expand this system's role",
-          "text": "The proposal moves live inference here: syncing a bundle that carries strategy code, running it against live candles, and publishing scored signals. That makes bundle integrity a trust boundary and makes determinism a tested requirement. System 2 must reply APPROVE or REJECT with reasons."
+          "title": "The live regime detector never reloads its bundle",
+          "text": "`LiveRegimeDetector.load_bundle` returns early while a bundle is cached and nothing calls it with `force=True`, so the model set is pinned at process start. Two activations since the last restart have had no effect: inference is running against `2026-08-17T09-28-46Z-d593220a` while `active` points at `2026-08-21T16-29-15Z-372f6956`. `/status` reports the downloader's id rather than the one in use, so the divergence is invisible on the status surface."
         },
         {
           "id": "GAP-S2-04",
-          "severity": "med",
-          "title": "Ops provisioning incomplete",
-          "text": "No environment template has been shipped, and the `latest.json` manifest shape does not match what the artifact sync expects. Tracked as hard blockers in the deployment guide."
+          "severity": "high",
+          "title": "The silence alarm exists but did not fire for this outage",
+          "text": "Two mechanisms cover a silent inbound queue: EXEC-008 pauses at queue age over 300 s in-session, and `ops-watchdog.timer` pages Telegram every 30 minutes on a composite *running but not trading* condition. The composite requires at least 8 gate decisions in a 3-hour window before *all rejected* means anything — which never happens when no signals arrive at all, which is exactly this outage. Two days of a stranded queue produced no page. What is missing is a standalone rule: a consumer whose lifetime `messages_seen` is 0 while its queue depth is non-zero is broken, not quiet."
         },
         {
           "id": "GAP-S2-05",
           "severity": "med",
-          "title": "Practice drill not run",
-          "text": "The end-to-end drill across all three computers, and the D-004 evidence package behind it, are pending. Go-live is a human decision that depends on both."
+          "title": "The one standing watchdog alert is a false positive",
+          "text": "`watchdog_state.json` has carried the episode `s2:producer` — *signal producer running=false* — open since 2026-08-15T18:09:26Z. That is now correct behaviour: System 2's local signal production was deliberately removed on 2026-08-15 and `/signal` returns `removed`. A permanently-lit alert is worse than no alert, because it trains the operator to ignore the channel that is supposed to carry the real one."
         },
         {
           "id": "GAP-S2-06",
+          "severity": "med",
+          "title": "Numbers on the previous version of this page were stale",
+          "text": "Corrected above and restated here so the diff is legible. Tests are 308 passed / 1 skipped of 309, not 152/152. Artifact poll is 300 s, not ~15 min — the docstring in `downloader.py` still says ~15 min and should be corrected at source. The 2-pip slippage budget and the 5-minute staleness rule are confirmed exactly, the latter with a startup alarm if a deployed override deviates from 300 s. Emergency STOP is SIGTERM/SIGINT or the `state/control/STOP` sentinel — **SIGUSR1 appears nowhere in the codebase**, and a runbook telling an operator to send it would do nothing in an emergency."
+        },
+        {
+          "id": "GAP-S2-07",
+          "severity": "med",
+          "title": "Price data has never been reconciled against System 1's",
+          "text": "System 2 reads OANDA mid candles (`price=M`, completed only) on demand and keeps no local candle store. System 1's ingest is recorded as MBA. Nobody has compared a bar. Under ADR-001 a regime label computed from a different price series is a different label, so this needs a bar-for-bar reconciliation before cutover, not after."
+        },
+        {
+          "id": "GAP-S2-08",
+          "severity": "med",
+          "title": "A drill signal would never reach this system",
+          "text": "G-008 asks System 2 to run a signal carrying `\"drill\": true` to the broker call and stop. System 2 can already do the stopping part — `EXEC_SHADOW=true` constructs the order and does not submit. But the flag cannot get here: System 3's `ScoredSignal` and `ApprovedOrder` schemas are both `additionalProperties: false`, so the drill signal is dead-lettered at the relay and the flag could not be forwarded even if it were not. Blocked on a contract change, not on System 2."
+        },
+        {
+          "id": "GAP-S2-09",
           "severity": "low",
-          "title": "Test fixtures observed in the live queue",
-          "text": "System 2 saw `entry: 1.05` messages — fixtures a System 1 test run wrote into the production queue artefact. The leak path is System 1's to close, but System 2 is where it surfaced."
+          "title": "There is no Computer 2",
+          "text": "System 2, System 3, the bridge, the signal relay and the telemetry publisher all run as systemd units on one GCP VM, `trading-1` in europe-west1-b. The three-computer topology is the design, not the deployment. Every isolation claim resting on the systems being on separate hosts — independent failure domains, System 3 surviving System 2's host dying — is currently untrue."
+        },
+        {
+          "id": "GAP-S2-10",
+          "severity": "low",
+          "title": "Environment template and manifest shape — both answered yes",
+          "text": "`config/.env.system2.template` exists in the engine repo, which closes the RUNBOOK instruction the deployment guide flagged as pointing at a file that did not exist; `deployment-guide/templates/env.system2.template` exists too. The `latest.json` manifest mismatch tracked beside it is also closed — the live pointer parses under System 2's own `Manifest.parse`, and the downloader verified and activated it on 2026-08-21."
         }
       ]
     }
