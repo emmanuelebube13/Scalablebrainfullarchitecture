@@ -119,12 +119,12 @@
         {
           "system": "system-2",
           "role": "required",
-          "need": "State which topic and subscription it consumes and confirm the process is running — any remaining file-based queue polling can never receive anything"
+          "need": "Answered 2026-08-22: consumes the local subscription `ams-outbound.executor` on a shared SQLite queue — **not** Pub/Sub, and it has never pulled `AMS_Outbound_Queue_sub`. The process is running, but its deployed `QUEUE_LOCAL_PATH` is a Windows path that resolved to an empty database beside its own source tree, so it has received nothing since 2026-08-20T15:09:24Z."
         },
         {
           "system": "system-3",
           "role": "required",
-          "need": "Name its subscription and confirm a consumer is pulling. This is the blocking link; everything waits on its reply"
+          "need": "Answered 2026-08-22 and **no longer the blocking link**: subscription `scored_signal_queue_sub` on topic `scored_signal_queue`, pulled continuously by `s3-signal-relay.service` since 2026-08-17 — 13,020 pull requests in the last 24 hours. Approved orders are published to `ams-outbound`. The capitalised `Scored_Signal_Queue` does not exist."
         }
       ],
       "blocked_by": null
@@ -159,7 +159,7 @@
         {
           "system": "system-3",
           "role": "consumer",
-          "need": ""
+          "need": "Cadence is not cosmetic for us: the `ScoredSignal` TTL is 15 minutes. A once-daily 22:30 batch produces signals that are hours past that TTL on arrival, so they are discarded before any risk logic runs. Hourly is the minimum at which H4 signals survive the trip."
         }
       ],
       "blocked_by": null
@@ -189,12 +189,12 @@
         {
           "system": "system-2",
           "role": "required",
-          "need": "Would run inference, and must accept executing System-1-authored code inside a checksummed bundle"
+          "need": "Reviewed 2026-08-22 — **approve with conditions**. Would run inference; already runs verified artifact sync and live HMM inference. Conditions: prove the transport first, sign the manifest rather than only checksumming it, run bundle strategy code in a least-privilege process with no broker credential, and gate cutover on a determinism test against System 1's own outputs."
         },
         {
           "system": "system-3",
           "role": "required",
-          "need": "Must confirm whether anything in the signal envelope changes when its publisher becomes System 2"
+          "need": "Reviewed 2026-08-22 — **approve with conditions**. Responsibilities are unchanged and the publisher's identity is irrelevant to the gate. The envelope is not: it needs a required `producer`, a `bundle_id`, and a `drill` boolean, and that change must land before System 2 starts publishing, not after."
         }
       ],
       "blocked_by": "Awaiting review from Systems 2 and 3"
@@ -229,7 +229,7 @@
         {
           "system": "system-3",
           "role": "consumer",
-          "need": "Sizing is derived from the measured edge, so a thin cell produces an unreliable Kelly fraction"
+          "need": "Sizing is derived from the measured edge, so a thin cell produces an unreliable Kelly fraction. In practice the sizing layer already refuses on insufficient or stale live statistics — 1,100 of 4,091 rejections to date — so the protection exists, but it arrives as a refusal to size rather than as a refusal to qualify."
         }
       ],
       "blocked_by": null
@@ -259,12 +259,12 @@
         {
           "system": "system-2",
           "role": "consumer",
-          "need": "Position management executes exit parameters carried on the order — with none supplied, there is nothing to execute"
+          "need": "Position management executes exit parameters carried on the order; with none supplied there is nothing to execute, and trailing stops and time-based exits are inert."
         },
         {
           "system": "system-3",
           "role": "consumer",
-          "need": "Duration gates in layer I reason about expected trade life"
+          "need": "Layer `H` compares the maximum hold duration against the next Friday cutoff. With `exits: {}` it falls back to the configured maximum rather than the strategy's own — 131 rejections have already landed there."
         }
       ],
       "blocked_by": null
@@ -294,12 +294,12 @@
         {
           "system": "system-2",
           "role": "required",
-          "need": "The 30-second account snapshot API must be serving, or layers A–C are inert"
+          "need": "The 30-second account snapshot **is** serving, so layers A–C are not inert. It is produced by `s2s3-bridge.service` rather than by System 2 itself: System 2's built EXEC tasks contain no snapshot producer, and the bridge reads System 2's credential so System 3 still never sees the broker key."
         },
         {
           "system": "system-3",
           "role": "owner",
-          "need": "Build it"
+          "need": "Largely built and running, not planned: 13 gate layers with per-layer reason codes, a persisted state machine, and 4,153 logged decisions at 0.75 ms mean latency. This goal's metric reads 0 of 10 layers implemented; 13 are implemented. What genuinely remains is the datastore — it is SQLite, and local PostgreSQL has never been provisioned."
         }
       ],
       "blocked_by": null
@@ -364,12 +364,12 @@
         {
           "system": "system-2",
           "role": "required",
-          "need": "Stop at the broker call, log the order it would have sent, report back"
+          "need": "Can already stop at the broker call — `EXEC_SHADOW=true` constructs the order and does not submit — and log what it would have sent. **Blocked** on the flag never reaching it: both System 3 contracts are `additionalProperties: false`."
         },
         {
           "system": "system-3",
           "role": "required",
-          "need": "Process through the full risk path, forward with the flag intact, report back"
+          "need": "**Blocked.** `ScoredSignal.schema.json` is `additionalProperties: false`, so a signal carrying `\"drill\": true` fails validation at the relay, which by design never acks an invalid message — System 1 would publish and hear nothing back, ever. `ApprovedOrder.schema.json` has the same setting, so the flag could not be forwarded either. Contract change first, drill second."
         }
       ],
       "blocked_by": "G-001"
@@ -481,49 +481,109 @@
       "system": "system-2",
       "goal": "G-001",
       "period": "2026-W34",
-      "status": "in_progress",
+      "status": "done",
       "title": "State which topic and subscription System 2 consumes",
-      "detail": "If any part of its path still polls a file-based queue it can never receive anything. Independent of System 3's reply; can proceed in parallel.",
-      "evidence": ""
+      "detail": "Answered in full. Consumes the local subscription `ams-outbound.executor` and publishes to `ams-inbound` / `ams-inbound.ams`, all topics in a shared SQLite queue under `QUEUE_PROVIDER=local`. It has never consumed from Pub/Sub: `AMS_Outbound_Queue_sub` has no `pull_request_count` time series at all over seven days. So yes — the whole order path is a file-based queue, and it can never receive anything System 1 publishes to Pub/Sub.",
+      "evidence": "`gcloud pubsub subscriptions list`; Cloud Monitoring `subscription/pull_request_count`, 7 d; deployed `config/.env.system2`"
     },
     {
       "id": "T-202",
       "system": "system-2",
       "goal": "G-001",
       "period": "2026-W34",
-      "status": "not_started",
+      "status": "in_progress",
       "title": "Add alarming on a silent inbound queue",
-      "detail": "The producer sat broken for weeks without anyone seeing it. Silence on an inbound queue during market hours should be an alert, not a normal state.",
-      "evidence": ""
+      "detail": "Partly built and demonstrably insufficient. EXEC-008 pauses at queue age over 300 s in-session, and `ops-watchdog.timer` pages Telegram every 30 minutes on a composite *running but not trading* condition — but that composite needs at least 8 gate decisions in a 3-hour window before *all rejected* means anything, which never happens when nothing arrives at all. Two days of a stranded queue produced no page. Missing rule: lifetime `messages_seen == 0` while queue depth is non-zero is broken, not quiet.",
+      "evidence": "`bridge/ops_watchdog.py`; `bridge/state/watchdog_state.json`; S2 `/status` showing `messages_seen: 0`"
     },
     {
       "id": "T-203",
       "system": "system-2",
       "goal": "G-008",
       "period": "2026-W34",
-      "status": "not_started",
+      "status": "blocked",
       "title": "Run the drill signal to the broker call and stop",
-      "detail": "Log the order it would have sent and report back. Confirm the practice endpoint before anything is unflagged.",
-      "evidence": ""
+      "detail": "The stopping half is ready — `EXEC_SHADOW=true` already constructs the order and does not submit, and the practice endpoint is confirmed (`OANDA_ENV=practice`, account `101-002-38449021-001`). Blocked because the flag cannot arrive: System 3's `ScoredSignal` and `ApprovedOrder` schemas are both `additionalProperties: false`. Unblocked by T-308.",
+      "evidence": "`execution/pipeline.py` `resolve_shadow`; `contracts/v1/ApprovedOrder.schema.json`"
     },
     {
       "id": "T-204",
       "system": "system-2",
       "goal": "G-003",
       "period": "2026-08",
-      "status": "not_started",
+      "status": "done",
       "title": "Review ADR-001 and reply APPROVE or REJECT",
-      "detail": "Specifically: is executing System-1-authored code acceptable to its security posture, and does it have candle history sufficient for a 252-bar D1 warm-up?",
-      "evidence": ""
+      "detail": "Approve with conditions, recorded in `decisions.json`. Candle warm-up is a config change — no local candle store exists, `OandaCandleSource` fetches on demand and 252 D1 bars is well within OANDA's per-request limit. Price agreement with System 1 is **unverified** and not claimed; see T-208. Executing System-1-authored code is acceptable given a signed manifest, a pinned and hashed dependency set, and a least-privilege process holding no broker credential.",
+      "evidence": "data/decisions.json → ADR-001 → reviews[system-2]"
     },
     {
       "id": "T-205",
       "system": "system-2",
       "goal": "G-006",
       "period": "2026-W36",
-      "status": "not_started",
+      "status": "done",
       "title": "Serve the 30-second account snapshot API",
-      "detail": "System 3's gate layers A–C are inert without it, and a missing snapshot must resolve to REJECT rather than to a stale value.",
+      "detail": "Serving, and reconciled 2,601 times with the most recent snapshot 29 s old at the time of writing. Produced by `s2s3-bridge.service` rather than System 2 itself, because System 2's built EXEC tasks contain no snapshot producer; the bridge reads System 2's credential, so System 3 still never sees the broker key. A missing snapshot resolves to REJECT at layer `S`, not to a stale value.",
+      "evidence": "S3 `/health`: `snapshots_reconciled: 2601`, `last_message_age_sec: 28.8`"
+    },
+    {
+      "id": "T-206",
+      "system": "system-2",
+      "goal": "G-001",
+      "period": "2026-W34",
+      "status": "not_started",
+      "title": "Repair the queue binding and assert it at startup",
+      "detail": "The deployed `.env.system2` sets `QUEUE_LOCAL_PATH` to a Windows absolute path; on the Linux host that is a filename, so System 2 opened an empty database beside its own source tree while System 3 and the bridge use `/opt/scalablebrain/shared/queue/queue.db`. Two parts: correct the value, and make `build_queue()` refuse to start unless the resolved path is absolute and already exists. A queue that silently creates itself when misconfigured is how two systems end up on two queues twice.",
+      "evidence": "5,587 messages stranded on `ams-outbound.executor` since 2026-08-20T15:09:24Z"
+    },
+    {
+      "id": "T-207",
+      "system": "system-2",
+      "goal": "G-003",
+      "period": "2026-W34",
+      "status": "not_started",
+      "title": "Reload the regime bundle after an artifact swap",
+      "detail": "`LiveRegimeDetector.load_bundle` returns early while a bundle is cached and nothing calls it with `force=True`, so the model set is pinned at process start. Inference is running against `2026-08-17T09-28-46Z-d593220a` while `active` points at `2026-08-21T16-29-15Z-372f6956`. Also report the id actually in use on `/status`, rather than the downloader's — the divergence is currently invisible.",
+      "evidence": "`system2.service` regime log lines vs `state/model-cache/state.json`"
+    },
+    {
+      "id": "T-208",
+      "system": "system-2",
+      "goal": "G-003",
+      "period": "2026-W35",
+      "status": "not_started",
+      "title": "Reconcile our candles against System 1's, bar for bar",
+      "detail": "We read OANDA mid candles (`price=M`, completed only) on demand and keep no local store; System 1's ingest is recorded as MBA. Nobody has compared a bar. ADR-001 makes this load-bearing: a regime label computed from a different price series is a different label. Compare a fixed window on D1, H4 and H1 across the live instruments and record the maximum discrepancy.",
+      "evidence": ""
+    },
+    {
+      "id": "T-209",
+      "system": "system-2",
+      "goal": "G-001",
+      "period": "2026-W34",
+      "status": "not_started",
+      "title": "Correct the operational claims that are wrong at source",
+      "detail": "Two documentation defects that would mislead an operator under pressure. The `downloader.py` docstring says the poll is ~15 min; it is 300 s. And any runbook naming SIGUSR1 as the emergency stop is wrong — SIGUSR1 appears nowhere in the codebase; STOP is SIGTERM/SIGINT, an in-process `trigger()`, or `touch state/control/STOP`. Sending SIGUSR1 in an emergency would do nothing at all.",
+      "evidence": "`src/system2/artifact_sync/downloader.py`; `src/system2/execution/lifecycle.py`"
+    },
+    {
+      "id": "T-210",
+      "system": "system-2",
+      "goal": "G-001",
+      "period": "2026-W34",
+      "status": "not_started",
+      "title": "Clear the standing false-positive watchdog alert",
+      "detail": "`watchdog_state.json` has carried the episode `s2:producer` — *signal producer running=false* — open since 2026-08-15T18:09:26Z. That became correct behaviour the day local signal production was removed. A permanently-lit alert trains the operator to ignore the one channel that is meant to carry the real one.",
+      "evidence": "`bridge/state/watchdog_state.json`"
+    },
+    {
+      "id": "T-211",
+      "system": "system-2",
+      "goal": "G-001",
+      "period": "2026-W36",
+      "status": "not_started",
+      "title": "Plan the three-process Pub/Sub cutover as one change",
+      "detail": "`build_queue()` returns a single backend for every topic, so flipping one process moves both its legs and disconnects the other two. System 2, System 3 and the bridge must move together, and the relay is deleted in the same change. Runs after T-206 and after one message has been observed travelling the whole path on the current transport.",
       "evidence": ""
     },
     {
@@ -531,10 +591,10 @@
       "system": "system-3",
       "goal": "G-001",
       "period": "2026-W34",
-      "status": "in_progress",
+      "status": "done",
       "title": "Name the subscription on Scored_Signal_Queue in writing",
-      "detail": "Blocking. Also confirm a consumer is actually pulling it, and name the topic approved orders are published to.",
-      "evidence": "comms/TO-SYSTEM3-2026-08-22-restore-signal-flow.md"
+      "detail": "Answered with evidence. Subscription `scored_signal_queue_sub`, topic `scored_signal_queue`, both lowercase — `Scored_Signal_Queue` has never existed in the project. A consumer is pulling right now: `s3-signal-relay.service`, up since 2026-08-17, 13,020 successful pull requests in the last 24 hours and 55,347 over seven days. Approved orders are published to `ams-outbound`, bridged onto `ams-outbound.executor`.",
+      "evidence": "`gcloud pubsub topics list`; `subscription/pull_request_count` 24 h / 7 d; `s3-signal-relay.service`"
     },
     {
       "id": "T-302",
@@ -543,57 +603,97 @@
       "period": "2026-W35",
       "status": "not_started",
       "title": "Provision local PostgreSQL on Computer 3",
-      "detail": "Hard requirement: the guardian must operate with Computer 1 offline, which is its normal state.",
-      "evidence": ""
+      "detail": "Honest answer: no, and there is no Computer 3 to provision it on. System 3 runs on the shared VM `trading-1` with `DB_PROVIDER=sqlite`, `DB_PATH=state/db/ams.db`. The host's `postgresql@18-main` cluster serves System 2's database only. Postgres is supported and the migrations exist; SQLite has carried 4,153 decisions without loss, so this is a scale and concurrency concern rather than a correctness one today.",
+      "evidence": "deployed `config/.env.system3`; `SELECT datname FROM pg_database` returns only `postgres` and `system2`"
     },
     {
       "id": "T-303",
       "system": "system-3",
       "goal": "G-006",
       "period": "2026-W36",
-      "status": "not_started",
+      "status": "done",
       "title": "Implement the account state machine with persistence",
-      "detail": "DEMO → ACTIVE → CAUTION → PAUSED → CIRCUIT_BROKEN → RECOVERY, written before any approval is published.",
-      "evidence": ""
+      "detail": "Built and running. DEMO → ACTIVE → CAUTION → PAUSED → CIRCUIT_BROKEN → RECOVERY, persisted in `ams_account_state` and written before any approval is published. Currently RECOVERY at stage `paper`, 4.85% below an 88,294.53 equity peak.",
+      "evidence": "`ams_account_state` row, updated 2026-08-22T15:06:18Z"
     },
     {
       "id": "T-304",
       "system": "system-3",
       "goal": "G-006",
       "period": "2026-W37",
-      "status": "not_started",
+      "status": "done",
       "title": "Implement gate layers A–J with per-layer reason codes",
-      "detail": "Sequential and short-circuiting. Every rejection must record which layer refused and why.",
-      "evidence": ""
+      "detail": "All ten exist, plus three the design never had: `P` provenance, `Q` quarantine and `S` account-truth freshness. Built order is P, Q, A, S, B–G, sizing, H, I, J — and the letters do not match the earlier description: `H` is the Friday-cutoff duration check, `I` is the calendar, `J` is final sanity and assembly, and sizing is a separate step between `G` and `H`. Every rejection records its layer and reason. 4,153 decisions logged at 0.75 ms mean, 421 ms max.",
+      "evidence": "`src/ams/gate/layers.py`, `src/ams/gate/pipeline.py`; `ams_decision_log`, 4,153 rows; 627/627 tests"
     },
     {
       "id": "T-305",
       "system": "system-3",
       "goal": "G-003",
       "period": "2026-08",
-      "status": "not_started",
+      "status": "done",
       "title": "Review ADR-001 and reply APPROVE or REJECT",
-      "detail": "Specifically: does anything in the signal envelope need to change when the publisher becomes System 2 — provenance, bundle id, producer identity?",
-      "evidence": ""
+      "detail": "Approve with conditions, recorded in `decisions.json`. Yes, the envelope must change — a required `producer`, a `bundle_id`, and a `drill` boolean — and it must change before System 2 starts publishing, because `additionalProperties: false` means any new field is dead-lettered rather than ignored. The duplicate-publisher hazard needs the producer field to be required so an unexpected producer can be rejected outright.",
+      "evidence": "data/decisions.json → ADR-001 → reviews[system-3]"
     },
     {
       "id": "T-306",
       "system": "system-3",
       "goal": "G-008",
       "period": "2026-W34",
-      "status": "not_started",
+      "status": "blocked",
       "title": "Process the drill signal with the flag intact",
-      "detail": "Through the full risk path, forwarded to System 2 without stripping \"drill\": true.",
-      "evidence": ""
+      "detail": "Cannot run. `ScoredSignal.schema.json` is `additionalProperties: false`, so a signal carrying `\"drill\": true` fails validation at the relay — which by design never acks and never forwards an invalid message, so it retries and dead-letters and System 1 hears nothing back. `ApprovedOrder.schema.json` is the same, so the flag could not be forwarded to System 2 either. Layer `P` adds a second trap: `selection_basis` must be present or the signal is rejected outright. Unblocked by T-308.",
+      "evidence": "`contracts/v1/ScoredSignal.schema.json`; `scripts/pubsub_signal_relay.py` safety posture"
     },
     {
       "id": "T-307",
       "system": "system-3",
       "goal": "G-008",
       "period": "2026-W38",
-      "status": "not_started",
+      "status": "done",
       "title": "Build the post-trade journal and decay auditor",
-      "detail": "The only feedback path from live results into model building. Keep it narrow.",
+      "detail": "Built. `trade_journal` and `daily_summary` persist realised trades, `audit/auditor.py` runs the decay bench, and quarantined strategies are refused at layer `Q`. Deliberately narrow — the only thing that leaves is a quarantine verdict. It is not yet exported anywhere System 1 can read it; that is T-311.",
+      "evidence": "`src/ams/audit/auditor.py`, `src/ams/posttrade/`, tables `trade_journal` / `strategy_status`"
+    },
+    {
+      "id": "T-308",
+      "system": "system-3",
+      "goal": "G-008",
+      "period": "2026-W34",
+      "status": "not_started",
+      "title": "Add producer, bundle id and drill to the contracts",
+      "detail": "Blocking G-008 and blocking ADR-001's transition. `ScoredSignal.schema.json` gains a **required** `producer`, a `bundle_id` and an optional `drill` boolean; `ApprovedOrder.schema.json` gains `drill` so the flag survives our egress. `producer` is required rather than optional so an unexpected publisher can be rejected outright during the transition, which is the only thing that catches two producers emitting different `signal_id`s for the same bar. Publish the updated contracts to `gs://scalable-brain-artifacts/contracts/v1/`.",
+      "evidence": "`contracts/v1/ScoredSignal.schema.json`, `contracts/v1/ApprovedOrder.schema.json`"
+    },
+    {
+      "id": "T-309",
+      "system": "system-3",
+      "goal": "G-006",
+      "period": "2026-W35",
+      "status": "not_started",
+      "title": "Fix single-channel alerting",
+      "detail": "`SMTP_HOST`, `SMTP_USER` and `SMTP_TO` are blank in the deployed environment, so the urgency-routed email fallback described in the design does not exist. Every alert this system can raise depends on one Telegram bot token. Either configure the fallback or record an explicit decision to accept a single channel — but a design that claims two and ships one is the worse of the three options.",
+      "evidence": "deployed `config/.env.system3`"
+    },
+    {
+      "id": "T-310",
+      "system": "system-3",
+      "goal": "G-006",
+      "period": "2026-W35",
+      "status": "not_started",
+      "title": "Inspect and drain the dead-letter queues",
+      "detail": "`scored-signals.ams.dlq` holds 9 messages and `ams-inbound.ams.dlq` holds 532. They are visible by design rather than dropped, but nothing routinely reads them and a DLQ nobody reads is a discard with extra steps. Classify what is in them, then report DLQ depth on `/health` so it has an owner.",
+      "evidence": "shared `queue.db`: 9 dead on `scored-signals.ams`, 532 on `ams-inbound.ams`"
+    },
+    {
+      "id": "T-311",
+      "system": "system-3",
+      "goal": "G-006",
+      "period": "2026-W37",
+      "status": "not_started",
+      "title": "Export decay and quarantine verdicts where System 1 can read them",
+      "detail": "The auditor and layer `Q` work locally, so a decayed strategy is refused here but System 1 is never told. Publish quarantine verdicts to GCS on the same read-only basis as everything else that crosses between systems. Keep it narrow — a verdict and its evidence, not live performance data, so the research side cannot start fitting to recent luck.",
       "evidence": ""
     }
   ]
