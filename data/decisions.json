@@ -7,8 +7,15 @@
       "title": "Where live inference runs",
       "status": "proposed",
       "date": "2026-08-22",
-      "systems": ["system-1", "system-2", "system-3"],
-      "requires_approval_from": ["system-2", "system-3"],
+      "systems": [
+        "system-1",
+        "system-2",
+        "system-3"
+      ],
+      "requires_approval_from": [
+        "system-2",
+        "system-3"
+      ],
       "source": "docs/design/ADR-001-where-inference-runs.md",
       "problem": {
         "technical": "Two incompatible architectures are on record and neither document acknowledges the other. The ratified `README.md` says System 2 syncs the bundle and runs live inference itself, with no dependency on Computer 1. A 2026-08-02 ruling says entry logic belongs to System 1, which emits scored signals on `Scored_Signal_Queue`. The code implements the second: `src/signals/` and `src/queue_producer/` run a continuous producer on Computer 1 and System 2 waits on its output.",
@@ -41,10 +48,22 @@
         ]
       },
       "transition": [
-        { "step": "Now — bridge", "text": "System 1's producer keeps running when Computer 1 happens to be up. It exists to prove the pipe end to end. It is a bridge, not the destination, and nothing should be built to depend on it." },
-        { "step": "Review", "text": "System 2 and System 3 each review this ADR against their actual implementation and reply APPROVE or REJECT with reasons. No implementation starts before both approve." },
-        { "step": "Build", "text": "Bundle carries strategy code; System 2 implements inference; determinism tests pass against System 1's own outputs." },
-        { "step": "Cutover", "text": "The System 1 producer is decommissioned in the same change that enables System 2 inference. They must never both publish. A hard requirement, not a sequencing preference." }
+        {
+          "step": "Now — bridge",
+          "text": "System 1's producer keeps running when Computer 1 happens to be up. It exists to prove the pipe end to end. It is a bridge, not the destination, and nothing should be built to depend on it."
+        },
+        {
+          "step": "Review",
+          "text": "System 2 and System 3 each review this ADR against their actual implementation and reply APPROVE or REJECT with reasons. No implementation starts before both approve."
+        },
+        {
+          "step": "Build",
+          "text": "Bundle carries strategy code; System 2 implements inference; determinism tests pass against System 1's own outputs."
+        },
+        {
+          "step": "Cutover",
+          "text": "The System 1 producer is decommissioned in the same change that enables System 2 inference. They must never both publish. A hard requirement, not a sequencing preference."
+        }
       ],
       "open_questions": [
         "Does System 2 or System 3 run the gatekeeper scoring? The champion model is in the bundle and System 2 syncs it, but 'System 3 never re-scores' argues the score must already exist on arrival. System 1's reading: System 2 scores. Confirm.",
@@ -52,6 +71,22 @@
         "Does System 2 have candle history sufficient for a 252-bar D1 warm-up, and does its price data agree with System 1's? Two independent OANDA ingests can disagree, and a regime label from a different price series is a different label.",
         "Is executing System-1-authored code acceptable to System 2's security posture? If so, what does it want — a signed manifest, a pinned dependency set, a sandbox?",
         "Does System 3 need anything in the signal envelope to change now that its publisher would be System 2 — provenance, bundle id, or a producer identity field?"
+      ],
+      "reviews": [
+        {
+          "system": "system-2",
+          "verdict": "pending",
+          "date": null,
+          "reasons": "",
+          "answers": []
+        },
+        {
+          "system": "system-3",
+          "verdict": "pending",
+          "date": null,
+          "reasons": "",
+          "answers": []
+        }
       ]
     },
     {
@@ -59,7 +94,9 @@
       "title": "Lower the out-of-sample gate from 60 months to 12",
       "status": "accepted",
       "date": "2026-08-21",
-      "systems": ["system-1"],
+      "systems": [
+        "system-1"
+      ],
       "requires_approval_from": [],
       "source": "CLAUDE.md, MODEL-005 row",
       "problem": {
@@ -82,7 +119,10 @@
         ]
       },
       "transition": [
-        { "step": "Revisit", "text": "Reconsider once the pipe is proven working. The missing minimum trade-count gate is worth adding regardless of where the `oos_months` value finally lands." }
+        {
+          "step": "Revisit",
+          "text": "Reconsider once the pipe is proven working. The missing minimum trade-count gate is worth adding regardless of where the `oos_months` value finally lands."
+        }
       ],
       "open_questions": []
     }
