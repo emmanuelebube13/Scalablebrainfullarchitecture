@@ -225,22 +225,22 @@
       "row": 4.5,
       "label": "Journal & decay auditor",
       "kind": "process",
-      "status": "planned",
+      "status": "live",
       "detail": {
-        "technical": "Post-trade processor, journal export to GCS, strategy-decay detection. Sustained live underperformance versus backtest is one of the retrain triggers.",
-        "plain": "Keeps the diary of what actually happened, and raises a hand when a strategy stops working in real life."
+        "technical": "`trade_journal` and `daily_summary` persist realised trades; `audit/auditor.py` runs the decay bench and quarantines a decayed strategy, which layer `Q` then refuses. Built and running, but nothing is exported to System 1 yet.",
+        "plain": "Keeps the record of what actually happened and benches strategies that stop working. The lab is not yet told when that happens."
       }
     },
     {
       "id": "s3-gate",
       "column": "s3",
       "row": 6,
-      "label": "Decision gate A–J",
+      "label": "Decision gate — P·Q·A·S·B–J",
       "kind": "process",
-      "status": "planned",
+      "status": "live",
       "detail": {
-        "technical": "Ten sequential short-circuiting layers. A–G are vetoes, H produces the size, I is calendar, J publishes. First failure ends evaluation with a logged reason code. < 100 ms median.",
-        "plain": "Ten checkpoints in a fixed order. Nine can only say no; exactly one decides the amount. The first no ends it."
+        "technical": "Thirteen sequential short-circuiting layers, not ten: `P` provenance, `Q` quarantine, `A` state, `S` account-truth freshness, `B`–`G`, sizing, `H` Friday-cutoff duration, `I` calendar, `J` final sanity and assembly. Pure functions over pre-resolved scalars in `gate/layers.py`. 4,153 decisions logged, 0.75 ms mean latency, 421 ms max.",
+        "plain": "The line of checkpoints a trade idea has to walk past. It is built, it is running, and it has already turned down four thousand ideas — one thousandth of a second each."
       }
     },
     {
@@ -249,22 +249,22 @@
       "row": 7.5,
       "label": "Account state machine",
       "kind": "control",
-      "status": "planned",
+      "status": "live",
       "detail": {
-        "technical": "DEMO → ACTIVE → CAUTION → PAUSED → CIRCUIT_BROKEN → RECOVERY, plus 8 circuit breakers and the graduated deployment ladder (Paper → Micro → Small → Full).",
-        "plain": "The account has a mood that changes on its own. A bad day demotes it; getting promoted back takes evidence, not time."
+        "technical": "DEMO → ACTIVE → CAUTION → PAUSED → CIRCUIT_BROKEN → RECOVERY, persisted in `ams_account_state` and written before any approval is published. Currently RECOVERY at stage `paper`, 4.85% below an 88,294.53 equity peak.",
+        "plain": "The account's mood, written to disk before anything acts on it. Right now it is in recovery at the smallest size, which is why almost everything gets refused at the first checkpoint."
       }
     },
     {
       "id": "s3-db",
       "column": "s3",
       "row": 9,
-      "label": "Local PostgreSQL",
+      "label": "Local SQLite ams.db",
       "kind": "store",
-      "status": "planned",
+      "status": "live",
       "detail": {
-        "technical": "System of record for account state, written before any approval is published. Zero runtime dependency on Computer 1.",
-        "plain": "Its own hard drive, written to before it acts — so a power cut cannot make it forget a decision it already made."
+        "technical": "`DB_PROVIDER=sqlite`, `DB_PATH=state/db/ams.db`. **Not PostgreSQL** — the design called for a local Postgres on a dedicated Computer 3 and neither exists. Postgres is supported via `DB_PROVIDER=postgres` plus `DB_DSN` and has never been provisioned. SQLite has carried 4,153 decisions without loss.",
+        "plain": "The risk officer's memory. It was supposed to be a proper database on its own machine; it is actually a single file on a shared one. It has not lost anything, but it is not what was designed."
       }
     },
     {
@@ -299,8 +299,8 @@
       "kind": "process",
       "status": "live",
       "detail": {
-        "technical": "Polls `latest.json` ~every 15 min, downloads the immutable prefix, recomputes SHA256, atomic cache swap. Mismatch aborts and keeps serving the previous bundle.",
-        "plain": "Collects the model box, checks the seal, swaps it in all at once. A bad delivery can never break what is already running."
+        "technical": "`s2-downloader.service` polls `latest.json` every 300 s, SHA256-verifies every artifact against the manifest and flips the `active` symlink atomically, retaining `last_good`. Verified activating `2026-08-21T16-29-15Z-372f6956_gk-d614163c` at 2026-08-21T16:30:05Z. A withdrawal manifest is a distinct code path from a parse failure.",
+        "plain": "Collects the sealed model box every five minutes, checks the seal against the receipt, and swaps it in all at once. Watched doing exactly that on 21 August."
       }
     },
     {
@@ -309,10 +309,10 @@
       "row": 2.5,
       "label": "Live regime detector",
       "kind": "process",
-      "status": "live",
+      "status": "degraded",
       "detail": {
-        "technical": "Forward-only HMM inference on live candles with persistence smoothing, against the shipped model. Never fits.",
-        "plain": "Works out what the market is doing right now, using the ruleset it was given rather than inventing one."
+        "technical": "Forward-only HMM inference with causal persistence smoothing, 16 instrument/granularity cells. **Degraded:** `load_bundle` returns early while a bundle is cached and nothing forces a reload, so inference is pinned to whichever set was active at process start — currently `2026-08-17T09-28-46Z-d593220a`, two swaps behind `active`. `/status` reports the downloader's id, so the divergence is invisible there.",
+        "plain": "Works out what kind of market it is right now, and does it well — but it picked up its rulebook when it started and has never checked for a newer one, so it is five days out of date and the status screen shows the new number rather than the one in use."
       }
     },
     {
@@ -323,32 +323,32 @@
       "kind": "process",
       "status": "live",
       "detail": {
-        "technical": "FastAPI `/api/v1/*` + React read-side views: KPI, trades, risk, regimes, model. Read-only.",
-        "plain": "The screen you watch. You cannot trade from it — only look."
+        "technical": "FastAPI on :8002 — `/status`, `/health`, `/regime`, `/signal`. Read-only. `gatekeeper` reports `unavailable — no approval-rate provider wired` rather than a false all-clear, and `/signal` returns `removed`: local signal production was deleted on 2026-08-15.",
+        "plain": "The screen you look at. You cannot trade from it. Where it has no real number it says so rather than showing a comforting one."
       }
     },
     {
       "id": "s2-consumer",
       "column": "s2",
       "row": 6,
-      "label": "Order consumer",
+      "label": "Order consumer — ams-outbound.executor",
       "kind": "process",
-      "status": "live",
+      "status": "blocked",
       "detail": {
-        "technical": "Schema-validates, deduplicates on `idempotency_key`, rejects anything past the 5-minute staleness budget → PAUSED.",
-        "plain": "Opens incoming orders, checks they are well-formed and recent, ignores duplicates."
+        "technical": "Polls the local subscription `ams-outbound.executor` with schema validation, `idempotency_key` dedupe and a TTL drop. **Blocked:** the deployed `QUEUE_LOCAL_PATH` is a Windows absolute path, which on the Linux host resolved to a literal filename, so `LocalDurableBackend` opened an empty database beside the source tree instead of `/opt/scalablebrain/shared/queue/queue.db`. Lifetime `messages_seen: 0`; 5,587 messages stranded since 2026-08-20T15:09:24Z.",
+        "plain": "The letterbox. Someone wrote a Windows folder path into a Linux machine's settings, so it made itself a brand new empty letterbox and has been checking that one ever since. Everything actually posted is piling up in the real one."
       }
     },
     {
       "id": "s2-broker",
       "column": "s2",
       "row": 7.2,
-      "label": "OANDA broker adapter",
+      "label": "OANDA adapter — SHADOW",
       "kind": "process",
-      "status": "live",
+      "status": "blocked",
       "detail": {
-        "technical": "Maps `idempotency_key` onto the OANDA client request ID so a replay is a broker-side no-op. 2-pip slippage budget. Confirms stop and take-profit attachment.",
-        "plain": "Actually places the trade. If the price already moved more than two pips against the plan, it refuses."
+        "technical": "`EXEC_SHADOW=true` and `OANDA_ENV=practice`: the adapter constructs the exact order and stops short of submitting, pending decision D-004. 2-pip slippage budget, `idempotency_key` mapped to the client request ID, and a fill with no broker-side stop is refused as `NO_STOP_UNSAFE`.",
+        "plain": "Deliberately cannot place a trade. It works out precisely what it would send, writes it down, and stops. Turning that off is a human decision that has not been taken."
       }
     },
     {
@@ -357,10 +357,10 @@
       "row": 8.6,
       "label": "Position manager",
       "kind": "process",
-      "status": "live",
+      "status": "degraded",
       "detail": {
-        "technical": "Trailing stops, duration gates, time-based exits — all from parameters carried on the order, never computed locally.",
-        "plain": "Babysits open trades, strictly according to the instructions they arrived with."
+        "technical": "Trailing stops, duration gates and time-based exits, executed only from parameters carried on the order. Zero open positions today, so the path is exercised by tests rather than by production traffic.",
+        "plain": "Babysits open trades. There are none to babysit, so nobody has seen it work outside of rehearsal."
       }
     },
     {
@@ -385,6 +385,30 @@
       "detail": {
         "technical": "Practice environment. Only System 2 holds a credential capable of placing an order.",
         "plain": "Where the money actually is. Exactly one machine can reach it."
+      }
+    },
+    {
+      "id": "s3-relay",
+      "column": "s3",
+      "row": 5.2,
+      "label": "Pub/Sub → local relay",
+      "kind": "process",
+      "status": "live",
+      "detail": {
+        "technical": "`s3-signal-relay.service` runs `scripts/pubsub_signal_relay.py`: pulls `scored_signal_queue_sub`, validates against `contracts/v1/ScoredSignal.schema.json`, writes to the local topic `scored-signals.ams`, and acks **only after** the local write succeeds. Up since 2026-08-17; 13,020 pull requests in the last 24 hours. It exists because `build_queue()` returns one backend for every topic, so moving System 3 to Pub/Sub wholesale would also move its outbound leg somewhere nothing downstream reads.",
+        "plain": "The one thing actually standing at the cloud mailbox. It collects post, checks it is well-formed, files it locally, and only then signs for it — so a crash means the letter is redelivered rather than lost."
+      }
+    },
+    {
+      "id": "s2-bridge",
+      "column": "s2",
+      "row": 5.2,
+      "label": "S2↔S3 bridge + snapshot relay",
+      "kind": "process",
+      "status": "live",
+      "detail": {
+        "technical": "`s2s3-bridge.service`. Translates System 3's `ApprovedOrder` shape onto the wire shape System 2's EXEC-004 consumer validates, and System 2's enveloped fill confirmations onto System 3's flat `FillEvent`. Untranslatable-but-valid traffic is parked on `bridge.unrouted`; anything carrying a broker outcome is dead-lettered instead, never parked. It also publishes the AccountSnapshot every ~60 s, because System 2's built EXEC tasks contain no snapshot producer — reading System 2's credential, so System 3 never sees the broker key.",
+        "plain": "A translator between two finished systems that were built to slightly different specifications. It also does one job neither of them does: telling the risk officer what the account is worth, every minute."
       }
     }
   ],
@@ -529,7 +553,7 @@
       "id": "e-gcs-s2",
       "from": "gcs",
       "to": "s2-sync",
-      "label": "latest.json poll ~15 min",
+      "label": "latest.json poll, 300 s — verified 2026-08-21",
       "kind": "artifact",
       "status": "live"
     },
@@ -544,8 +568,8 @@
     {
       "id": "e-signal-s3",
       "from": "q-signal",
-      "to": "s3-gate",
-      "label": "consumption unconfirmed",
+      "to": "s3-relay",
+      "label": "scored_signal_queue_sub — consumer live, 0 messages received",
       "kind": "message",
       "status": "degraded"
     },
@@ -555,7 +579,7 @@
       "to": "s3-gate",
       "label": "state, budgets, streak",
       "kind": "control",
-      "status": "planned"
+      "status": "live"
     },
     {
       "id": "e-db-state",
@@ -563,15 +587,15 @@
       "to": "s3-state",
       "label": "system of record",
       "kind": "data",
-      "status": "planned"
+      "status": "live"
     },
     {
       "id": "e-gate-out",
       "from": "s3-gate",
       "to": "q-out",
-      "label": "approved + sized order",
+      "label": "approved + sized order → ams-outbound",
       "kind": "order",
-      "status": "planned"
+      "status": "live"
     },
     {
       "id": "e-state-journal",
@@ -579,23 +603,23 @@
       "to": "s3-journal",
       "label": "realised trades",
       "kind": "data",
-      "status": "planned"
+      "status": "live"
     },
     {
       "id": "e-out-s2",
-      "from": "q-out",
+      "from": "s2-bridge",
       "to": "s2-consumer",
-      "label": "order intent",
+      "label": "ams-outbound.executor — 5,587 stranded, S2 on the wrong file",
       "kind": "order",
-      "status": "degraded"
+      "status": "blocked"
     },
     {
       "id": "e-sync-regime",
       "from": "s2-sync",
       "to": "s2-regime",
-      "label": "verified model cache",
+      "label": "verified cache — never re-read after a swap",
       "kind": "artifact",
-      "status": "live"
+      "status": "degraded"
     },
     {
       "id": "e-regime-tele",
@@ -609,25 +633,25 @@
       "id": "e-consumer-broker",
       "from": "s2-consumer",
       "to": "s2-broker",
-      "label": "validated intent",
+      "label": "validated intent — no production traffic yet",
       "kind": "order",
-      "status": "live"
+      "status": "degraded"
     },
     {
       "id": "e-broker-market",
       "from": "s2-broker",
       "to": "market",
-      "label": "OANDA v20 order",
+      "label": "SHADOW — constructed, never submitted (D-004 pending)",
       "kind": "order",
-      "status": "live"
+      "status": "blocked"
     },
     {
       "id": "e-market-broker",
       "from": "market",
       "to": "s2-broker",
-      "label": "fills, rejections",
+      "label": "fills, rejections — none in SHADOW",
       "kind": "data",
-      "status": "live"
+      "status": "degraded"
     },
     {
       "id": "e-broker-pos",
@@ -635,7 +659,7 @@
       "to": "s2-pos",
       "label": "open positions",
       "kind": "data",
-      "status": "live"
+      "status": "degraded"
     },
     {
       "id": "e-pos-market",
@@ -643,7 +667,7 @@
       "to": "market",
       "label": "stop moves, exits",
       "kind": "order",
-      "status": "live"
+      "status": "degraded"
     },
     {
       "id": "e-pos-tele",
@@ -657,7 +681,7 @@
       "id": "e-broker-in",
       "from": "s2-broker",
       "to": "q-in",
-      "label": "fill confirmation",
+      "label": "fill confirmation → ams-inbound — no fills yet",
       "kind": "message",
       "status": "degraded"
     },
@@ -665,15 +689,15 @@
       "id": "e-in-state",
       "from": "q-in",
       "to": "s3-state",
-      "label": "reconcile account",
+      "label": "AccountSnapshot + fills — 2,601 reconciled",
       "kind": "message",
-      "status": "planned"
+      "status": "live"
     },
     {
       "id": "e-journal-orch",
       "from": "s3-journal",
       "to": "s1-orch",
-      "label": "strategy decay → retrain trigger",
+      "label": "decay verdicts — built locally, not exported",
       "kind": "control",
       "status": "planned"
     },
@@ -689,9 +713,33 @@
       "id": "e-journal-op",
       "from": "s3-journal",
       "to": "operator",
-      "label": "Telegram + SMTP alerts",
+      "label": "Telegram only — SMTP unconfigured",
       "kind": "data",
-      "status": "planned"
+      "status": "degraded"
+    },
+    {
+      "id": "e-relay-gate",
+      "from": "s3-relay",
+      "to": "s3-gate",
+      "kind": "message",
+      "status": "live",
+      "label": "scored-signals.ams — ack after local write"
+    },
+    {
+      "id": "e-out-bridge",
+      "from": "q-out",
+      "to": "s2-bridge",
+      "kind": "order",
+      "status": "live",
+      "label": "ams-outbound → translate"
+    },
+    {
+      "id": "e-bridge-in",
+      "from": "s2-bridge",
+      "to": "q-in",
+      "kind": "message",
+      "status": "live",
+      "label": "AccountSnapshot every ~60 s"
     }
   ],
   "flows": [

@@ -4,44 +4,52 @@
   "ordinal": 3,
   "name": "The Guardian",
   "role": "Risk governance",
-  "host": "Computer 3",
-  "duty_cycle": "Always on — 24/7",
+  "host": "GCP VM `trading-1` (europe-west1-b) — there is no Computer 3",
+  "duty_cycle": "Always on — `s3-ams.service` up 173,153 s at time of writing",
   "accent": "#f0a44a",
-  "repository": "../system-3-account-management/ (separate module, deployed on Computer 3)",
-  "code_root": "system-3-account-management/",
+  "repository": "https://github.com/emmanuelebube13/scalablebrain-ams (private) — deployed at `/opt/scalablebrain/system3/ams`",
+  "code_root": "ams/",
   "status": {
-    "state": "designed",
+    "state": "operational",
     "as_of": "2026-08-22",
-    "note": "Consolidated architecture ratified; nothing runs on Computer 3 yet. It is currently the blocking link in the signal path — System 1 publishes to `Scored_Signal_Queue` and cannot see whether anything consumes it, because its service account is publisher-only. A written reply naming the subscription is the open ask."
+    "note": "This system is built and running, not designed. `s3-ams.service` is up on `trading-1` in `AMS_MODE=enforce`, and `ams_decision_log` holds **4,153 real decisions** taken between 2026-07-15 and 2026-08-14 — 4,091 rejected, 62 approved at reduced size. All ten gate layers A–J exist in code, plus three the design never had (P, Q, S). 627 of 627 tests pass. It is **not** the blocking link and has not been for five days: a consumer has been pulling `scored_signal_queue_sub` continuously since 2026-08-17. What is blocking the path is upstream and downstream of it — System 1 has published nothing to the topic, and System 2 is bound to the wrong queue file."
   },
   "summary": {
-    "technical": "System 3 is always-on risk middleware. Every scored signal must clear a ten-layer sequential decision gate (A–J) before it can become an order. It does arithmetic, not machine learning: account state, loss budgets, drawdown, exposure caps, correlation, Kelly sizing and calendar windows. It is the only component that sizes a position, and it holds no broker credential.",
-    "plain": "System 3 is the risk officer, and it never sleeps. Every trade idea has to walk past ten checkpoints in order, and any one of them can say no. It is also the only part that decides how much money goes on a trade. It cannot place the trade itself — it can only approve one and hand it on."
+    "technical": "System 3 is always-on risk middleware. Every scored signal clears a sequential, short-circuiting decision gate before it can become an order — thirteen layers as built, not ten: `P` provenance, `Q` quarantine, `A` state, `S` account-truth freshness, then `B`–`G`, then sizing, then `H`–`J`. It does arithmetic, not machine learning: account state, loss budgets, drawdown, exposure caps, correlation, quarter-Kelly sizing and calendar windows. It is the only component that sizes a position and it holds no broker credential. Its system of record is **SQLite** (`state/db/ams.db`), not PostgreSQL; Postgres is supported via `DB_PROVIDER=postgres` and has never been provisioned.",
+    "plain": "System 3 is the risk officer, and it never sleeps. Every trade idea walks past a fixed line of checkpoints in order, and the first one to say no ends it. It is also the only part that decides how much money goes on a trade. It cannot place the trade itself. Two corrections to what was written about it before: there are thirteen checkpoints, not ten, and its memory lives in a simple local file rather than the database the design called for."
   },
   "facts": [
     {
+      "label": "Host",
+      "value": "GCP VM `trading-1` — not a dedicated Computer 3"
+    },
+    {
       "label": "Decision latency",
-      "value": "< 100 ms median"
+      "value": "0.75 ms mean, 421 ms max, over 4,153 decisions"
     },
     {
       "label": "Datastore",
-      "value": "Own local PostgreSQL on Computer 3"
+      "value": "**SQLite** `state/db/ams.db` — Postgres not provisioned"
+    },
+    {
+      "label": "Gate layers built",
+      "value": "13 — A–J plus P, Q, S"
     },
     {
       "label": "Sizing",
       "value": "Quarter-Kelly — cap 2.0%, floor 0.1%"
     },
     {
-      "label": "Circuit breakers",
-      "value": "8 layers"
-    },
-    {
       "label": "Broker access",
-      "value": "None, by design"
+      "value": "None, by design — verified, no key in its env"
     },
     {
       "label": "Notifications",
-      "value": "Telegram + SMTP, urgency-routed"
+      "value": "Telegram configured; **SMTP blank** — email disabled"
+    },
+    {
+      "label": "Tests",
+      "value": "627 / 627 passing"
     }
   ],
   "sections": [
@@ -51,29 +59,68 @@
       "kind": "ingestion",
       "body": {
         "technical": [
-          "System 3 draws on four inputs, and the isolation rule governing them is strict: **it has zero runtime dependency on Computer 1.** System 1 artifacts reach it only as immutable objects in GCS. If Computer 1 is off — which it usually is — System 3 keeps operating on the last verified bundle.",
-          "Account truth comes from System 2 rather than from the broker directly, on a 30-second internal API snapshot plus event-driven fill confirmations on `AMS_Inbound_Queue`. Its own local database is the system of record for account state, and it is written before any approval is published, so a crash cannot lose a decision it already acted on."
+          "**The answer System 1 asked for, in one place.** The subscription is `scored_signal_queue_sub`, on topic `scored_signal_queue`. Both are lowercase. `Scored_Signal_Queue` does not exist in project `scalable-brain` and never has — `gcloud pubsub topics list` returns exactly `AMS_Outbound_Queue`, `AMS_Inbound_Queue`, `scored_signal_queue` and `scored_signal_dlq`. Approved orders are published to the topic `ams-outbound` (`TOPIC_AMS_OUTBOUND`), which the bridge translates onto `ams-outbound.executor` for System 2.",
+          "**Yes, a consumer is pulling it right now.** Not `ams.service.main` directly: `s3-signal-relay.service` runs `scripts/pubsub_signal_relay.py`, which pulls `scored_signal_queue_sub`, validates each message against `contracts/v1/ScoredSignal.schema.json`, writes it to the local topic `scored-signals.ams`, and acks **only after** the local write succeeds. Verified two ways — the unit has been up since 2026-08-17, and Cloud Monitoring `pubsub.googleapis.com/subscription/pull_request_count` shows 13,020 successful pulls in the last 24 hours, a flat ~545 per hour, and 55,347 over seven days.",
+          "The relay exists because `build_queue()` returns one backend for every topic: flipping System 3 to `pubsub` wholesale would also move its *outbound* leg to `AMS_Outbound_Queue`, where the bridge and System 2 cannot see it, and approved orders would be published and silently never executed. The relay connects the inbound leg only. It has a defined exit — when all three processes move together, delete it and set `SCORED_SIGNAL_SUB=scored_signal_queue_sub`.",
+          "Account truth comes from System 2 rather than the broker directly, and the local database is the system of record, written before any approval is published, so a crash cannot lose a decision already acted on."
         ],
         "plain": [
-          "Four things feed the risk officer, and the important rule is that none of them can leave it stranded.",
-          "The model package sits in cloud storage, so the research machine can be switched off for a week and nothing here notices. Account balance and open positions are reported in every thirty seconds by the execution machine. And the running tally of wins, losses and drawdown lives on its own hard drive, written down before it acts, so a power cut cannot make it forget a decision it already made."
+          "The exact answers, first. The mailbox is called `scored_signal_queue_sub`, all lower case. The name that was being asked about, with capital letters, does not exist and never did. Approved orders go out to a box called `ams-outbound`.",
+          "And yes — somebody is standing at that mailbox right now. A small dedicated program has been checking it every few seconds since 17 August. That is not a claim from a document; the cloud provider's own counters show about 545 checks an hour, without a gap.",
+          "It is a separate small program on purpose. Switching the whole risk officer over to the cloud queues would have moved its outgoing post as well, to a box nobody downstream reads — so approvals would have been sent and never delivered. Moving only the incoming leg avoids that.",
+          "Everything the risk officer knows about the account is written to its own disk before it acts, so a power cut cannot make it forget a decision it already made."
         ]
       },
       "tables": [
+        {
+          "title": "The transport answer, verified 2026-08-22",
+          "columns": [
+            "Question",
+            "Answer",
+            "How it was verified"
+          ],
+          "rows": [
+            [
+              "Subscription on the scored-signal topic",
+              "`scored_signal_queue_sub` (topic `scored_signal_queue`)",
+              "`gcloud pubsub subscriptions list`"
+            ],
+            [
+              "Is a consumer pulling it now",
+              "**Yes** — `s3-signal-relay.service`, since 2026-08-17",
+              "13,020 pull requests in 24 h, ~545/h flat"
+            ],
+            [
+              "Topic approved orders are published to",
+              "`ams-outbound`, bridged to `ams-outbound.executor`",
+              "`TOPIC_AMS_OUTBOUND`, `gate/pipeline.py`"
+            ],
+            [
+              "Does `Scored_Signal_Queue` exist",
+              "**No** — capitalised form has never existed",
+              "Full topic list is four lowercase/underscore names"
+            ],
+            [
+              "Has System 1 published anything",
+              "**No** — 3 publish requests ever, all on 2026-08-17, all ours",
+              "`topic/send_request_count` over 25 days"
+            ]
+          ]
+        },
         {
           "title": "Inputs",
           "columns": [
             "Input",
             "Source",
             "Cadence",
-            "Isolation property"
+            "State"
           ],
           "rows": [
             [
               "Scored signals",
-              "Pub/Sub `Scored_Signal_Queue`",
+              "Pub/Sub `scored_signal_queue_sub` → relay → `scored-signals.ams`",
               "Event driven",
-              "Rejected if stale — no queue, no trades"
+              "**Consumer live**, zero messages received"
             ],
             [
               "Model bundle / regime map / weights",
@@ -83,23 +130,31 @@
             ],
             [
               "Account snapshot",
-              "System 2 internal API",
-              "Every 30 s",
-              "Missing snapshot → default REJECT"
+              "Bridge, from System 2's broker credential",
+              "Every ~60 s",
+              "**Live** — 2,601 reconciled, last 29 s ago"
             ],
             [
               "Fill confirmations",
-              "Pub/Sub `AMS_Inbound_Queue`",
+              "`ams-inbound.ams`",
               "Event driven",
-              "Reconciles state machine against reality"
+              "No fills exist yet"
             ],
             [
               "Local account state",
-              "Own PostgreSQL",
+              "**SQLite** `state/db/ams.db`",
               "Continuous",
-              "System of record; survives every peer failing"
+              "System of record; Postgres not provisioned"
             ]
           ]
+        }
+      ],
+      "callouts": [
+        {
+          "tone": "warn",
+          "title": "The zero-runtime-dependency claim is currently false in practice",
+          "technical": "The isolation property holds in code — System 3 reads System 1 only as immutable GCS objects. It does not hold in deployment: System 3, System 2, the bridge and the relay are systemd units on one VM. A host failure takes all of them at once, and System 3's SQLite file is on that host's disk. Independent failure domains are a design property that the current deployment does not have.",
+          "plain": "On paper the risk officer can keep working if any other machine dies. In reality it is in the same room as everything else, on the same computer. If that computer goes, all three go together."
         }
       ]
     },
@@ -109,101 +164,134 @@
       "kind": "pipeline",
       "body": {
         "technical": [
-          "The decision gate is **sequential and short-circuiting**. Layers A–J are evaluated in order and the first failure ends evaluation with a logged reason. Ordering is not cosmetic: cheap account-level vetoes run before expensive portfolio arithmetic, and every layer before H is a veto while H is where the number is produced.",
-          "Layer J is the only place an approval leaves the system. It publishes a fully-sized order to `AMS_Outbound_Queue`. Nothing downstream may adjust that size.",
-          "Running underneath the gate is an account state machine — DEMO → ACTIVE → CAUTION → PAUSED → CIRCUIT_BROKEN → RECOVERY — plus eight circuit breakers and a graduated deployment ladder (Paper → Micro → Small → Full) whose stage multiplies every position size."
+          "The decision gate is **sequential and short-circuiting**. The first failure ends evaluation with a logged layer and reason in `ams_decision_log`. The built order is `P, Q, A, S, B, C, D, E, F, G, sizing, H, I, J` — three more layers than the design described, and the letters do not mean what the earlier version of this page said: `H` is the duration/Friday-cutoff check, `I` is the calendar, `J` is final sanity and assembly, and sizing is a distinct step between `G` and `H` rather than a lettered layer.",
+          "Every layer is a pure function over already-resolved scalars in `gate/layers.py` — no layer touches the database, the clock or the network, so each is testable to the cent. Missing or unparseable data is coerced default-safe: a non-positive equity yields an infinite exposure so the comparison rejects.",
+          "Layer `J` is the only place an approval leaves the system, publishing a fully-sized order to `ams-outbound`. Nothing downstream may adjust that size.",
+          "Underneath the gate runs the account state machine — DEMO → ACTIVE → CAUTION → PAUSED → CIRCUIT_BROKEN → RECOVERY — plus the circuit breakers and a deployment ladder (Paper → Micro → Small → Full) whose stage multiplies every position size. The account is in **RECOVERY** at stage **paper** today, which is why 2,719 of the 4,091 rejections are at layer `A`: the guardian is refusing everything, on purpose."
         ],
         "plain": [
-          "Ten checkpoints, in a fixed order, and the first 'no' ends the conversation. The cheap questions come first — *is the account even allowed to trade today?* — before the system bothers with the expensive ones.",
-          "Nine of the ten can only refuse. Exactly one of them decides the amount. Once that amount is set, nothing downstream is permitted to change it.",
-          "The account also has a mood, and it changes automatically: healthy, cautious, paused, or shut down entirely. A bad enough day moves it down a level on its own, and moving back up takes evidence rather than time."
+          "Thirteen checkpoints, in a fixed order, and the first *no* ends the conversation. The cheap questions come first — *is this trade idea's pedigree even legible? is the account allowed to trade today?* — before the system spends effort on the expensive ones.",
+          "Twelve of them can only refuse. Exactly one decides the amount. Once that amount is set, nothing downstream may change it.",
+          "The account also has a mood, and it changes automatically: healthy, cautious, paused, or shut down. It is currently in recovery at the smallest possible size, which is why the great majority of everything it has ever seen was refused at the very first account-level checkpoint. That is the machinery working, not failing."
         ]
       },
       "stages": [
         {
+          "code": "P",
+          "name": "Strategy provenance",
+          "module": "`layer_p_provenance`",
+          "output": "Reject, or a size multiplier",
+          "technical": "Branches on `selection_basis`: `qualified` full size, `designated` half size logged REDUCED, anything else **including absent** rejects with `unknown_selection_basis`. Runs first, ahead of everything, and its verdict feeds sizing rather than merely passing.",
+          "plain": "Asks whether the trade idea's pedigree is even readable. A fully proven strategy gets full size, a provisional one gets half, and anything that does not say gets refused outright."
+        },
+        {
+          "code": "Q",
+          "name": "Strategy quarantine",
+          "module": "`layer_q_quarantine`",
+          "output": "Reject if quarantined",
+          "technical": "Rejects when the signal's `strategy_id` has been quarantined by the decay auditor.",
+          "plain": "If a strategy has been benched for going bad in live trading, its ideas are refused at the door."
+        },
+        {
           "code": "A",
-          "name": "Account state",
-          "module": "State machine",
-          "output": "Reject unless ACTIVE",
-          "technical": "Gate on the current state. CAUTION halves size; PAUSED and CIRCUIT_BROKEN reject outright.",
-          "plain": "Is the account allowed to trade at all right now?"
+          "name": "Account state + halt",
+          "module": "`layer_a_state`",
+          "output": "Reject unless trading is permitted",
+          "technical": "Gate on the state machine and any halt with a future expiry. **2,719 of 4,091 rejections landed here** — the account is in RECOVERY.",
+          "plain": "Is the account allowed to trade at all right now? For most of this system's life the honest answer has been no."
+        },
+        {
+          "code": "S",
+          "name": "Account-truth freshness",
+          "module": "`layer_s_freshness`",
+          "output": "Reject on stale snapshot or open book",
+          "technical": "Runs before B because B is the first layer to read the snapshot-fed account row. A silent outage and a stale value are distinguished in the reason, never merged.",
+          "plain": "Before deciding on numbers, check the numbers are recent. Deciding on yesterday's balance is worse than not deciding."
         },
         {
           "code": "B",
           "name": "Daily loss budget",
-          "module": "Budget tracker",
-          "output": "Soft stop ≥ 2%, hard stop ≥ 3%",
-          "technical": "Soft stop halves size and pauses 30 minutes. Hard stop halts for 24 hours. Boundaries computed in UTC.",
+          "module": "`layer_b_daily_budget`",
+          "output": "Soft stop 2%, hard stop 3%",
+          "technical": "Soft stop halves size and pauses 30 minutes; hard stop halts for 24 hours. Boundaries computed in UTC.",
           "plain": "How much has today already cost? Past a point, the day is over."
         },
         {
           "code": "C",
           "name": "Drawdown guard",
-          "module": "Equity peak tracker",
-          "output": "≥ 20% → CIRCUIT_BROKEN",
-          "technical": "Max drawdown from equity peak. Breach transitions to CIRCUIT_BROKEN and closes all positions.",
-          "plain": "How far below the high-water mark is the account? Far enough, and everything closes."
+          "module": "`layer_c_drawdown`",
+          "output": "20% → CIRCUIT_BROKEN",
+          "technical": "Max drawdown from equity peak. Breach transitions to CIRCUIT_BROKEN and closes all positions. Currently 4.85% against a 88,294.53 peak.",
+          "plain": "How far below the high-water mark is the account? Far enough, and everything closes. It is about a twentieth of the way there."
         },
         {
           "code": "D",
           "name": "Consecutive losses",
-          "module": "Streak tracker",
+          "module": "`layer_d_loss_streak`",
           "output": "5 in a row → 24 h cooling",
-          "technical": "Streak counter reset on any win. Five consecutive losses trigger a cooling-off period.",
+          "technical": "Streak counter reset on any win.",
           "plain": "Five losses in a row means stop for a day. Usually the market changed, not the luck."
         },
         {
           "code": "E",
-          "name": "Concurrent trades",
-          "module": "Portfolio state",
-          "output": "Cap 5 open",
-          "technical": "Hard cap on simultaneously open positions.",
-          "plain": "No more than five trades open at once."
+          "name": "Concurrency + trades per day",
+          "module": "`layer_e_concurrency`",
+          "output": "Cap open trades and daily count",
+          "technical": "Hard caps on simultaneously open positions and on trades initiated per day. 136 rejections here.",
+          "plain": "No more than a set number of trades open at once, and no more than a set number started in a day."
         },
         {
           "code": "F",
           "name": "Per-pair exposure",
-          "module": "Exposure calculator",
+          "module": "`layer_f_pair_exposure`",
           "output": "Max 6% of equity",
           "technical": "Aggregate risk on a single instrument.",
           "plain": "No single currency pair gets more than 6% of the account at risk."
         },
         {
           "code": "G",
-          "name": "Correlated exposure",
-          "module": "Correlation monitor",
-          "output": "Max 10% of equity",
-          "technical": "Groups correlated instruments and caps aggregate risk across the group. Prevents five 'different' trades that are one bet.",
+          "name": "Correlated exposure + total heat",
+          "module": "`layer_g_correlated_heat`",
+          "output": "Max 10% correlated, plus a total cap",
+          "technical": "Groups correlated instruments and caps aggregate risk across the group and across the whole book.",
           "plain": "Prevents taking the same bet five times under five different names — EUR/USD and GBP/USD often move together."
         },
         {
+          "code": "SIZE",
+          "name": "Quarter-Kelly sizing",
+          "module": "`risk.sizing`",
+          "output": "Position size, or refusal",
+          "technical": "Quarter-Kelly from the strategy's own live edge, capped at 2.0% and floored at 0.1%, then multiplied by state, drawdown, streak, provenance and deployment-stage multipliers. Not a lettered layer, and it can refuse: **1,100 of 4,091 rejections are here**, on insufficient or stale live statistics.",
+          "plain": "The one step that produces a number instead of a verdict — then deliberately cuts it to a quarter of the mathematically optimal amount, because the maths assumes the edge estimate is perfect and it never is. It also refuses outright when there is not enough live evidence to estimate an edge at all, which is the second most common way a trade dies here."
+        },
+        {
           "code": "H",
-          "name": "Kelly sizing",
-          "module": "Sizing engine",
-          "output": "Position size",
-          "technical": "Quarter-Kelly from the strategy's own historical edge, capped at 2.0% and floored at 0.1%, then multiplied by state, drawdown, streak and deployment-stage multipliers.",
-          "plain": "The one checkpoint that produces a number instead of a verdict: how much to risk, based on how strong the strategy's proven edge is — then deliberately cut to a quarter of the mathematically optimal amount, because the maths assumes the edge estimate is perfect and it never is."
+          "name": "Duration vs Friday cutoff",
+          "module": "`layer_h_duration`",
+          "output": "Reject if the hold straddles the weekend",
+          "technical": "Rejects if holding for the maximum allowed duration would straddle the next Friday cutoff. 131 rejections here.",
+          "plain": "Do not open a three-day trade on a Friday afternoon."
         },
         {
           "code": "I",
-          "name": "Duration, weekend, macro",
-          "module": "Calendar gates",
-          "output": "Reject or park",
-          "technical": "Session windows, expected trade duration vs time to the weekend gap, and high-impact macro event windows.",
-          "plain": "Do not open a three-day trade on a Friday afternoon, and stay out of the way of scheduled news."
+          "name": "Weekend, holiday, macro",
+          "module": "`layer_i_time`",
+          "output": "Reject or reduce",
+          "technical": "Calendar verdict from `config/holidays.json` and macro windows; a `reduce` verdict feeds the sizing volatility flag, a `reject` is applied here. 5 rejections here.",
+          "plain": "Stay out of the way of scheduled news, and out of the market on public holidays."
         },
         {
           "code": "J",
-          "name": "Approve, size, publish",
-          "module": "Outbound producer",
-          "output": "`AMS_Outbound_Queue`",
-          "technical": "Publishes the fully-sized approved order. This is the only egress point for an approval.",
-          "plain": "The single door an approved trade leaves by."
+          "name": "Final sanity, assemble, publish",
+          "module": "`layer_j_sanity` + `gate/assemble.py`",
+          "output": "`ams-outbound`",
+          "technical": "Stop and take-profit on the correct side of entry, positive units, risk within cap and within the tighter RECOVERY cap. The only egress point for an approval.",
+          "plain": "A last read-through — is the stop actually on the losing side, is the size positive, is the risk inside the cap — then the single door an approved trade leaves by."
         }
       ],
       "tables": [
         {
-          "title": "Inviolable defaults",
+          "title": "Inviolable defaults — as loaded from `config/risk_config.json`",
           "columns": [
             "Threshold",
             "Value"
@@ -223,28 +311,91 @@
             ],
             [
               "Daily loss soft stop",
-              "≥ 2% → −50% size, 30 min pause"
+              "2% → −50% size, 30 min pause"
             ],
             [
               "Daily loss hard stop",
-              "≥ 3% → 24 h halt"
+              "3% → 24 h halt"
             ],
             [
               "Weekly loss stop",
-              "≥ 6% → 0.5% risk next week"
+              "6% → 0.5% risk next week"
             ],
             [
               "Max drawdown circuit break",
-              "≥ 20% → RECOVERY mode"
+              "20% → RECOVERY"
             ],
             [
-              "Stage risk multipliers",
-              "Demo 0.5 · Micro 0.5 · Small 0.75 · Full 1.0"
+              "Consecutive losses",
+              "5 → 24 h cooling"
+            ],
+            [
+              "Margin warn / act",
+              "150% / 120%"
+            ],
+            [
+              "Max position units",
+              "500,000"
+            ],
+            [
+              "Account currency",
+              "CAD"
             ]
           ]
         },
         {
-          "title": "Account state machine",
+          "title": "What the gate has actually done — `ams_decision_log`, 4,153 rows",
+          "columns": [
+            "Outcome or layer",
+            "Count",
+            "Meaning"
+          ],
+          "rows": [
+            [
+              "REJECTED",
+              "4,091",
+              "First failing layer recorded on every one"
+            ],
+            [
+              "REDUCED",
+              "62",
+              "Approved at reduced size"
+            ],
+            [
+              "APPROVED at full size",
+              "0",
+              "Has never happened"
+            ],
+            [
+              "Rejected at `A`",
+              "2,719",
+              "Account not in a trading state"
+            ],
+            [
+              "Rejected at sizing",
+              "1,100",
+              "Insufficient or stale live edge statistics"
+            ],
+            [
+              "Rejected at `E`",
+              "136",
+              "Concurrency / trades-per-day cap"
+            ],
+            [
+              "Rejected at `H`",
+              "131",
+              "Hold would straddle the Friday cutoff"
+            ],
+            [
+              "Rejected at `I`",
+              "5",
+              "Calendar window"
+            ]
+          ],
+          "note": "Spanning 2026-07-15 to 2026-08-14. Nothing since, because nothing has been published to the topic since."
+        },
+        {
+          "title": "Account state machine — current position",
           "columns": [
             "State",
             "Meaning",
@@ -277,8 +428,8 @@
               "Human decision only"
             ],
             [
-              "RECOVERY",
-              "Re-entry at reduced size",
+              "**RECOVERY — current**",
+              "Re-entry at reduced size, stage `paper`",
               "Sustained positive performance"
             ]
           ]
@@ -290,6 +441,12 @@
           "title": "Why the guardian is the always-on one",
           "technical": "Risk state is continuous; model building is not. An open position accrues risk every second, so the component tracking it cannot have a duty cycle. System 1 runs weekly, System 2 runs during market hours, System 3 runs forever.",
           "plain": "The research machine can sleep. The trading machine sleeps at weekends. The thing watching your money cannot sleep at all, because the risk does not stop when the office closes."
+        },
+        {
+          "tone": "good",
+          "title": "The latency budget was met by two orders of magnitude",
+          "technical": "The design budget was a median under 100 ms. Measured across all 4,153 logged decisions: **0.75 ms mean**, 421 ms maximum. The layers are pure functions over pre-resolved scalars and the orchestrator reads the database once, which is where the margin comes from.",
+          "plain": "The target was to decide in under a tenth of a second. It decides in under a thousandth. The rare slow one is a hundredth."
         }
       ]
     },
@@ -302,44 +459,52 @@
           "title": "Published interfaces",
           "columns": [
             "Interface",
-            "Transport",
-            "Consumer"
+            "Transport, exactly",
+            "Consumer",
+            "State"
           ],
           "rows": [
             [
               "Approved, sized orders",
-              "Pub/Sub `AMS_Outbound_Queue`",
-              "System 2"
+              "local topic `ams-outbound` → bridge → `ams-outbound.executor`",
+              "System 2",
+              "Publishing; **System 2 cannot read it**"
             ],
             [
               "Rejection log with reason codes",
-              "Local PostgreSQL",
-              "Audit / post-mortem"
+              "SQLite `ams_decision_log`",
+              "Audit / post-mortem",
+              "Live — 4,153 rows"
             ],
             [
               "Trade journal export",
               "GCS",
-              "Analytics, tax, review"
+              "Analytics, tax, review",
+              "Built"
             ],
             [
               "Alerts",
-              "Telegram + SMTP, urgency-routed",
-              "Operator"
+              "Telegram — **SMTP unconfigured**",
+              "Operator",
+              "Telegram live; email dead"
             ],
             [
               "Strategy decay signals",
-              "Local → GCS",
-              "Feeds System 1 retrain triggers"
+              "`strategy_status` quarantine → layer `Q`",
+              "System 1 retrain triggers",
+              "Local only; not yet exported"
             ]
           ]
         }
       ],
       "body": {
         "technical": [
-          "The decay auditor closes the loop: sustained live underperformance against the backtested expectation is one of the triggers that can cause System 1 to retrain. That is the only feedback path from live results back into model building, and it is deliberately narrow."
+          "The decay auditor closes the loop: sustained live underperformance quarantines a strategy at layer `Q` and is one of the triggers that can cause System 1 to retrain. That is the only feedback path from live results back into model building, and it is deliberately narrow.",
+          "One correction on alerting: `SMTP_HOST`, `SMTP_USER` and `SMTP_TO` are all empty in the deployed environment, so the urgency-routed email fallback does not exist. Every alert this system can raise depends on a single Telegram bot token."
         ],
         "plain": [
-          "There is one thread running back to the research lab: if a strategy stops working in real life, the lab is told to go and think again. Nothing else about live trading is allowed to influence the research, so that the research cannot start fitting itself to recent luck."
+          "There is one thread running back to the research lab: if a strategy stops working in real life, it is benched here and the lab is told to think again. Nothing else about live trading is allowed to influence the research, so the research cannot start fitting itself to recent luck.",
+          "A warning about how you would hear from it: the email channel was never filled in. Every alert goes through one Telegram bot. If that bot's token stops working, the risk officer becomes silent without anybody being told."
         ]
       }
     },
@@ -351,38 +516,62 @@
         {
           "id": "GAP-S3-01",
           "severity": "high",
-          "title": "Blocking the signal path, and invisible from System 1",
-          "text": "System 1 publishes to `Scored_Signal_Queue` but its service account is publisher-only and cannot list subscriptions. Needed in writing: the subscription name, confirmation a consumer is actually pulling it, and the topic approved orders are published to. Not “it should be set up”."
+          "title": "A drill signal, or any new envelope field, is dead-lettered",
+          "text": "`contracts/v1/ScoredSignal.schema.json` is `additionalProperties: false`. A signal carrying `\"drill\": true` fails validation at the relay, which by design never acks and never forwards an invalid message — so it retries and dead-letters, and System 1 sees a published message and no response, forever. `ApprovedOrder.schema.json` is also `additionalProperties: false`, so even if the signal were accepted the flag could not be forwarded to System 2. **G-008 cannot run until this is changed.** Layer `P` compounds it: `selection_basis` is optional in the schema but a missing value is a hard REJECT, so a drill signal must carry it."
         },
         {
           "id": "GAP-S3-02",
           "severity": "high",
-          "title": "Schema and skeleton pending",
-          "text": "The design is ratified but the AMS database schema and service skeleton are not stood up on Computer 3, so the ten-layer gate has never been exercised."
+          "title": "System 2 cannot read what this system publishes",
+          "text": "Approved orders go to `ams-outbound`, which the bridge translates onto `ams-outbound.executor`. System 2's deployed `QUEUE_LOCAL_PATH` points at a Windows path that resolves to an empty database beside its own source tree, so 5,587 messages have stranded on that topic since 2026-08-20T15:09:24Z. All of them are this system's own heartbeats — no approved order has been lost, because none has been approved since 2026-08-14. The next approval would be. Tracked from System 2's side as GAP-S2-01."
         },
         {
           "id": "GAP-S3-03",
-          "severity": "med",
-          "title": "Incoming strategies rest on 5–20 trades",
-          "text": "The three live cells qualified after the OOS gate was lowered to 12 months, and System 1 has no minimum trade-count gate. Their profit factors are small-sample artefacts. This is a knowingly accepted risk on a practice account and explicitly not a reason to refuse orders — but sizing is System 3's call, and a thin cell produces an unreliable Kelly fraction."
+          "severity": "high",
+          "title": "Local PostgreSQL is not provisioned — the answer is no",
+          "text": "`DB_PROVIDER=sqlite`, `DB_PATH=state/db/ams.db`. The `postgresql@18-main` cluster on the host serves System 2's `system2` database only; there is no `ams_db`. Postgres is supported (`DB_PROVIDER=postgres` plus `DB_DSN`) and the migrations exist, but it has never been stood up. SQLite has carried 4,153 decisions without loss, so this is a scale and concurrency concern rather than a correctness one today — but the design called it a hard requirement and it is not met."
         },
         {
           "id": "GAP-S3-04",
-          "severity": "med",
-          "title": "Arriving signals carry no exits",
-          "text": "All three live map entries have `exits: {}`. Layer I reasons about expected trade duration, which an empty exit specification does not supply."
+          "severity": "high",
+          "title": "Every alert depends on one Telegram token",
+          "text": "`SMTP_HOST`, `SMTP_USER` and `SMTP_TO` are blank in the deployed environment. The urgency-routed email fallback described in the design does not exist. A revoked or rate-limited bot token silently removes every channel this system has for telling a human that it has stopped."
         },
         {
           "id": "GAP-S3-05",
           "severity": "med",
-          "title": "Live evidence is 10 losing trades",
-          "text": "The only realised live record is 10 trades, all losers, expectancy −367 CAD/trade, from the 2026-07-22 audit. The sizing gate being shut is currently what prevents further loss — the safety machinery is protecting the account, not an edge."
+          "title": "Nothing has been published to the topic to consume",
+          "text": "The consumer is live and has been since 2026-08-17. `subscription/sent_message_count` on `scored_signal_queue_sub` is **0** over 24 hours, and `topic/send_request_count` on `scored_signal_queue` shows three publish requests in 25 days, all on 2026-08-17, all of them our own round-trip verification. System 1's task list records the switch from `local` to `pubsub` as done and the producer repair as verified end to end; the topic's own counters do not show a message from it. Recorded here as an observation against this system's inputs, not as a change to System 1's page."
         },
         {
           "id": "GAP-S3-06",
           "severity": "med",
-          "title": "ADR-001 changes who publishes to its inbound topic",
-          "text": "Responsibilities are unchanged, but the publisher would become System 2. System 3 must confirm whether the signal envelope needs a provenance, bundle id or producer identity field."
+          "title": "Nine signals are already in the dead-letter queue",
+          "text": "`scored-signals.ams` has 9 messages in state `dead` with 9 matching rows on `scored-signals.ams.dlq`, and `ams-inbound.ams` has 532 dead with 532 on its DLQ. They are visible by design rather than dropped, but nothing routinely inspects them, and a DLQ nobody reads is the same as a discard with extra steps."
+        },
+        {
+          "id": "GAP-S3-07",
+          "severity": "med",
+          "title": "The gate has never approved a trade at full size",
+          "text": "4,153 decisions, 62 approvals — all `REDUCED`, none at full size. 2,719 died at layer `A` because the account is in RECOVERY and 1,100 at sizing for insufficient live statistics. Both are the machinery working correctly. The consequence is that the approve-and-publish path beyond a reduced-size order has never been exercised against a real signal, and layer `J`'s full-cap branch is covered only by tests."
+        },
+        {
+          "id": "GAP-S3-08",
+          "severity": "med",
+          "title": "Incoming strategies rest on 5–20 trades",
+          "text": "The three live cells qualified after the out-of-sample gate was lowered to 12 months, and System 1 has no minimum trade-count gate. Their profit factors are small-sample artefacts. This is a knowingly accepted risk on a practice account and explicitly not a reason to refuse orders — but sizing is this system's call, and a thin cell produces an unreliable Kelly fraction. In practice the sizing layer already refuses on insufficient statistics, which is the same protection arriving by a different route."
+        },
+        {
+          "id": "GAP-S3-09",
+          "severity": "med",
+          "title": "Arriving signals carry no exits",
+          "text": "All three live map entries have `exits: {}`. Layer `H` reasons about the maximum hold duration against the Friday cutoff, which an empty exit specification does not supply — so it falls back to the configured maximum rather than the strategy's own, and 131 rejections have already landed there."
+        },
+        {
+          "id": "GAP-S3-10",
+          "severity": "low",
+          "title": "The relay is a stopgap with a defined exit, and it is single-threaded",
+          "text": "`pubsub_signal_relay.py` polls every 5 seconds with a batch of 10 and no concurrency. That is ample for the current volume of zero, and would be a bottleneck at bar-close bursts across many instruments. Its exit condition is written into its own docstring: when System 2, System 3 and the bridge move to Pub/Sub together, delete it and set `SCORED_SIGNAL_SUB=scored_signal_queue_sub`."
         }
       ]
     }
