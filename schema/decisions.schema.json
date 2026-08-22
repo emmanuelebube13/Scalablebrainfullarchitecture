@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Architecture decision records",
+  "type": "object",
+  "required": ["schema_version", "decisions"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "as_of": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "status", "date", "problem", "decision", "consequences"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "status": { "type": "string", "enum": ["proposed", "accepted", "rejected", "superseded"] },
+          "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+          "systems": { "type": "array", "items": { "type": "string" } },
+          "requires_approval_from": { "type": "array", "items": { "type": "string" } },
+          "source": { "type": "string" },
+          "problem": { "type": "object", "required": ["technical"] },
+          "argument": { "type": "object" },
+          "decision": { "type": "object", "required": ["technical"] },
+          "load_bearing_requirement": { "type": "object" },
+          "consequences": {
+            "type": "object",
+            "required": ["good", "bad"],
+            "properties": {
+              "good": { "type": "array", "items": { "type": "string" } },
+              "bad": { "type": "array", "items": { "type": "string" } }
+            }
+          },
+          "transition": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["step", "text"],
+              "properties": { "step": { "type": "string" }, "text": { "type": "string" } }
+            }
+          },
+          "open_questions": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

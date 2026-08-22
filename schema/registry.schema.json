@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Scalable Brain site registry",
+  "type": "object",
+  "required": ["schema_version", "project", "systems", "status_vocabulary"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "generated_by": { "type": "string" },
+    "project": {
+      "type": "object",
+      "required": ["name", "as_of", "principles"],
+      "properties": {
+        "name": { "type": "string" },
+        "subtitle": { "type": "string" },
+        "thesis": { "type": "string" },
+        "as_of": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "source_repository": { "type": "string" },
+        "site_repository": { "type": "string" },
+        "principles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["title", "technical"],
+            "properties": {
+              "title": { "type": "string" },
+              "technical": { "type": "string" },
+              "plain": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "systems": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "ordinal", "file"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^system-[0-9]+$" },
+          "ordinal": { "type": "integer" },
+          "file": { "type": "string" }
+        }
+      }
+    },
+    "status_vocabulary": { "type": "object" },
+    "decisions_file": { "type": "string" },
+    "goals_file": { "type": "string" },
+    "architecture_file": { "type": "string" }
+  }
+}

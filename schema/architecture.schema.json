@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Unified architecture map",
+  "type": "object",
+  "required": ["schema_version", "layout", "columns", "nodes", "edges", "flows"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "as_of": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "layout": {
+      "type": "object",
+      "required": ["column_width", "row_height", "node_width", "node_height", "padding"],
+      "properties": {
+        "column_width": { "type": "number" },
+        "row_height": { "type": "number" },
+        "node_width": { "type": "number" },
+        "node_height": { "type": "number" },
+        "padding": { "type": "number" }
+      }
+    },
+    "columns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "system": { "type": ["string", "null"] },
+          "subtitle": { "type": "string" }
+        }
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "column", "row", "label", "kind", "status"],
+        "properties": {
+          "id": { "type": "string" },
+          "column": { "type": "string" },
+          "row": { "type": "number" },
+          "label": { "type": "string" },
+          "kind": { "type": "string", "enum": ["source", "process", "store", "queue", "control", "sink"] },
+          "status": { "type": "string", "enum": ["live", "degraded", "blocked", "planned"] },
+          "detail": {
+            "type": "object",
+            "required": ["technical"],
+            "properties": { "technical": { "type": "string" }, "plain": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "from", "to", "kind", "status"],
+        "properties": {
+          "id": { "type": "string" },
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "label": { "type": "string" },
+          "kind": { "type": "string", "enum": ["data", "artifact", "message", "order", "control"] },
+          "status": { "type": "string", "enum": ["live", "degraded", "blocked", "planned"] }
+        }
+      }
+    },
+    "flows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "edges"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "edges": { "type": "array", "items": { "type": "string" } },
+          "technical": { "type": "string" },
+          "plain": { "type": "string" }
+        }
+      }
+    },
+    "legend": { "type": "object" }
+  }
+}

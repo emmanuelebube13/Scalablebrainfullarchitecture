@@ -1,0 +1,94 @@
+{
+  "schema_version": "1.0.0",
+  "id": "system-N",
+  "ordinal": 4,
+  "name": "The …",
+  "role": "One line: what this system is for",
+  "host": "Computer N",
+  "duty_cycle": "When it runs — always on / market hours / intermittent",
+  "accent": "#8b8bf5",
+  "repository": "path or URL to the source of truth",
+  "code_root": "src/…",
+
+  "status": {
+    "state": "planned",
+    "as_of": "YYYY-MM-DD",
+    "note": "What is true today, including what does not work. Prefer an unflattering sentence to a vague one."
+  },
+
+  "summary": {
+    "technical": "Exact engineering description: inputs, transformations, outputs, guarantees.",
+    "plain": "The same thing said to someone who does not write code. Use a concrete analogy, not a simplified diagram in words."
+  },
+
+  "facts": [
+    { "label": "Language", "value": "…" },
+    { "label": "Datastore", "value": "…" }
+  ],
+
+  "sections": [
+    {
+      "id": "ingestion",
+      "title": "Data Ingestion & Mapping",
+      "kind": "ingestion",
+      "body": {
+        "technical": ["Sources, formats, transformation logic, feature engineering. Name the modules."],
+        "plain": ["What arrives here, where it comes from, and what is done to it before anything else sees it."]
+      },
+      "tables": [
+        {
+          "title": "Sources and destinations",
+          "columns": ["Source", "Shape", "Cadence", "Lands in", "Guarantee"],
+          "rows": [["…", "…", "…", "…", "…"]],
+          "note": "Optional footnote. Supports `code` and **bold**."
+        }
+      ],
+      "callouts": [
+        { "tone": "warn", "title": "Something a newcomer would get wrong", "technical": "…", "plain": "…" }
+      ]
+    },
+    {
+      "id": "core-logic",
+      "title": "Core Logic & Execution",
+      "kind": "pipeline",
+      "body": {
+        "technical": ["Strategy mechanics, modelling layers, signal generation, latency and execution parameters."],
+        "plain": ["The idea behind it, in the order it happens."]
+      },
+      "stages": [
+        {
+          "code": "STAGE-01",
+          "name": "…",
+          "module": "`path/to/module.py`",
+          "output": "`table_or_artifact`",
+          "technical": "Exact behaviour, including the guarantee it provides.",
+          "plain": "What this step does, in one or two sentences."
+        }
+      ]
+    },
+    {
+      "id": "interfaces",
+      "title": "Outputs & Contracts",
+      "kind": "interfaces",
+      "body": {
+        "technical": ["What leaves this system, over what transport, under what schema."],
+        "plain": ["What this part hands to the next part, and what it is not allowed to do."]
+      },
+      "tables": [
+        {
+          "title": "Published interfaces",
+          "columns": ["Interface", "Transport", "Contract", "Consumer"],
+          "rows": [["…", "…", "…", "…"]]
+        }
+      ]
+    },
+    {
+      "id": "open",
+      "title": "Known Gaps",
+      "kind": "issues",
+      "issues": [
+        { "id": "GAP-SN-01", "severity": "high", "title": "…", "text": "What is broken or missing, and why it matters." }
+      ]
+    }
+  ]
+}

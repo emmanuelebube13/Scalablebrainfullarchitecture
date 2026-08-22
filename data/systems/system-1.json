@@ -1,0 +1,317 @@
+{
+  "schema_version": "1.0.0",
+  "id": "system-1",
+  "ordinal": 1,
+  "name": "The Brain",
+  "role": "Offline model building",
+  "host": "Computer 1",
+  "duty_cycle": "Intermittent — training, plus a daily signal batch that ADR-001 proposes removing",
+  "accent": "#6aa9ff",
+  "repository": "https://github.com/emmanuelebube13/scalable-brain",
+  "code_root": "src/system1/",
+  "status": {
+    "state": "operational",
+    "as_of": "2026-08-22",
+    "note": "Pipeline runs end to end and a model set is published. The signal producer was repaired on 2026-08-22 (FIX-S1-016) after never having emitted a single message; it currently runs once a day, which is too slow for the H4 strategies it serves."
+  },
+  "summary": {
+    "technical": "System 1 is the offline intelligence factory. It ingests OANDA multi-timeframe candles, builds a versioned trailing-only feature store, fits causal regime labels, attributes historical trade outcomes to the regime in force at entry, vets each (strategy x regime x granularity) cell against fixed gates, trains an XGBoost gatekeeper on walk-forward folds, and publishes a checksummed artifact bundle. It never emits an order and holds no credential capable of placing one. It also currently runs a live signal producer — a contradiction that ADR-001 exists to resolve.",
+    "plain": "System 1 is the research lab. It reads years of price history, works out what kind of market each moment was, checks which trading rules actually made money in which kind of market, and packages the winners into a sealed box with a serial number on it. It never touches the money. Its job is to hand the box downstream and then be allowed to switch off."
+  },
+  "facts": [
+    { "label": "Language", "value": "Python 3.12" },
+    { "label": "Database", "value": "PostgreSQL 16 + TimescaleDB 2.26.3" },
+    { "label": "Models", "value": "XGBoost gatekeeper · Gaussian HMM regimes" },
+    { "label": "Artifact store", "value": "GCS `scalable-brain-artifacts`" },
+    { "label": "Live model set", "value": "`2026-08-21T16-29-15Z-372f6956_gk-d614163c`" },
+    { "label": "Queue transport", "value": "Pub/Sub — publisher-only service account" }
+  ],
+  "sections": [
+    {
+      "id": "ingestion",
+      "title": "Data Ingestion & Mapping",
+      "kind": "ingestion",
+      "body": {
+        "technical": [
+          "Ingestion is a single governed writer: `src/system1/ingestion/multi_timeframe_ingest.py`, fronted by `dq.py` data-quality gates. It pulls **MBA candles** (mid, bid and ask in one request) from the OANDA v20 REST practice endpoint across H1, H4 and D1, and writes to the `fact_market_prices` hypertable with `INSERT … ON CONFLICT (<pk>)` so a re-run is a no-op rather than a duplicate.",
+          "Every write goes through `src/common/db.py`. No module builds a connection string inline. Session timezone is pinned to UTC, because every day and week boundary in the risk layer downstream is computed in UTC and a local-time drift would silently move a daily loss budget.",
+          "Column casing is a real hazard in this schema: only `\"Open\"` and `\"Close\"` are mixed-case and `\"timestamp\"` is reserved, so all three are double-quoted; everything else is lowercase. Code is written schema-aware — optional columns are never assumed to exist, because the live schema has drifted from the original design."
+        ],
+        "plain": [
+          "This step is the delivery bay. It phones the broker, asks for the price history of each currency pair at three different zoom levels — hourly, four-hourly and daily — and files it away.",
+          "Two things make it boring on purpose. First, asking twice does not create two copies; the second delivery is recognised and thrown away. Second, everything is stamped in one single timezone, so 'Tuesday' means the same Tuesday everywhere in the system."
+        ]
+      },
+      "tables": [
+        {
+          "title": "Sources and destinations",
+          "columns": ["Source", "Shape", "Cadence", "Lands in", "Guarantee"],
+          "rows": [
+            ["OANDA v20 REST (practice)", "MBA candles — mid/bid/ask OHLC + volume", "Daily batch + weekly Saturday cron", "`fact_market_prices`", "Idempotent upsert on primary key"],
+            ["OANDA v20 REST (practice)", "Same, backfill mode", "On demand", "`fact_market_prices`", "Range-bounded, never truncates"],
+            ["Macro event text (auxiliary)", "Scraped headlines scored by FinBERT", "Ad hoc", "`fact_macro_events`", "Not enforced as a feature or a gate — MODEL-010 is unbuilt"]
+          ]
+        },
+        {
+          "title": "Feature store — MODEL-002",
+          "columns": ["Property", "Value"],
+          "rows": [
+            ["Module", "`src/system1/features/feature_pipeline.py` + `definitions.py`"],
+            ["Format", "Versioned Parquet under `feature-store/{version}/`"],
+            ["Look-ahead policy", "Trailing-only. Every feature at bar *t* uses bars ≤ *t*"],
+            ["Determinism", "Byte-identical partitions for identical inputs"],
+            ["Consumers", "MODEL-003 (regimes), MODEL-006 (gatekeeper)"]
+          ]
+        }
+      ],
+      "callouts": [
+        {
+          "tone": "bad",
+          "title": "The look-ahead trap this project actually fell into",
+          "technical": "`detect_swing_points` used a centred rolling window (`center=True`), which reads bars *after* the one being labelled. It contaminated the only live strategy at the time and 36 of the 51 research strategies. Feature code is now required to pass `assert_no_lookahead_v2`.",
+          "plain": "A helper function was quietly peeking at tomorrow's prices to decide what today looked like. Every result built on it was fiction — not wrong by a little, wrong in the way that makes a losing system look like a winning one. It is now checked automatically."
+        }
+      ]
+    },
+    {
+      "id": "core-logic",
+      "title": "Core Logic & Execution",
+      "kind": "pipeline",
+      "body": {
+        "technical": [
+          "The runtime is organised as tasks MODEL-001…010. Every module is a `python -m` entry point, separates pure math from I/O, and registers runs to MLflow. Walk-forward folds are shared from `validation/walk_forward.py` — min train 36 months, 6-month step, 6-month out-of-sample, anchored — so regimes, attribution and the gatekeeper all cut time the same way.",
+          "The controlling design decision is **strategy first, gatekeeper vetoes**. Strategies run blind on mechanical price rules with no idea what the regime is. The regime model labels history separately. Attribution joins the two *after the fact* at the trade's entry timestamp, using the causal label. This is what makes it possible to throw hundreds of dumb strategies at the wall without hand-coding regime logic into each one.",
+          "Promotion-capable stages default to dry-run. `vet` writes `results/reports/proposed_*` unless `--live`; `gatekeeper.train --dry-run` never touches the live champion. The orchestrator is the **single governed writer** of the champion bundle (FIX-S1-009) — a second promotion path is prohibited, not merely discouraged."
+        ],
+        "plain": [
+          "Think of it as a hiring process for trading rules.",
+          "First, every candidate rule is let loose on decades of history with a blindfold on — it just follows its mechanical instructions and every trade it would have made is written down. Separately, a second program goes through the same history and marks each day with what the market was doing: trending, drifting sideways, or violent.",
+          "Then the two lists are laid on top of each other. Now you can ask a sharp question: *this rule made money — but was that in calm markets or wild ones?* Rules that only work in one kind of weather get used only in that weather.",
+          "Finally, a machine-learning referee learns to spot the trades that tend to fail even when the rule and the weather both look right, and gets a veto. Nothing is promoted automatically; almost every stage refuses to change anything unless explicitly told to."
+        ]
+      },
+      "stages": [
+        {
+          "code": "MODEL-001",
+          "name": "Multi-timeframe ingest",
+          "module": "`ingestion/multi_timeframe_ingest.py` + `dq.py`",
+          "output": "`fact_market_prices`",
+          "technical": "OANDA MBA candle fetch across H1/H4/D1 with data-quality gates on gaps, duplicates and stale bars.",
+          "plain": "Fetches the raw price history and refuses to accept it if there are holes in it."
+        },
+        {
+          "code": "MODEL-002",
+          "name": "Feature pipeline",
+          "module": "`features/feature_pipeline.py`",
+          "output": "`feature-store/{version}/`",
+          "technical": "Versioned Parquet feature store. All features trailing-only, deterministic, byte-identical across runs.",
+          "plain": "Turns raw prices into the measurements the models actually read — trend strength, volatility, momentum."
+        },
+        {
+          "code": "MODEL-003",
+          "name": "Regime detection",
+          "module": "`regime/hmm_regime.py` + `mapping.py`",
+          "output": "`fact_market_regime_v2`, `models/hmm_model.joblib`",
+          "technical": "4-state Gaussian HMM on D1/H4/H1 mapping to {Trending-Up, Trending-Down, Ranging, High-Vol}. K-Means fallback below the 0.70 accuracy gate. Emits a reporting label **and** a causal walk-forward label; only the causal one is allowed downstream.",
+          "plain": "Sorts market history into four kinds of weather. It produces two versions of the answer: a tidy hindsight one for charts, and a strict one that only used information available at the time. Only the strict one is allowed to influence money."
+        },
+        {
+          "code": "MODEL-004",
+          "name": "Attribution",
+          "module": "`attribution/attribute.py` + `metrics.py`",
+          "output": "`fact_strategy_regime_attribution`",
+          "technical": "Point-in-time join of each trade to the causal regime at entry. Per (strategy x regime x granularity) metrics on **out-of-sample trades only**, with Bayesian shrinkage for thin cells.",
+          "plain": "Files each historical trade under the weather it was opened in, then scores each rule separately per weather type. Buckets with too few trades get their scores pulled toward the average — though as the gates section explains, that shrinkage is not currently enough to stop a five-trade cell qualifying."
+        },
+        {
+          "code": "MODEL-005",
+          "name": "Vetting",
+          "module": "`vetting/vet.py` + `gates.py`",
+          "output": "`regime_strategy_map.json`, `strategy_weights.json`",
+          "technical": "Gates: PF ≥ 1.5, Sharpe ≥ 0.8, MaxDD ≤ 25%, WinRate ≥ 40%, Recovery ≥ 3.0, **OOS ≥ 12 months** — lowered from 60 by owner decision on 2026-08-21. `INTEGRITY_DISQUALIFIED` is checked **before** the performance gates, in a separate category. There is **no minimum trade-count gate**; `trade_count` is only a ranking tie-break.",
+          "plain": "The examiner. Six pass marks and a separate blacklist for rules whose past results are known to be fiction. One pass mark was deliberately relaxed in August, and there has never been a rule saying *how many trades* the evidence has to rest on — which is exactly how a five-trade track record ended up qualifying."
+        },
+        {
+          "code": "MODEL-006",
+          "name": "Gatekeeper training",
+          "module": "`gatekeeper/train.py` + `thresholds.py`",
+          "output": "`champion_model.pkl` + manifest",
+          "technical": "XGBoost on causal-regime features, expanding-window walk-forward, per-regime thresholds, bootstrap-significant OOS uplift required.",
+          "plain": "Trains the referee that can veto individual trades. It only counts as an improvement if the improvement survives a statistical shake-test."
+        },
+        {
+          "code": "MODEL-007",
+          "name": "Serialize & publish",
+          "module": "`serializer/serialize.py` + `publish_gatekeeper.py`",
+          "output": "Versioned bundle in GCS",
+          "technical": "Immutable versioned prefixes, secret scan, SHA256 round-trip verify, then — and only then — an atomic `latest.json` pointer flip. Superseded pointer archived to `previous.json`; old versions are never overwritten.",
+          "plain": "Seals the box, re-checks the seal after shipping, and only then updates the sign that says 'this is the current box'. If the checks disagree, the shipment is deleted and the sign never moves."
+        },
+        {
+          "code": "MODEL-008",
+          "name": "Signal producer",
+          "module": "`signals/` + `queue_producer/producer.py`",
+          "output": "`Scored_Signal_Queue` messages",
+          "technical": "Schema-validated against `contracts/signal-message-contract.json`, idempotent by `message_id`, backpressure + DLQ. **The only online component in this repository** — and the subject of ADR-001, which proposes moving it to System 2 entirely.",
+          "plain": "Puts each scored trade idea in an envelope with a unique reference number and posts it. It is the only part of the research lab that has to be awake during market hours — which is precisely the problem an open architecture decision is trying to fix."
+        },
+        {
+          "code": "MODEL-009",
+          "name": "Retrain orchestrator",
+          "module": "`scheduler/orchestrator.py` + `triggers.py`",
+          "output": "`results/state/retrain_log_*.json`",
+          "technical": "Triggers: Sunday 00:00 UTC, low Sharpe, circuit breaker. Single-flight lock, cooldown, gated pipeline, atomic promote only if gates pass **and** it beats the incumbent read from the storage backend (FIX-S1-007). The single governed writer of the champion bundle.",
+          "plain": "The foreman. Decides when a retrain is warranted, refuses to start a second one on top of a running one, and only replaces the current model if the new one is genuinely better than what is already deployed."
+        },
+        {
+          "code": "S1-EXPORT-002",
+          "name": "Analytics bundle",
+          "module": "`analytics/publish_analytics.py`",
+          "output": "`system1/analytics/<version>/` in GCS",
+          "technical": "Read-only downstream bundle: strategy catalog, per-trade OOS r-multiple series per qualified cell, frequency stats and regime occupancy. Same immutable-prefix + verify + pointer-flip-last contract. A failure here never affects the promote.",
+          "plain": "Publishes the supporting evidence so the other machines can show charts without needing access to this one's database. If it fails, the model still ships — it is a report, not a dependency."
+        }
+      ],
+      "callouts": [
+        {
+          "tone": "warn",
+          "title": "The gates were relaxed, and one gate was never there",
+          "technical": "On 2026-08-21 the owner lowered `oos_months` from 60 to 12. Separately, `vet.py` has never had a minimum trade-count gate — `trade_count` participates only as a ranking tie-break. The two together are why cells resting on 5, 13 and 20 out-of-sample trades now appear as `qualified` in the live map with profit factors of 6.8 to 13.6 and drawdowns of 0.02% to 1%.",
+          "plain": "Two things happened. The owner deliberately shortened the minimum track record a strategy needs, from five years to one. And there has never been any rule about *how many* trades that track record must contain. Put together, a strategy with five trades in its history can now be waved through with a spectacular-looking score — and a five-trade score is noise, not skill."
+        }
+      ]
+    },
+    {
+      "id": "interfaces",
+      "title": "Outputs & Contracts",
+      "kind": "interfaces",
+      "body": {
+        "technical": [
+          "System 1 emits exactly two kinds of thing: **artifacts** to object storage and **messages** to a Pub/Sub topic. It never emits an order, and it holds no broker credential capable of placing one.",
+          "The publish contract is ordering-critical: upload to an immutable versioned prefix → SHA256 verify the round trip → only then flip `latest.json`. A consumer that reads the pointer therefore can never observe a half-written bundle. Retention trims the oldest versions; it never overwrites.",
+          "`QUEUE_PROVIDER` is now `pubsub` — it was `local` until recently, which meant signals landed in a directory on Computer 1 that no other machine could ever read. System 1's service account is **publisher-only**: it can push to `Scored_Signal_Queue` but cannot list topics or subscriptions, so it has no way to confirm anyone is on the other end."
+        ],
+        "plain": [
+          "Two outputs, both one-way. A sealed model package on cloud storage, and a stream of scored trade ideas.",
+          "Nothing here can place a trade. That is deliberate — the machine that decides what is a good idea is physically incapable of acting on its own opinion.",
+          "The trade ideas now go into a real cloud postbox rather than a folder on one desk. But System 1 has posting rights only: it cannot look inside the postbox to check whether anyone is collecting. Confirmation has to come back from the other machines in writing."
+        ]
+      },
+      "tables": [
+        {
+          "title": "Published interfaces",
+          "columns": ["Interface", "Transport", "Contract", "Consumer"],
+          "rows": [
+            ["Model bundle + `latest.json`", "GCS `scalable-brain-artifacts`", "SHA256 manifest, immutable prefixes", "System 2 (artifact sync)"],
+            ["Scored signals", "Pub/Sub `Scored_Signal_Queue`", "`contracts/signal-message-contract.json`", "System 3 (Guardian)"],
+            ["Regime→strategy map", "GCS artifact", "`contracts/regime-map-contract.json`", "System 2, System 3"],
+            ["Strategy weights", "GCS artifact", "`contracts/weights-contract.json`", "System 3"],
+            ["Regime status", "GCS artifact", "`contracts/regime-status-contract.json`", "System 2"],
+            ["Analytics bundle", "GCS `system1/analytics/`", "Versioned + pointer flip", "Telemetry / simulation"]
+          ]
+        },
+        {
+          "title": "Signal message — required fields",
+          "columns": ["Field", "Type", "Note"],
+          "rows": [
+            ["`schema_version`", "string", "Consumers reject unknown majors"],
+            ["`message_id` / `signal_id`", "string", "Idempotency keys"],
+            ["`instrument`, `granularity`", "string", "Granularity ∈ H1 / H4 / D1 / W1"],
+            ["`direction`, `entry`, `stop`, `target`", "string / number", "Prices, not sizes — System 1 never sizes"],
+            ["`model_score`, `threshold_applied`, `approved`", "number / bool", "Nullable when scoring is unavailable"],
+            ["`regime`, `regime_probs`", "string / object", "The causal label at signal time"],
+            ["`bundle_version`", "string", "Which sealed box produced this"],
+            ["`selection_basis`, `scoring_status`", "string", "Why this signal exists and whether the model spoke"]
+          ],
+          "note": "Full schema: `contracts/signal-message-contract.json` in the source repository. `additionalProperties: false` — unknown fields are a hard reject."
+        }
+      ],
+      "callouts": [
+        {
+          "tone": "warn",
+          "title": "The producer runs once a day, for strategies that trade six times a day",
+          "technical": "The producer fires from `cron_daily_ingest_and_signals.sh` at 22:30, weekdays only. Two of the three live strategies are H4 — six bars per day — so a once-daily batch emits signals for bars that closed up to twenty hours earlier. `src/signals/run.py` already supports a continuous 60-second loop; the open decision is hourly cron versus continuous service, with hourly cron recommended as the smaller, restartable change.",
+          "plain": "The trade ideas are posted once a night. But two of the three live strategies produce a new idea every four hours, so most of what gets posted is describing a moment that passed the previous afternoon. An idea that stale is not tradeable."
+        }
+      ]
+    },
+    {
+      "id": "state",
+      "title": "Current State & Evidence",
+      "kind": "evidence",
+      "body": {
+        "technical": [
+          "As of 2026-08-22 the pipeline is functioning end to end and a model set is published and loading. The honest qualification is that the three strategies in the live map qualified under a relaxed gate on very thin samples, and are being run on a practice account as a deliberate, stated risk rather than as an established edge."
+        ],
+        "plain": [
+          "Everything below is deliberately unflattering. The machinery works. What it has found so far does not yet amount to proof that any of these strategies makes money."
+        ]
+      },
+      "tables": [
+        {
+          "title": "The live map — `regime_strategy_map.json` v2.0.0, generated 2026-08-21",
+          "columns": ["Regime", "Strategy", "Trades", "Profit factor", "Sharpe", "Max DD", "OOS months"],
+          "rows": [
+            ["Trending-Down", "`liquidity_grab_fade@H4`", "13", "8.28", "1.74", "0.05%", "23.6"],
+            ["High-Vol", "`macd_divergence@H4`", "20", "13.58", "2.92", "0.02%", "17.6"],
+            ["High-Vol", "`weekly_day_reversal_ea@D1`", "5", "6.76", "0.85", "1.01%", "23.4"]
+          ],
+          "note": "Map `status` is **`proposed`**, not `qualified`. All three carry `exits: {}` — an empty exit specification, which is a known open defect in `vet.py`. Ranging and Trending-Up have no coverage."
+        },
+        {
+          "title": "Data volumes",
+          "columns": ["Table", "Rows", "As of"],
+          "rows": [
+            ["`fact_market_prices`", "~4.68 M", "2026-08"],
+            ["`fact_market_regime_v2`", "847,151 — kappa ≥ 0.83", "2026-08-14"],
+            ["`fact_trade_outcomes`", "55,756", "2026-08-15"],
+            ["`fact_strategy_regime_attribution`", "40 cells / 38,610 OOS trades", "2026-08-15"]
+          ],
+          "note": "`fact_trade_outcomes` halved from 134,500 on purpose: the writer had been backtesting every strategy on both H1 and H4 regardless of its declared `primary_granularity`, counting two strategy pairs twice. That is double-counting coming out, not evidence being lost."
+        },
+        {
+          "title": "What has been settled by measurement",
+          "columns": ["Question", "Answer", "Source"],
+          "rows": [
+            ["Do the legacy 10 strategies qualify?", "No — 0 of 36 clean cells, after regime labels were fixed and re-measured", "`task/OPEN.md` §1"],
+            ["Do regimes discriminate win rate?", "No — 0 of 10 strategies. Max spread among clean strategies 0.0567 vs a 0.10 bar", "Finding B, re-tested 2026-08-14"],
+            ["Do the 51 research strategies qualify on the original gates?", "47 built, 46 measured, **1 passing cell in ~230** — `demark_fractal_breakout` USD_JPY H4, 610 OOS trades, PF 1.51, Sharpe 1.11", "`N5-fleet-completion/SUMMARY.md`"],
+            ["Did regime-aware filtering rescue the fleet?", "No — OOS p-values 0.199 and 0.262 across 126 post-hoc comparisons. Null hypothesis accepted", "R3 trial, concluded 2026-08-16"],
+            ["Are the three live strategies an established edge?", "No. Stated explicitly: profit factors of 6.8–13.6 on 5–20 trades are small-sample artefacts, knowingly accepted on a practice account", "`comms/TONIGHT-2026-08-22-restore-trading.md`"]
+          ]
+        }
+      ],
+      "callouts": [
+        {
+          "tone": "info",
+          "title": "Why 'honest zero' counted as progress",
+          "technical": "Before 2026-08-14 the live map routed to `Range_Stochastic_Divergence`, whose attribution rows read PF 1.92 / Sharpe 1.07 — derived from outcomes produced by a look-ahead version of the strategy that emits zero signals when computed causally. Regenerating the map would not have removed it; a fresh `vet --live` would have re-qualified it. Only an integrity blocklist checked before the gates could.",
+          "plain": "The system used to have exactly one strategy live, and its impressive track record was an illusion produced by a bug. Removing it dropped the measured value to zero — but it was always zero. The number became true, which is the only reason anything measured afterwards can be believed."
+        },
+        {
+          "tone": "good",
+          "title": "FIX-S1-016 — the producer had never emitted anything, ever",
+          "technical": "Fixed and verified end to end on 2026-08-22. Two independent faults: it checked publication status on the wrong artifact, a condition nothing could ever satisfy; and it crashed on import because the causal routing label had been deleted along with a retired experiment. The bug survived for weeks precisely because trading depended on a machine nobody was watching — which is ADR-001's central argument.",
+          "plain": "The component responsible for posting trade ideas had never successfully posted one in its entire life. It failed silently, on a computer that is usually asleep, so nothing looked broken. Both causes are now fixed and verified against the real cloud bundle."
+        }
+      ]
+    },
+    {
+      "id": "open",
+      "title": "Known Gaps",
+      "kind": "issues",
+      "issues": [
+        { "id": "GAP-S1-01", "severity": "high", "title": "Producer cadence is once a day", "text": "`cron_daily_ingest_and_signals.sh` runs at 22:30 on weekdays. Two of three live strategies are H4. Signals arrive up to twenty hours stale, which is useless for execution. Owner decision pending: hourly cron (recommended) or continuous service." },
+        { "id": "GAP-S1-02", "severity": "high", "title": "No minimum trade-count gate", "text": "`vet.py` treats `trade_count` only as a ranking tie-break. Combined with the 2026-08-21 reduction of `oos_months` from 60 to 12, cells with 5, 13 and 20 trades reached the live map. Worth adding regardless of where the OOS threshold lands." },
+        { "id": "GAP-S1-03", "severity": "high", "title": "Qualified strategies published with empty exits", "text": "All three entries in the live map carry `exits: {}`. A strategy with no exit specification serializes cleanly and means nothing to whoever executes it. Open defect in `vet.py`." },
+        { "id": "GAP-S1-04", "severity": "high", "title": "Delivery is unverified past the first hop", "text": "System 1's service account is publisher-only and cannot list topics or subscriptions. It can prove it published; it cannot see whether System 3 consumed. Confirmation has to arrive as a written reply naming the subscription." },
+        { "id": "GAP-S1-05", "severity": "med", "title": "Test fixtures leaked into the production queue artefact", "text": "A test run once wrote fixtures into the live queue — the `entry: 1.05` messages System 2 observed. The leak path is not yet closed." },
+        { "id": "GAP-S1-06", "severity": "med", "title": "Trade outcomes writer is destructive", "text": "`persist_trade_outcomes` does DELETE-then-rebuild with no transaction. Snapshot first, and pass `--lookback-years 10` — the default of 5 silently discards half the history." },
+        { "id": "GAP-S1-07", "severity": "med", "title": "Finding A — weight starvation", "text": "`gates.normalized_weights` shift-by-floor drives the lowest-scoring qualifier in a regime toward zero weight regardless of merit (Sharpe 1.74, PF 3.06 → weight 8e-8). Softmax or rank weighting proposed." },
+        { "id": "GAP-S1-08", "severity": "low", "title": "`src/registry/` imports a removed package", "text": "Retains imports of the deleted `regime_aware` package, gated behind the `regime_aware_port` universe. Latent — will not fire for the current three strategies." },
+        { "id": "GAP-S1-09", "severity": "low", "title": "`layer2_config_adapter` emits T-SQL", "text": "A leftover from the SQL Server era. Emits SQL that will not run against PostgreSQL. Reconcile or retire." },
+        { "id": "GAP-S1-10", "severity": "low", "title": "T6 ATR case mismatch", "text": "`engine_adapter` writes `df['atr']`, `StrategyBase` reads `df['ATR']`. Affects research verdicts only — the ten legacy strategies set uppercase themselves. Unfixed, no FIX doc." }
+      ]
+    }
+  ]
+}

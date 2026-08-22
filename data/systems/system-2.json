@@ -1,0 +1,274 @@
+{
+  "schema_version": "1.0.0",
+  "id": "system-2",
+  "ordinal": 2,
+  "name": "The Hand",
+  "role": "Execution only",
+  "host": "Computer 2",
+  "duty_cycle": "Active market hours — Sun 22:00 to Fri 20:00 UTC",
+  "accent": "#4fd1a5",
+  "repository": "../system-2-execution-engine/ (separate module, deployed on Computer 2)",
+  "code_root": "system-2-execution-engine/",
+  "status": {
+    "state": "engineering-complete",
+    "as_of": "2026-08-22",
+    "note": "152/152 tests passing. The engine is ready; what is unproven is the transport around it — System 2 has not yet confirmed in writing which topic and subscription it consumes. ADR-001 would substantially expand its role to include live inference. The local copy in the System 1 tree is reference only and must not be run or edited from Computer 1."
+  },
+  "summary": {
+    "technical": "System 2 is a deterministic execution engine with no autonomous risk authority. It synchronises verified model artifacts from GCS, runs live regime inference, consumes pre-sized approved orders from `AMS_Outbound_Queue`, places them on OANDA v20, manages open positions, and publishes fill confirmations back on `AMS_Inbound_Queue`. It never re-sizes an order and never decides to trade.",
+    "plain": "System 2 is the hands. It receives an instruction that already says exactly what to buy, how much, and where the stop goes — and it carries it out precisely. It is not allowed to have an opinion. If the instruction is missing or looks stale, it stops rather than improvising."
+  },
+  "facts": [
+    {
+      "label": "Broker",
+      "value": "OANDA v20 REST"
+    },
+    {
+      "label": "Datastore",
+      "value": "Own local PostgreSQL — no dependency on Computer 1"
+    },
+    {
+      "label": "Artifact sync",
+      "value": "`latest.json` poll, ~15 min"
+    },
+    {
+      "label": "Slippage budget",
+      "value": "2 pips — flag or reject beyond"
+    },
+    {
+      "label": "Staleness rule",
+      "value": "Queue age > 5 min → PAUSED"
+    },
+    {
+      "label": "Tests",
+      "value": "152 / 152"
+    }
+  ],
+  "sections": [
+    {
+      "id": "ingestion",
+      "title": "Data Ingestion & Mapping",
+      "kind": "ingestion",
+      "body": {
+        "technical": [
+          "System 2 has three inbound streams and treats each one as untrusted until verified.",
+          "**Artifacts.** It polls `latest.json` in GCS roughly every 15 minutes, downloads the referenced immutable prefix, recomputes SHA256 against the manifest, and only then performs an atomic swap of the local model cache. A checksum mismatch aborts the swap and leaves the previous model serving. Because System 1 flips the pointer *last*, a partially uploaded bundle is never reachable.",
+          "**Live candles.** It streams prices from OANDA and runs HMM inference locally with persistence smoothing, so a live regime label exists even when Computer 1 is asleep. This is inference against a frozen model — System 2 never fits anything.",
+          "**Orders.** It polls `AMS_Outbound_Queue` for orders that System 3 has already approved *and sized*. Each carries an `idempotency_key` which is mapped directly onto the OANDA client request ID, making a replayed message a broker-side no-op rather than a second position."
+        ],
+        "plain": [
+          "Three things arrive here, and each is checked before it is believed.",
+          "The model package is downloaded and weighed against the receipt that came with it. If the weights disagree, the download is thrown away and the old model keeps working — a corrupted delivery can never take the system down.",
+          "Live prices arrive continuously and are used to work out what the market is doing right now, using the model that was shipped rather than inventing a new one.",
+          "And orders arrive already finalised: instrument, direction, size, stop. Each carries a reference number, so if the same order arrives twice it is recognised and ignored instead of doubling the position."
+        ]
+      },
+      "tables": [
+        {
+          "title": "Inbound streams",
+          "columns": [
+            "Stream",
+            "Source",
+            "Verification",
+            "Failure behaviour"
+          ],
+          "rows": [
+            [
+              "Model bundle",
+              "GCS `latest.json`",
+              "SHA256 vs manifest",
+              "Abort swap, keep serving previous"
+            ],
+            [
+              "Live candles",
+              "OANDA v20 stream",
+              "Gap / staleness check",
+              "Regime label goes stale → pause"
+            ],
+            [
+              "Approved orders",
+              "`AMS_Outbound_Queue`",
+              "Schema + `idempotency_key`",
+              "Queue age > 5 min → PAUSED"
+            ],
+            [
+              "Emergency STOP",
+              "SIGUSR1 or authenticated API",
+              "Signature check",
+              "Flattens positions with **no** queue dependency"
+            ]
+          ]
+        }
+      ],
+      "callouts": [
+        {
+          "tone": "info",
+          "title": "Why the emergency stop bypasses the queue",
+          "technical": "Every other control path depends on the message bus. If the bus is the thing that is broken, a queue-delivered kill switch is useless exactly when it is needed. STOP is therefore delivered out-of-band via signal or direct authenticated call.",
+          "plain": "The fire alarm is not wired through the same phone line as everything else. If the phone line is what failed, you still need the alarm to work."
+        }
+      ]
+    },
+    {
+      "id": "core-logic",
+      "title": "Core Logic & Execution",
+      "kind": "pipeline",
+      "body": {
+        "technical": [
+          "The engine is intentionally thin. Its correctness property is *determinism*: given the same approved order and the same broker state, the resulting broker call must be identical. There is no sizing arithmetic, no signal scoring, no risk evaluation anywhere in this process.",
+          "Position management is the one place System 2 acts on its own — but only within instructions it was given. Trailing stops, time-based exits and take-profit confirmations execute against parameters that arrived with the order, not parameters it computed."
+        ],
+        "plain": [
+          "This part is deliberately dumb, and that is the feature. The fewer decisions it makes, the fewer ways it can be wrong.",
+          "It does look after trades once they are open — moving a stop, closing at a deadline — but only following instructions that came with the order. It never decides that a trade deserves more room."
+        ]
+      },
+      "stages": [
+        {
+          "code": "EXEC-A",
+          "name": "Artifact downloader + verifier",
+          "module": "Artifact sync service",
+          "output": "Verified local model cache",
+          "technical": "Poll pointer, download immutable prefix, SHA256 verify, atomic swap.",
+          "plain": "Collects the sealed model box, checks the seal, and swaps it in all at once."
+        },
+        {
+          "code": "EXEC-B",
+          "name": "Live regime detector",
+          "module": "HMM inference on live candles",
+          "output": "Current regime label + probabilities",
+          "technical": "Forward-only inference with persistence smoothing against the shipped HMM. No fitting.",
+          "plain": "Works out what kind of market it is right now, using the ruleset that was shipped to it."
+        },
+        {
+          "code": "EXEC-C",
+          "name": "Queue consumer",
+          "module": "`AMS_Outbound_Queue` consumer",
+          "output": "Validated order intents",
+          "technical": "Schema-validate, deduplicate on `idempotency_key`, reject anything older than the staleness budget.",
+          "plain": "Opens the incoming orders, checks they are well-formed and recent, and throws away duplicates."
+        },
+        {
+          "code": "EXEC-D",
+          "name": "OANDA broker adapter",
+          "module": "Broker adapter",
+          "output": "Filled or rejected orders",
+          "technical": "Maps `idempotency_key` to the client request ID, enforces a 2-pip slippage budget, confirms stop and take-profit attachment.",
+          "plain": "Actually places the trade, and refuses it if the price has already moved more than two pips against the plan."
+        },
+        {
+          "code": "EXEC-E",
+          "name": "Position manager",
+          "module": "Active position management",
+          "output": "Stop moves, exits",
+          "technical": "Executes trailing stops, duration gates and time-based exits from parameters carried on the order.",
+          "plain": "Babysits the open trades according to the instructions they arrived with."
+        },
+        {
+          "code": "EXEC-F",
+          "name": "Fill confirmation producer",
+          "module": "`AMS_Inbound_Queue` producer",
+          "output": "Fill and close events",
+          "technical": "Publishes fills, partial fills, rejections and closes back to System 3 so the account state machine stays truthful.",
+          "plain": "Reports back what actually happened, so the risk manager is never guessing about the account."
+        },
+        {
+          "code": "EXEC-G",
+          "name": "Telemetry API + dashboard",
+          "module": "FastAPI + React",
+          "output": "Read-only observability surface",
+          "technical": "Read-side KPI, trades, risk, regimes and model views. Telemetry is System 2's surface — the retired layer 5 moved here.",
+          "plain": "The screen you look at to see what is going on. Read-only: you cannot trade from it."
+        }
+      ]
+    },
+    {
+      "id": "interfaces",
+      "title": "Outputs & Contracts",
+      "kind": "interfaces",
+      "body": {
+        "technical": [
+          "System 2 is the only component in the platform holding a broker credential capable of placing an order. System 3, which decides *whether* to trade, deliberately never holds that key — separating the authority to decide from the ability to act."
+        ],
+        "plain": [
+          "This is the only machine that can actually move money. The machine that decides whether to move money cannot, and the machine that can does not decide. Neither can act alone."
+        ]
+      },
+      "tables": [
+        {
+          "title": "Published interfaces",
+          "columns": [
+            "Interface",
+            "Transport",
+            "Consumer"
+          ],
+          "rows": [
+            [
+              "Fill / close confirmations",
+              "Pub/Sub `AMS_Inbound_Queue`",
+              "System 3"
+            ],
+            [
+              "Account snapshot",
+              "Internal API, every 30 s",
+              "System 3"
+            ],
+            [
+              "Broker orders",
+              "OANDA v20 REST",
+              "The market"
+            ],
+            [
+              "Telemetry",
+              "FastAPI `/api/v1/*`",
+              "Operator dashboard"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "open",
+      "title": "Known Gaps",
+      "kind": "issues",
+      "issues": [
+        {
+          "id": "GAP-S2-01",
+          "severity": "high",
+          "title": "Consuming transport unconfirmed",
+          "text": "System 2 has not stated which topic and subscription it consumes. If any part of its path still polls a file-based queue it can never receive anything, because System 1 moved from a local directory to Pub/Sub. A written confirmation is the open ask."
+        },
+        {
+          "id": "GAP-S2-02",
+          "severity": "high",
+          "title": "A silent inbound queue raises no alarm",
+          "text": "System 1's producer sat broken for weeks, having never emitted a message, and nothing downstream noticed. Silence on an inbound queue during market hours should be an alert, not an unremarkable state."
+        },
+        {
+          "id": "GAP-S2-03",
+          "severity": "high",
+          "title": "ADR-001 would substantially expand this system's role",
+          "text": "The proposal moves live inference here: syncing a bundle that carries strategy code, running it against live candles, and publishing scored signals. That makes bundle integrity a trust boundary and makes determinism a tested requirement. System 2 must reply APPROVE or REJECT with reasons."
+        },
+        {
+          "id": "GAP-S2-04",
+          "severity": "med",
+          "title": "Ops provisioning incomplete",
+          "text": "No environment template has been shipped, and the `latest.json` manifest shape does not match what the artifact sync expects. Tracked as hard blockers in the deployment guide."
+        },
+        {
+          "id": "GAP-S2-05",
+          "severity": "med",
+          "title": "Practice drill not run",
+          "text": "The end-to-end drill across all three computers, and the D-004 evidence package behind it, are pending. Go-live is a human decision that depends on both."
+        },
+        {
+          "id": "GAP-S2-06",
+          "severity": "low",
+          "title": "Test fixtures observed in the live queue",
+          "text": "System 2 saw `entry: 1.05` messages — fixtures a System 1 test run wrote into the production queue artefact. The leak path is System 1's to close, but System 2 is where it surfaced."
+        }
+      ]
+    }
+  ]
+}

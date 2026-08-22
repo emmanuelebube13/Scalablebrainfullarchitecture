@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Editing the data layer — Scalable Brain</title>
+<meta name="description" content="How humans, scripts and automated agents read and write this site's content through Git and the GitHub API.">
+<link rel="stylesheet" href="assets/css/main.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header id="site-header"></header>
+
+<main id="main">
+  <section class="hero">
+    <div class="wrap">
+      <div class="eyebrow">Multi-agent content layer</div>
+      <h1>Editing this site</h1>
+      <p class="lede">Nothing on this site is written in HTML. Every page fetches structured JSON from
+        <code>data/</code> and renders it. A human, a script or an automated agent changes what the site says by
+        committing a JSON change — never by touching markup.</p>
+      <blockquote class="thesis">If a change requires editing an HTML file, either the schema is missing something
+        or the change is a design change. Those are different problems and they have different reviewers.</blockquote>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker">Layout</span>
+        <h2>Where everything lives</h2>
+        <p>Five content files and one template. That is the whole editable surface.</p>
+      </div>
+<pre><code>data/
+├── registry.json            Project identity, principles, and the list of systems
+├── architecture.json        Nodes, edges and traceable flows for the unified map
+├── decisions.json           Architecture decision records — including open ones
+├── goals.json               Milestone ladder, goals, dependency matrix, task tracker
+└── systems/
+    ├── system-1.json        One file per subsystem, all sharing one schema
+    ├── system-2.json
+    └── system-3.json
+
+schema/                      JSON Schema for each of the above — validate before committing
+templates/
+└── system.template.json     Copy this to add System 4
+tools/validate.mjs           Zero-dependency validator: node tools/validate.mjs
+assets/                      Stylesheet and ES modules. Design, not content.
+</code></pre>
+      <div class="callout t-info">
+        <h4>The one rule</h4>
+        <p>Content lives in <code>data/</code>. Presentation lives in <code>assets/</code>. An agent updating a
+          status, adding a task or documenting a new pipeline stage should only ever touch <code>data/</code>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker">Conventions</span>
+        <h2>Two rules that make the content usable</h2>
+      </div>
+      <div class="grid grid-2">
+        <div class="card">
+          <h3>Every explanation comes in two voices</h3>
+          <p class="goal-why">Anywhere the schema allows an explanation, it takes an object with
+            <code>technical</code> and <code>plain</code> keys. The header toggle picks one. Writing only
+            <code>technical</code> is allowed and falls back gracefully — but the plain version is where most of the
+            value is, because it is the one a non-engineer can challenge you on.</p>
+<pre><code>"summary": {
+  "technical": "4-state Gaussian HMM on D1/H4/H1 with K-Means fallback below a 0.70 accuracy gate.",
+  "plain": "Sorts market history into four kinds of weather, and falls back to a simpler
+            method if it cannot do that reliably."
+}</code></pre>
+        </div>
+        <div class="card">
+          <h3>Light inline markup, deliberately not Markdown</h3>
+          <p class="goal-why">Strings support <code>`code`</code>, <code>**bold**</code>, <code>*italic*</code> and
+            <code>[label](https://…)</code>. Everything is HTML-escaped first, so content written by an agent cannot
+            inject markup into the page. If you need a table, use a <code>tables</code> entry rather than
+            hand-drawing one in a string.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker">Workflow A</span>
+        <h2>Editing through Git</h2>
+        <p>The normal path for a developer or an agent with a checkout.</p>
+      </div>
+      <ol class="steps">
+        <li>
+          <h3>Clone and branch</h3>
+<pre><code>git clone https://github.com/emmanuelebube13/Scalablebrainfullarchitecture.git
+cd Scalablebrainfullarchitecture
+git checkout -b update/system-1-status</code></pre>
+        </li>
+        <li>
+          <h3>Edit the JSON</h3>
+          <p>Change only what you mean to change. Statuses, metrics and task rows are the common edits;
+            structural changes to the schema are not.</p>
+        </li>
+        <li>
+          <h3>Validate before committing</h3>
+          <p>The validator has no dependencies and needs no install. It checks every content file against its
+            schema and cross-checks referential integrity — every edge endpoint resolving to a node, every flow
+            edge existing, every task pointing at a real goal and a real system.</p>
+<pre><code>node tools/validate.mjs</code></pre>
+        </li>
+        <li>
+          <h3>Preview locally</h3>
+          <p>The pages load their content with <code>fetch()</code>, which browsers block on <code>file://</code>.
+            Serve the folder over HTTP:</p>
+<pre><code>python3 -m http.server 8080
+# then open http://localhost:8080</code></pre>
+        </li>
+        <li>
+          <h3>Commit and push</h3>
+          <p>One logical change per commit, with a message stating what became true — not what file moved.
+            GitHub Pages redeploys from the default branch automatically.</p>
+<pre><code>git commit -am "S1: producer repaired (FIX-S1-016); cadence still daily"
+git push -u origin update/system-1-status</code></pre>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker">Workflow B</span>
+        <h2>Editing through the GitHub API</h2>
+        <p>For automated agents with no checkout — a CI job, a monitoring script, or a system on another computer
+          reporting its own status.</p>
+      </div>
+
+      <h3>Read the current content and its blob SHA</h3>
+<pre><code>curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
+  -H "Accept: application/vnd.github+json" \
+  https://api.github.com/repos/emmanuelebube13/Scalablebrainfullarchitecture/contents/data/goals.json \
+  | jq -r '{sha, content}' </code></pre>
+
+      <h3>Write it back</h3>
+      <p>The <code>sha</code> is required and acts as optimistic concurrency control: if another agent has committed
+        since you read, your write is rejected rather than silently overwriting them. Re-read and re-apply.</p>
+<pre><code>NEW_CONTENT=$(base64 -w0 goals.json)
+
+curl -s -X PUT \
+  -H "Authorization: Bearer $GITHUB_TOKEN" \
+  -H "Accept: application/vnd.github+json" \
+  https://api.github.com/repos/emmanuelebube13/Scalablebrainfullarchitecture/contents/data/goals.json \
+  -d @- &lt;&lt;JSON
+{
+  "message": "S3: confirm subscription name on Scored_Signal_Queue",
+  "content": "$NEW_CONTENT",
+  "sha": "$CURRENT_SHA",
+  "branch": "main"
+}
+JSON</code></pre>
+
+      <div class="callout t-warn">
+        <h4>Concurrency is the failure mode to design for</h4>
+        <p>Three systems on three computers writing one file will collide. Two mitigations, in order of preference:
+          have each system own a distinct file or a distinct array (System 3 only ever appends tasks whose
+          <code>id</code> starts <code>T-3</code>), and always send the <code>sha</code> you read so a collision
+          is an error rather than a silent loss.</p>
+      </div>
+
+      <h3>Read-only consumption</h3>
+      <p>Any system can consume this content without credentials — the raw files are public and CORS-enabled,
+        which makes them a legitimate integration point rather than only a website:</p>
+<pre><code>curl -s https://raw.githubusercontent.com/emmanuelebube13/Scalablebrainfullarchitecture/main/data/goals.json \
+  | jq '.tasks[] | select(.system=="system-2" and .status!="done")'</code></pre>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker">Extensibility</span>
+        <h2>Adding System 4</h2>
+        <p>The site is built for <em>N</em> systems. Adding one is a data change, and no HTML, CSS or JavaScript
+          is touched.</p>
+      </div>
+      <ol class="steps">
+        <li>
+          <h3>Copy the template</h3>
+<pre><code>cp templates/system.template.json data/systems/system-4.json</code></pre>
+          <p>Fill in <code>id</code>, <code>ordinal</code>, <code>name</code>, <code>role</code>, <code>host</code>,
+            <code>accent</code>, the two-voice <code>summary</code>, and as many <code>sections</code> as you have
+            content for. Sections are rendered generically — <code>body</code>, <code>stages</code>,
+            <code>tables</code>, <code>callouts</code> and <code>issues</code> all render wherever they appear.</p>
+        </li>
+        <li>
+          <h3>Register it</h3>
+          <p>Append one entry to <code>systems</code> in <code>data/registry.json</code>. The overview page,
+            the subsystem navigation, the goal filters and the dependency matrix all pick it up from there.</p>
+<pre><code>{ "id": "system-4", "ordinal": 4, "file": "data/systems/system-4.json" }</code></pre>
+        </li>
+        <li>
+          <h3>Put it on the map</h3>
+          <p>Add a column to <code>columns</code> in <code>data/architecture.json</code>, then nodes that reference
+            it. Nodes declare a <code>column</code> and a <code>row</code>; coordinates are computed, so there is no
+            pixel arithmetic and no layout to rebalance.</p>
+<pre><code>{ "id": "s4", "title": "System 4 — The Analyst", "system": "system-4",
+  "subtitle": "Computer 4 · nightly" }
+
+{ "id": "s4-report", "column": "s4", "row": 2, "label": "Report builder",
+  "kind": "process", "status": "planned",
+  "detail": { "technical": "…", "plain": "…" } }</code></pre>
+        </li>
+        <li>
+          <h3>Wire its dependencies</h3>
+          <p>Add a <code>{ "system": "system-4", "role": …, "need": … }</code> entry to any goal in
+            <code>data/goals.json</code> that it touches. The dependency matrix is generated from those arrays,
+            so it cannot drift from the goals themselves.</p>
+        </li>
+        <li>
+          <h3>Validate and push</h3>
+<pre><code>node tools/validate.mjs &amp;&amp; git commit -am "Add System 4 — The Analyst"</code></pre>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker">Reference</span>
+        <h2>Schema at a glance</h2>
+      </div>
+      <div id="schema-tables"></div>
+    </div>
+  </section>
+</main>
+
+<footer id="site-footer"></footer>
+<script type="module" src="assets/js/contribute.js"></script>
+</body>
+</html>

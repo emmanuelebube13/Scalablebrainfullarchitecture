@@ -1,0 +1,600 @@
+{
+  "schema_version": "1.0.0",
+  "as_of": "2026-08-22",
+  "current_period": "2026-W34",
+  "status_vocabulary": {
+    "done": {
+      "label": "Done",
+      "tone": "good"
+    },
+    "in_progress": {
+      "label": "In progress",
+      "tone": "info"
+    },
+    "blocked": {
+      "label": "Blocked",
+      "tone": "bad"
+    },
+    "not_started": {
+      "label": "Not started",
+      "tone": "muted"
+    },
+    "deferred": {
+      "label": "Deferred by decision",
+      "tone": "warn"
+    }
+  },
+  "dependency_roles": {
+    "owner": {
+      "label": "Owns",
+      "symbol": "●",
+      "note": "This system does the work and is accountable for the outcome"
+    },
+    "required": {
+      "label": "Must change",
+      "symbol": "◐",
+      "note": "Cannot be achieved without a change in this system"
+    },
+    "consumer": {
+      "label": "Consumes",
+      "symbol": "○",
+      "note": "Affected by the outcome but requires no change"
+    },
+    "none": {
+      "label": "—",
+      "symbol": "",
+      "note": "Not involved"
+    }
+  },
+  "milestones": [
+    {
+      "id": "M0",
+      "name": "Where we actually started",
+      "state": "done",
+      "date": "2026-08-13",
+      "summary": "10 realised trades, all losers. Expectancy −367 CAD/trade, lifetime −15,935 CAD. The live map held one strategy that emitted zero signals when computed honestly. Honest valuation as a trading business: ~$0.",
+      "plain": "The baseline, written down without flattery. Ten real trades, ten losses, and the one strategy that was live turned out to be running on a bug.",
+      "falsifier": null
+    },
+    {
+      "id": "M1",
+      "name": "Honest zero",
+      "state": "done",
+      "date": "2026-08-14",
+      "summary": "Nothing in the live map that cannot fire in real time. `Range_Stochastic_Divergence` struck off via `INTEGRITY_DISQUALIFIED`; regimes re-fit with corrected label ordering and causal smoothing (kappa ≥ 0.83); finding B re-tested against honest labels and it stands.",
+      "plain": "The measured value stayed at zero — but it became a true zero. Every measurement taken after this point can be trusted, which is the only reason the rungs above it mean anything.",
+      "falsifier": "If the map still routes to a strategy whose honest signal count is zero, M1 is not met regardless of what else was built."
+    },
+    {
+      "id": "M2",
+      "name": "First honest qualifier",
+      "state": "contested",
+      "date": null,
+      "summary": "Three cells now sit in the live map as `qualified` — but only after the OOS gate was lowered from 60 months to 12 on 2026-08-21, and they rest on 5, 13 and 20 out-of-sample trades. Their profit factors (6.8–13.6) and drawdowns (0.02%–1%) are small-sample artefacts, stated as such by the owner. Measured against the original gates, the strongest honest candidate remains `demark_fractal_breakout` USD_JPY H4: 610 OOS trades, PF 1.51, Sharpe 1.11 — one passing cell in roughly 230.",
+      "plain": "On paper, three strategies passed. In practice they passed because the bar was lowered and because nothing checks how many trades the evidence contains — five trades is not a track record. The one result that would genuinely count has 610 trades behind it and works on a single currency pair.",
+      "falsifier": "A qualifier that would not survive re-imposing the 60-month gate and a minimum trade count is not a qualifier; it is a sample-size artefact."
+    },
+    {
+      "id": "M3",
+      "name": "Forward test",
+      "state": "in_progress",
+      "date": null,
+      "summary": "A signal travels the full three-system path on the practice account and its realised results track expectation. The drill design is specified: System 1 publishes one correctly-formed signal carrying `\"drill\": true`, System 3 processes it through the full risk path with the flag intact, System 2 runs it to the broker call and stops, logging the order it would have sent.",
+      "plain": "Prove the pipe before trusting it with anything. One clearly-marked test order is sent down the whole chain; the last machine stops just short of actually placing it and writes down exactly what it would have done.",
+      "falsifier": "If the same `signal_id` is not visible at all three systems, the pipe is not proven, however healthy each machine looks on its own."
+    },
+    {
+      "id": "M4",
+      "name": "Verified track record",
+      "state": "not_started",
+      "date": null,
+      "summary": "A continuous, auditable, out-of-sample equity curve of sufficient length to underwrite. This is the asset. Everything before it is infrastructure.",
+      "plain": "A long enough run of honest results that somebody else would take it seriously. Buyers underwrite an equity curve first and inspect the engineering second.",
+      "falsifier": "A curve with a gap, a restatement, or an unexplained parameter change in the middle is not a track record."
+    }
+  ],
+  "goals": [
+    {
+      "id": "G-001",
+      "title": "Prove the signal pipe end to end across all three computers",
+      "kind": "macro",
+      "horizon": "week",
+      "period": "2026-W34",
+      "status": "in_progress",
+      "metric": {
+        "name": "Links verified",
+        "current": 1,
+        "target": 3,
+        "unit": "hops"
+      },
+      "why": "Signals route `S1 → Scored_Signal_Queue → S3 → AMS_Outbound_Queue → S2`. System 1 publishes to link 1 and that is verified. Links 2 and 3 are unverified and System 1 is blind to them — its service account is publisher-only and cannot list topics or subscriptions. Nothing else about model quality can matter until a message is observed arriving.",
+      "plain": "Three machines, two pipes between them. We can prove letters are going into the first pipe. Nobody has yet confirmed in writing that anyone is collecting them, or where the reply goes.",
+      "definition_of_done": "A written reply from System 3 naming its subscription on `Scored_Signal_Queue`, confirming a consumer is actually pulling it, and naming the topic it publishes approved orders to. Not 'it should be set up'. Then the same `signal_id` observed at all three systems during the drill.",
+      "dependencies": [
+        {
+          "system": "system-1",
+          "role": "owner",
+          "need": "Publish; raise producer cadence to at least hourly during market hours"
+        },
+        {
+          "system": "system-2",
+          "role": "required",
+          "need": "State which topic and subscription it consumes and confirm the process is running — any remaining file-based queue polling can never receive anything"
+        },
+        {
+          "system": "system-3",
+          "role": "required",
+          "need": "Name its subscription and confirm a consumer is pulling. This is the blocking link; everything waits on its reply"
+        }
+      ],
+      "blocked_by": null
+    },
+    {
+      "id": "G-002",
+      "title": "Raise the producer cadence to at least hourly",
+      "kind": "system",
+      "horizon": "week",
+      "period": "2026-W34",
+      "status": "in_progress",
+      "metric": {
+        "name": "Producer runs per trading day",
+        "current": 1,
+        "target": 24,
+        "unit": "runs"
+      },
+      "why": "The producer fires from `cron_daily_ingest_and_signals.sh` at 22:30 on weekdays. Two of the three live strategies are H4 — six bars a day — so a once-daily batch emits signals for bars that closed up to twenty hours earlier. `src/signals/run.py` already supports a continuous 60-second loop.",
+      "plain": "Trade ideas are posted once a night, but most of the strategies produce a new idea every four hours. Almost everything posted is describing a moment that has already gone.",
+      "definition_of_done": "`crontab -l` shows the producer running at least hourly during market hours. Recommendation on record: hourly cron before continuous service — smaller change, restartable, matches the existing operational pattern.",
+      "dependencies": [
+        {
+          "system": "system-1",
+          "role": "owner",
+          "need": "Owner decision between hourly cron and continuous service, then implement"
+        },
+        {
+          "system": "system-2",
+          "role": "consumer",
+          "need": ""
+        },
+        {
+          "system": "system-3",
+          "role": "consumer",
+          "need": ""
+        }
+      ],
+      "blocked_by": null
+    },
+    {
+      "id": "G-003",
+      "title": "Resolve ADR-001 — decide where live inference runs",
+      "kind": "macro",
+      "horizon": "month",
+      "period": "2026-08",
+      "status": "blocked",
+      "metric": {
+        "name": "Approvals received",
+        "current": 0,
+        "target": 2,
+        "unit": "approvals"
+      },
+      "why": "Two incompatible architectures are on record. The code makes trading depend on Computer 1 — a host with unreliable networking — so if that machine is offline, nothing trades anywhere. That coupling is in no design document and is the direct cause of the incident in which the producer had never emitted a message and nobody could see why.",
+      "plain": "The whole operation currently depends on the least reliable computer in the building being awake. The proposal is to move the live work onto the machine that is already awake during market hours, and let the research machine go back to sleep.",
+      "definition_of_done": "System 2 and System 3 each reply APPROVE or REJECT with reasons, against their actual implementations rather than against the document. No implementation starts before both approve.",
+      "dependencies": [
+        {
+          "system": "system-1",
+          "role": "owner",
+          "need": "Authored the ADR; would decommission its producer in the same change that enables System 2 inference"
+        },
+        {
+          "system": "system-2",
+          "role": "required",
+          "need": "Would run inference, and must accept executing System-1-authored code inside a checksummed bundle"
+        },
+        {
+          "system": "system-3",
+          "role": "required",
+          "need": "Must confirm whether anything in the signal envelope changes when its publisher becomes System 2"
+        }
+      ],
+      "blocked_by": "Awaiting review from Systems 2 and 3"
+    },
+    {
+      "id": "G-004",
+      "title": "Add a minimum trade-count gate to vetting",
+      "kind": "system",
+      "horizon": "month",
+      "period": "2026-08",
+      "status": "not_started",
+      "metric": {
+        "name": "Live cells below a defensible sample size",
+        "current": 3,
+        "target": 0,
+        "unit": "cells"
+      },
+      "why": "`vet.py` treats `trade_count` only as a ranking tie-break, so there has never been a rule about how much evidence a qualification rests on. Combined with the 2026-08-21 reduction of `oos_months` from 60 to 12, cells with 5, 13 and 20 trades reached the live map with profit factors of 6.8 to 13.6.",
+      "plain": "Nothing in the examiner checks how many trades a strategy's track record actually contains. A strategy with five trades can therefore score spectacularly and be waved through — but five trades is noise.",
+      "definition_of_done": "A minimum trade-count gate exists in `gates.py` with a stated threshold and a test, and no cell below it can appear in a published map. Worth adding regardless of where the `oos_months` value finally lands.",
+      "dependencies": [
+        {
+          "system": "system-1",
+          "role": "owner",
+          "need": "Implement the gate and re-run vetting"
+        },
+        {
+          "system": "system-2",
+          "role": "none",
+          "need": ""
+        },
+        {
+          "system": "system-3",
+          "role": "consumer",
+          "need": "Sizing is derived from the measured edge, so a thin cell produces an unreliable Kelly fraction"
+        }
+      ],
+      "blocked_by": null
+    },
+    {
+      "id": "G-005",
+      "title": "Fix qualified strategies published with empty exits",
+      "kind": "system",
+      "horizon": "month",
+      "period": "2026-08",
+      "status": "not_started",
+      "metric": {
+        "name": "Live cells with empty exits",
+        "current": 3,
+        "target": 0,
+        "unit": "cells"
+      },
+      "why": "All three entries in the current live map carry `exits: {}`. A strategy with no exit specification serializes cleanly and passes every schema check, but means nothing to whoever has to execute it — the executing system has been told when to enter and never told when to leave.",
+      "plain": "Every strategy currently live says how to open a trade and says nothing at all about how to close one. It looks perfectly valid to every automated check on the way out.",
+      "definition_of_done": "`vet.py` refuses to publish a cell with an empty `exits` object, with a guarding test. The three live entries either gain exits or leave the map.",
+      "dependencies": [
+        {
+          "system": "system-1",
+          "role": "owner",
+          "need": "Fix the defect in `vet.py`"
+        },
+        {
+          "system": "system-2",
+          "role": "consumer",
+          "need": "Position management executes exit parameters carried on the order — with none supplied, there is nothing to execute"
+        },
+        {
+          "system": "system-3",
+          "role": "consumer",
+          "need": "Duration gates in layer I reason about expected trade life"
+        }
+      ],
+      "blocked_by": null
+    },
+    {
+      "id": "G-006",
+      "title": "Stand up the System 3 AMS schema and service skeleton",
+      "kind": "system",
+      "horizon": "quarter",
+      "period": "2026-Q3",
+      "status": "not_started",
+      "metric": {
+        "name": "Gate layers implemented",
+        "current": 0,
+        "target": 10,
+        "unit": "layers"
+      },
+      "why": "System 3's design is ratified but nothing runs on Computer 3. Its own PostgreSQL is a hard requirement, not a convenience — the guardian must keep operating when Computer 1 is asleep, which is its normal state.",
+      "plain": "The risk officer exists on paper only. Its checkpoints, its memory of the account, and its ability to say no all still need building.",
+      "definition_of_done": "Local PostgreSQL provisioned on Computer 3; account state machine persisted; gate layers A–J implemented with per-layer reason codes; median decision latency measured under 100 ms.",
+      "dependencies": [
+        {
+          "system": "system-1",
+          "role": "consumer",
+          "need": "Retrain triggers will eventually read decay signals from here"
+        },
+        {
+          "system": "system-2",
+          "role": "required",
+          "need": "The 30-second account snapshot API must be serving, or layers A–C are inert"
+        },
+        {
+          "system": "system-3",
+          "role": "owner",
+          "need": "Build it"
+        }
+      ],
+      "blocked_by": null
+    },
+    {
+      "id": "G-007",
+      "title": "Close the look-ahead defect class across the research fleet",
+      "kind": "system",
+      "horizon": "month",
+      "period": "2026-08",
+      "status": "in_progress",
+      "metric": {
+        "name": "Strategies verified leak-free",
+        "current": 15,
+        "target": 51,
+        "unit": "strategies"
+      },
+      "why": "`detect_swing_points` used a centred window and contaminated 36 of the 51 research strategies plus the only live strategy at the time. This is not one bug; it is a category of bug that makes losing systems look profitable, and it must be closed by an automated check rather than by review.",
+      "plain": "A helper was letting strategies peek at tomorrow's prices. Any result built on it was worthless. The fix is not to check each strategy by hand — it is to make it impossible to ship one that peeks.",
+      "definition_of_done": "Every strategy in the fleet passes `assert_no_lookahead_v2` in CI, and no measurement is published for a strategy that has not.",
+      "dependencies": [
+        {
+          "system": "system-1",
+          "role": "owner",
+          "need": "Fix the centred-window usages and gate the harness on the assertion"
+        },
+        {
+          "system": "system-2",
+          "role": "none",
+          "need": ""
+        },
+        {
+          "system": "system-3",
+          "role": "none",
+          "need": ""
+        }
+      ],
+      "blocked_by": null
+    },
+    {
+      "id": "G-008",
+      "title": "Reach M3 — a drill signal visible at all three systems",
+      "kind": "macro",
+      "horizon": "quarter",
+      "period": "2026-Q3",
+      "status": "in_progress",
+      "metric": {
+        "name": "Milestone rungs reached",
+        "current": 1,
+        "target": 3,
+        "unit": "rungs (target: M3)"
+      },
+      "why": "Every proposal should answer one question: which rung of the ladder does this move? Work that moves no rung is a cost, however good the engineering. M1 is reached, M2 is contested, M3 is the next honest rung.",
+      "plain": "A single test for whether a piece of work is worth doing: does it move the project closer to a real, provable track record? If not, it waits.",
+      "definition_of_done": "One signal carrying `\"drill\": true` is published by System 1, processed by System 3 through the full risk path with the flag intact, and run by System 2 to the broker call and no further — with the logged order matching what System 1 sent, and the same `signal_id` visible at all three.",
+      "dependencies": [
+        {
+          "system": "system-1",
+          "role": "required",
+          "need": "Publish the drill signal at a realistic live price"
+        },
+        {
+          "system": "system-2",
+          "role": "required",
+          "need": "Stop at the broker call, log the order it would have sent, report back"
+        },
+        {
+          "system": "system-3",
+          "role": "required",
+          "need": "Process through the full risk path, forward with the flag intact, report back"
+        }
+      ],
+      "blocked_by": "G-001"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-101",
+      "system": "system-1",
+      "goal": "G-002",
+      "period": "2026-W34",
+      "status": "in_progress",
+      "title": "Raise the producer to at least hourly during market hours",
+      "detail": "Owner decision needed: hourly cron or continuous service. Hourly cron recommended — smaller change, restartable, matches the existing pattern.",
+      "evidence": "crontab -l"
+    },
+    {
+      "id": "T-102",
+      "system": "system-1",
+      "goal": "G-001",
+      "period": "2026-W34",
+      "status": "done",
+      "title": "FIX-S1-016 — repair the signal producer",
+      "detail": "It checked publication status on the wrong artifact, a condition nothing could satisfy, and crashed on import because the causal routing label had been deleted with a retired experiment. Both fixed, verified end to end against the live GCS bundle.",
+      "evidence": "comms/TONIGHT-2026-08-22-restore-trading.md"
+    },
+    {
+      "id": "T-103",
+      "system": "system-1",
+      "goal": "G-001",
+      "period": "2026-W34",
+      "status": "done",
+      "title": "Switch QUEUE_PROVIDER from local to pubsub",
+      "detail": "Signals had been landing in a directory on Computer 1 that no other machine could ever read.",
+      "evidence": ""
+    },
+    {
+      "id": "T-104",
+      "system": "system-1",
+      "goal": "G-001",
+      "period": "2026-W34",
+      "status": "not_started",
+      "title": "Publish the drill signal",
+      "detail": "One correctly-formed signal on a real instrument at a realistic live price, carrying \"drill\": true. Runs after links 2 and 3 are confirmed.",
+      "evidence": ""
+    },
+    {
+      "id": "T-105",
+      "system": "system-1",
+      "goal": "G-004",
+      "period": "2026-W35",
+      "status": "not_started",
+      "title": "Add a minimum trade-count gate to gates.py",
+      "detail": "With a stated threshold and a guarding test. Revisit after the pipe is proven.",
+      "evidence": ""
+    },
+    {
+      "id": "T-106",
+      "system": "system-1",
+      "goal": "G-005",
+      "period": "2026-W35",
+      "status": "not_started",
+      "title": "Refuse to publish cells with empty exits",
+      "detail": "All three live entries currently carry exits: {}.",
+      "evidence": ""
+    },
+    {
+      "id": "T-107",
+      "system": "system-1",
+      "goal": "G-001",
+      "period": "2026-W34",
+      "status": "not_started",
+      "title": "Close the test-fixture leak into the production queue",
+      "detail": "A test run once wrote fixtures into the live queue artefact — the entry: 1.05 messages System 2 saw. Not blocking, not closed.",
+      "evidence": ""
+    },
+    {
+      "id": "T-108",
+      "system": "system-1",
+      "goal": "G-003",
+      "period": "2026-08",
+      "status": "blocked",
+      "title": "Await APPROVE/REJECT on ADR-001 from Systems 2 and 3",
+      "detail": "No implementation starts before both reply. Until then the producer is a bridge, not the destination.",
+      "evidence": "docs/design/ADR-001-where-inference-runs.md"
+    },
+    {
+      "id": "T-109",
+      "system": "system-1",
+      "goal": "G-007",
+      "period": "2026-W35",
+      "status": "in_progress",
+      "title": "Gate the research harness on assert_no_lookahead_v2",
+      "detail": "Make it impossible to publish a measurement for a strategy that has not passed the assertion.",
+      "evidence": ""
+    },
+    {
+      "id": "T-110",
+      "system": "system-1",
+      "goal": "G-004",
+      "period": "2026-W36",
+      "status": "not_started",
+      "title": "Wrap persist_trade_outcomes in a transaction",
+      "detail": "Currently DELETE-then-rebuild with no transaction, and the default --lookback-years 5 silently discards half the history.",
+      "evidence": ""
+    },
+    {
+      "id": "T-201",
+      "system": "system-2",
+      "goal": "G-001",
+      "period": "2026-W34",
+      "status": "in_progress",
+      "title": "State which topic and subscription System 2 consumes",
+      "detail": "If any part of its path still polls a file-based queue it can never receive anything. Independent of System 3's reply; can proceed in parallel.",
+      "evidence": ""
+    },
+    {
+      "id": "T-202",
+      "system": "system-2",
+      "goal": "G-001",
+      "period": "2026-W34",
+      "status": "not_started",
+      "title": "Add alarming on a silent inbound queue",
+      "detail": "The producer sat broken for weeks without anyone seeing it. Silence on an inbound queue during market hours should be an alert, not a normal state.",
+      "evidence": ""
+    },
+    {
+      "id": "T-203",
+      "system": "system-2",
+      "goal": "G-008",
+      "period": "2026-W34",
+      "status": "not_started",
+      "title": "Run the drill signal to the broker call and stop",
+      "detail": "Log the order it would have sent and report back. Confirm the practice endpoint before anything is unflagged.",
+      "evidence": ""
+    },
+    {
+      "id": "T-204",
+      "system": "system-2",
+      "goal": "G-003",
+      "period": "2026-08",
+      "status": "not_started",
+      "title": "Review ADR-001 and reply APPROVE or REJECT",
+      "detail": "Specifically: is executing System-1-authored code acceptable to its security posture, and does it have candle history sufficient for a 252-bar D1 warm-up?",
+      "evidence": ""
+    },
+    {
+      "id": "T-205",
+      "system": "system-2",
+      "goal": "G-006",
+      "period": "2026-W36",
+      "status": "not_started",
+      "title": "Serve the 30-second account snapshot API",
+      "detail": "System 3's gate layers A–C are inert without it, and a missing snapshot must resolve to REJECT rather than to a stale value.",
+      "evidence": ""
+    },
+    {
+      "id": "T-301",
+      "system": "system-3",
+      "goal": "G-001",
+      "period": "2026-W34",
+      "status": "in_progress",
+      "title": "Name the subscription on Scored_Signal_Queue in writing",
+      "detail": "Blocking. Also confirm a consumer is actually pulling it, and name the topic approved orders are published to.",
+      "evidence": "comms/TO-SYSTEM3-2026-08-22-restore-signal-flow.md"
+    },
+    {
+      "id": "T-302",
+      "system": "system-3",
+      "goal": "G-006",
+      "period": "2026-W35",
+      "status": "not_started",
+      "title": "Provision local PostgreSQL on Computer 3",
+      "detail": "Hard requirement: the guardian must operate with Computer 1 offline, which is its normal state.",
+      "evidence": ""
+    },
+    {
+      "id": "T-303",
+      "system": "system-3",
+      "goal": "G-006",
+      "period": "2026-W36",
+      "status": "not_started",
+      "title": "Implement the account state machine with persistence",
+      "detail": "DEMO → ACTIVE → CAUTION → PAUSED → CIRCUIT_BROKEN → RECOVERY, written before any approval is published.",
+      "evidence": ""
+    },
+    {
+      "id": "T-304",
+      "system": "system-3",
+      "goal": "G-006",
+      "period": "2026-W37",
+      "status": "not_started",
+      "title": "Implement gate layers A–J with per-layer reason codes",
+      "detail": "Sequential and short-circuiting. Every rejection must record which layer refused and why.",
+      "evidence": ""
+    },
+    {
+      "id": "T-305",
+      "system": "system-3",
+      "goal": "G-003",
+      "period": "2026-08",
+      "status": "not_started",
+      "title": "Review ADR-001 and reply APPROVE or REJECT",
+      "detail": "Specifically: does anything in the signal envelope need to change when the publisher becomes System 2 — provenance, bundle id, producer identity?",
+      "evidence": ""
+    },
+    {
+      "id": "T-306",
+      "system": "system-3",
+      "goal": "G-008",
+      "period": "2026-W34",
+      "status": "not_started",
+      "title": "Process the drill signal with the flag intact",
+      "detail": "Through the full risk path, forwarded to System 2 without stripping \"drill\": true.",
+      "evidence": ""
+    },
+    {
+      "id": "T-307",
+      "system": "system-3",
+      "goal": "G-008",
+      "period": "2026-W38",
+      "status": "not_started",
+      "title": "Build the post-trade journal and decay auditor",
+      "detail": "The only feedback path from live results into model building. Keep it narrow.",
+      "evidence": ""
+    }
+  ]
+}

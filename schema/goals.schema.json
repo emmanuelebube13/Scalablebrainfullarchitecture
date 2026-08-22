@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Goals, milestones and tasks",
+  "type": "object",
+  "required": ["schema_version", "status_vocabulary", "dependency_roles", "milestones", "goals", "tasks"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "as_of": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "current_period": { "type": "string" },
+    "status_vocabulary": { "type": "object" },
+    "dependency_roles": { "type": "object" },
+    "milestones": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "state", "summary"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "state": { "type": "string", "enum": ["done", "in_progress", "contested", "not_started", "blocked"] },
+          "date": { "type": ["string", "null"] },
+          "summary": { "type": "string" },
+          "plain": { "type": "string" },
+          "falsifier": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "goals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "kind", "status", "why", "definition_of_done", "dependencies"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "kind": { "type": "string", "enum": ["macro", "system"] },
+          "horizon": { "type": "string", "enum": ["week", "month", "quarter"] },
+          "period": { "type": "string" },
+          "status": { "type": "string" },
+          "metric": {
+            "type": "object",
+            "required": ["name", "current", "target"],
+            "properties": {
+              "name": { "type": "string" },
+              "current": { "type": "number" },
+              "target": { "type": "number" },
+              "unit": { "type": "string" },
+              "note": { "type": "string" }
+            }
+          },
+          "why": { "type": "string" },
+          "plain": { "type": "string" },
+          "definition_of_done": { "type": "string" },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["system", "role"],
+              "properties": {
+                "system": { "type": "string" },
+                "role": { "type": "string", "enum": ["owner", "required", "consumer", "none"] },
+                "need": { "type": "string" }
+              }
+            }
+          },
+          "blocked_by": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "system", "goal", "period", "status", "title"],
+        "properties": {
+          "id": { "type": "string" },
+          "system": { "type": "string" },
+          "goal": { "type": "string" },
+          "period": { "type": "string" },
+          "status": { "type": "string" },
+          "title": { "type": "string" },
+          "detail": { "type": "string" },
+          "evidence": { "type": "string" }
+        }
+      }
+    }
+  }
+}

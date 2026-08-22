@@ -1,0 +1,816 @@
+{
+  "schema_version": "1.0.0",
+  "as_of": "2026-08-22",
+  "layout": {
+    "column_width": 252,
+    "row_height": 74,
+    "node_width": 196,
+    "node_height": 50,
+    "padding": 48
+  },
+  "columns": [
+    {
+      "id": "sources",
+      "title": "Sources",
+      "system": null
+    },
+    {
+      "id": "s1",
+      "title": "System 1 — The Brain",
+      "system": "system-1",
+      "subtitle": "Computer 1 · intermittent"
+    },
+    {
+      "id": "bus-a",
+      "title": "Artifacts & signal bus",
+      "system": null,
+      "subtitle": "GCS + Pub/Sub"
+    },
+    {
+      "id": "s3",
+      "title": "System 3 — The Guardian",
+      "system": "system-3",
+      "subtitle": "Computer 3 · always on"
+    },
+    {
+      "id": "bus-b",
+      "title": "Order & fill bus",
+      "system": null,
+      "subtitle": "Pub/Sub"
+    },
+    {
+      "id": "s2",
+      "title": "System 2 — The Hand",
+      "system": "system-2",
+      "subtitle": "Computer 2 · market hours"
+    },
+    {
+      "id": "edge",
+      "title": "Market & operator",
+      "system": null
+    }
+  ],
+  "nodes": [
+    {
+      "id": "oanda-data",
+      "column": "sources",
+      "row": 0,
+      "label": "OANDA v20 price API",
+      "kind": "source",
+      "status": "live",
+      "detail": {
+        "technical": "REST practice endpoint. MBA candles — mid, bid and ask in a single request — across H1, H4 and D1.",
+        "plain": "The broker's price history feed. Where every number in the system originally comes from."
+      }
+    },
+    {
+      "id": "macro",
+      "column": "sources",
+      "row": 3,
+      "label": "Macro event text",
+      "kind": "source",
+      "status": "planned",
+      "detail": {
+        "technical": "Scraped macro headlines scored by FinBERT into `fact_macro_events`. Implemented and ingest-capable, but MODEL-010 never wired it in as a feature or a gate.",
+        "plain": "News and economic announcements. The reading machinery exists but nothing currently listens to it."
+      }
+    },
+    {
+      "id": "s1-ingest",
+      "column": "s1",
+      "row": 0,
+      "label": "MODEL-001 · Ingest",
+      "kind": "process",
+      "status": "live",
+      "detail": {
+        "technical": "`multi_timeframe_ingest.py` + `dq.py`. Idempotent upsert into `fact_market_prices` (~4.68 M rows). Daily batch plus a weekly Saturday cron.",
+        "plain": "Collects the price history and refuses it if there are holes."
+      }
+    },
+    {
+      "id": "s1-features",
+      "column": "s1",
+      "row": 1,
+      "label": "MODEL-002 · Feature store",
+      "kind": "process",
+      "status": "live",
+      "detail": {
+        "technical": "Versioned Parquet, trailing-only, byte-deterministic. `feature-store/{version}/`.",
+        "plain": "Turns raw prices into the measurements models read. Never uses a future bar."
+      }
+    },
+    {
+      "id": "s1-regime",
+      "column": "s1",
+      "row": 2,
+      "label": "MODEL-003 · Regimes",
+      "kind": "process",
+      "status": "live",
+      "detail": {
+        "technical": "4-state Gaussian HMM on D1/H4/H1, K-Means fallback below the 0.70 gate. Emits a reporting label and a causal walk-forward label. 847,151 rows, kappa ≥ 0.83.",
+        "plain": "Labels every moment of history as trending up, trending down, sideways or violent."
+      }
+    },
+    {
+      "id": "s1-outcomes",
+      "column": "s1",
+      "row": 3,
+      "label": "Backtest → outcomes",
+      "kind": "process",
+      "status": "live",
+      "detail": {
+        "technical": "`layer0/persist_trade_outcomes.py` runs each strategy on its declared `primary_granularity` and writes `fact_trade_outcomes` (55,756 rows). Destructive DELETE-then-rebuild — snapshot first.",
+        "plain": "Replays every trading rule across all of history and writes down every trade it would have taken."
+      }
+    },
+    {
+      "id": "s1-attrib",
+      "column": "s1",
+      "row": 4,
+      "label": "MODEL-004 · Attribution",
+      "kind": "process",
+      "status": "live",
+      "detail": {
+        "technical": "Point-in-time join of each trade to the **causal** regime at entry. Metrics on OOS trades only, Bayesian shrinkage for thin cells. 40 cells / 38,610 OOS trades.",
+        "plain": "Files each historical trade under the market weather it was opened in, then scores each rule per weather."
+      }
+    },
+    {
+      "id": "s1-vet",
+      "column": "s1",
+      "row": 5,
+      "label": "MODEL-005 · Vetting",
+      "kind": "process",
+      "status": "live",
+      "detail": {
+        "technical": "PF ≥ 1.5, Sharpe ≥ 0.8, MaxDD ≤ 25%, WinRate ≥ 40%, Recovery ≥ 3.0, **OOS ≥ 12mo** (lowered from 60 by owner decision 2026-08-21). `INTEGRITY_DISQUALIFIED` checked first, separately. **No minimum trade-count gate** — which is how 5-, 13- and 20-trade cells qualified.",
+        "plain": "The examiner. Six pass marks plus a blacklist for rules whose track record is known to be fiction. One mark was deliberately relaxed in August, and there has never been a rule about how many trades the evidence must rest on."
+      }
+    },
+    {
+      "id": "s1-gate",
+      "column": "s1",
+      "row": 6,
+      "label": "MODEL-006 · Gatekeeper",
+      "kind": "process",
+      "status": "live",
+      "detail": {
+        "technical": "XGBoost on causal-regime features, expanding-window walk-forward, per-regime thresholds, bootstrap-significant OOS uplift required.",
+        "plain": "Trains the referee that vetoes individual trades even when the rule and the weather both look right."
+      }
+    },
+    {
+      "id": "s1-pub",
+      "column": "s1",
+      "row": 7,
+      "label": "MODEL-007 · Publish",
+      "kind": "process",
+      "status": "live",
+      "detail": {
+        "technical": "Immutable versioned prefix → secret scan → SHA256 round-trip verify → **then** atomic `latest.json` flip. Superseded pointer archived to `previous.json`.",
+        "plain": "Seals the box, re-checks the seal after shipping, and only then updates the sign saying which box is current."
+      }
+    },
+    {
+      "id": "s1-queue",
+      "column": "s1",
+      "row": 8,
+      "label": "MODEL-008 · Signal producer",
+      "kind": "process",
+      "status": "degraded",
+      "detail": {
+        "technical": "`src/signals/` + `queue_producer/producer.py`. Schema-validated, idempotent by `message_id`, backpressure + DLQ. Repaired 2026-08-22 (FIX-S1-016) after never having emitted a message. `QUEUE_PROVIDER=pubsub`. Runs once a day at 22:30 weekdays — too slow for the two H4 strategies it serves. **ADR-001 proposes removing it entirely.**",
+        "plain": "Posts each scored trade idea to a real cloud postbox. Until 2026-08-22 it had never successfully posted anything at all. It now works, but only fires once a night, while most of the strategies it serves produce a new idea every four hours."
+      }
+    },
+    {
+      "id": "s1-orch",
+      "column": "s1",
+      "row": 9.6,
+      "label": "MODEL-009 · Orchestrator",
+      "kind": "control",
+      "status": "live",
+      "detail": {
+        "technical": "Triggers: Sunday 00:00 UTC, low Sharpe, circuit breaker. Single-flight lock, cooldown, gated pipeline, atomic promote only if gates pass **and** it beats the incumbent read from the storage backend. The single governed writer of the champion bundle.",
+        "plain": "The foreman. Decides when to retrain, refuses to run two at once, and only swaps the live model if the new one is genuinely better."
+      }
+    },
+    {
+      "id": "gcs",
+      "column": "bus-a",
+      "row": 3,
+      "label": "GCS artifact registry",
+      "kind": "store",
+      "status": "live",
+      "detail": {
+        "technical": "`scalable-brain-artifacts`. Immutable versioned prefixes, `latest.json` pointer, SHA256 manifests, retention trims oldest. Never overwrites.",
+        "plain": "The shelf where sealed model boxes are kept, each with a serial number and a receipt. Old boxes are never edited, only retired."
+      }
+    },
+    {
+      "id": "q-signal",
+      "column": "bus-a",
+      "row": 8,
+      "label": "Scored_Signal_Queue",
+      "kind": "queue",
+      "status": "degraded",
+      "detail": {
+        "technical": "Pub/Sub topic, S1 → S3. System 1 publishes to it successfully. Its service account is **publisher-only** and cannot list topics or subscriptions, so whether anything consumes on the other side is unconfirmed from this side.",
+        "plain": "The pipe carrying trade ideas to the risk officer. Letters are going in. Nobody on this end can see whether they are being collected — that has to come back as a written confirmation."
+      }
+    },
+    {
+      "id": "s3-journal",
+      "column": "s3",
+      "row": 4.5,
+      "label": "Journal & decay auditor",
+      "kind": "process",
+      "status": "planned",
+      "detail": {
+        "technical": "Post-trade processor, journal export to GCS, strategy-decay detection. Sustained live underperformance versus backtest is one of the retrain triggers.",
+        "plain": "Keeps the diary of what actually happened, and raises a hand when a strategy stops working in real life."
+      }
+    },
+    {
+      "id": "s3-gate",
+      "column": "s3",
+      "row": 6,
+      "label": "Decision gate A–J",
+      "kind": "process",
+      "status": "planned",
+      "detail": {
+        "technical": "Ten sequential short-circuiting layers. A–G are vetoes, H produces the size, I is calendar, J publishes. First failure ends evaluation with a logged reason code. < 100 ms median.",
+        "plain": "Ten checkpoints in a fixed order. Nine can only say no; exactly one decides the amount. The first no ends it."
+      }
+    },
+    {
+      "id": "s3-state",
+      "column": "s3",
+      "row": 7.5,
+      "label": "Account state machine",
+      "kind": "control",
+      "status": "planned",
+      "detail": {
+        "technical": "DEMO → ACTIVE → CAUTION → PAUSED → CIRCUIT_BROKEN → RECOVERY, plus 8 circuit breakers and the graduated deployment ladder (Paper → Micro → Small → Full).",
+        "plain": "The account has a mood that changes on its own. A bad day demotes it; getting promoted back takes evidence, not time."
+      }
+    },
+    {
+      "id": "s3-db",
+      "column": "s3",
+      "row": 9,
+      "label": "Local PostgreSQL",
+      "kind": "store",
+      "status": "planned",
+      "detail": {
+        "technical": "System of record for account state, written before any approval is published. Zero runtime dependency on Computer 1.",
+        "plain": "Its own hard drive, written to before it acts — so a power cut cannot make it forget a decision it already made."
+      }
+    },
+    {
+      "id": "q-out",
+      "column": "bus-b",
+      "row": 6,
+      "label": "AMS_Outbound_Queue",
+      "kind": "queue",
+      "status": "degraded",
+      "detail": {
+        "technical": "Pub/Sub topic, S3 → S2, carrying approved and already-sized orders. Existence and subscription names are unverified — System 1 is blind to this link and System 3 has been asked to name it in writing.",
+        "plain": "The pipe carrying finished instructions to the hands. Nobody has yet confirmed in writing that it exists or who is listening to it."
+      }
+    },
+    {
+      "id": "q-in",
+      "column": "bus-b",
+      "row": 8,
+      "label": "AMS_Inbound_Queue",
+      "kind": "queue",
+      "status": "degraded",
+      "detail": {
+        "technical": "Pub/Sub topic, S2 → S3: fills, partial fills, rejections and closes. Unverified, same blindness as the outbound link.",
+        "plain": "The pipe reporting back what actually happened at the broker. Also unconfirmed."
+      }
+    },
+    {
+      "id": "s2-sync",
+      "column": "s2",
+      "row": 1,
+      "label": "Artifact sync + verify",
+      "kind": "process",
+      "status": "live",
+      "detail": {
+        "technical": "Polls `latest.json` ~every 15 min, downloads the immutable prefix, recomputes SHA256, atomic cache swap. Mismatch aborts and keeps serving the previous bundle.",
+        "plain": "Collects the model box, checks the seal, swaps it in all at once. A bad delivery can never break what is already running."
+      }
+    },
+    {
+      "id": "s2-regime",
+      "column": "s2",
+      "row": 2.5,
+      "label": "Live regime detector",
+      "kind": "process",
+      "status": "live",
+      "detail": {
+        "technical": "Forward-only HMM inference on live candles with persistence smoothing, against the shipped model. Never fits.",
+        "plain": "Works out what the market is doing right now, using the ruleset it was given rather than inventing one."
+      }
+    },
+    {
+      "id": "s2-tele",
+      "column": "s2",
+      "row": 4,
+      "label": "Telemetry API + dashboard",
+      "kind": "process",
+      "status": "live",
+      "detail": {
+        "technical": "FastAPI `/api/v1/*` + React read-side views: KPI, trades, risk, regimes, model. Read-only.",
+        "plain": "The screen you watch. You cannot trade from it — only look."
+      }
+    },
+    {
+      "id": "s2-consumer",
+      "column": "s2",
+      "row": 6,
+      "label": "Order consumer",
+      "kind": "process",
+      "status": "live",
+      "detail": {
+        "technical": "Schema-validates, deduplicates on `idempotency_key`, rejects anything past the 5-minute staleness budget → PAUSED.",
+        "plain": "Opens incoming orders, checks they are well-formed and recent, ignores duplicates."
+      }
+    },
+    {
+      "id": "s2-broker",
+      "column": "s2",
+      "row": 7.2,
+      "label": "OANDA broker adapter",
+      "kind": "process",
+      "status": "live",
+      "detail": {
+        "technical": "Maps `idempotency_key` onto the OANDA client request ID so a replay is a broker-side no-op. 2-pip slippage budget. Confirms stop and take-profit attachment.",
+        "plain": "Actually places the trade. If the price already moved more than two pips against the plan, it refuses."
+      }
+    },
+    {
+      "id": "s2-pos",
+      "column": "s2",
+      "row": 8.6,
+      "label": "Position manager",
+      "kind": "process",
+      "status": "live",
+      "detail": {
+        "technical": "Trailing stops, duration gates, time-based exits — all from parameters carried on the order, never computed locally.",
+        "plain": "Babysits open trades, strictly according to the instructions they arrived with."
+      }
+    },
+    {
+      "id": "operator",
+      "column": "edge",
+      "row": 4,
+      "label": "Operator",
+      "kind": "sink",
+      "status": "live",
+      "detail": {
+        "technical": "Read-only dashboard plus urgency-routed Telegram and SMTP alerts. Go-live remains a human decision.",
+        "plain": "You. Watching, and holding the only switch that says the system may trade for real."
+      }
+    },
+    {
+      "id": "market",
+      "column": "edge",
+      "row": 7.8,
+      "label": "OANDA broker / market",
+      "kind": "sink",
+      "status": "live",
+      "detail": {
+        "technical": "Practice environment. Only System 2 holds a credential capable of placing an order.",
+        "plain": "Where the money actually is. Exactly one machine can reach it."
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-price",
+      "from": "oanda-data",
+      "to": "s1-ingest",
+      "label": "MBA candles H1/H4/D1",
+      "kind": "data",
+      "status": "live"
+    },
+    {
+      "id": "e-macro",
+      "from": "macro",
+      "to": "s1-features",
+      "label": "FinBERT sentiment (unwired)",
+      "kind": "data",
+      "status": "planned"
+    },
+    {
+      "id": "e-prices-feat",
+      "from": "s1-ingest",
+      "to": "s1-features",
+      "label": "fact_market_prices",
+      "kind": "data",
+      "status": "live"
+    },
+    {
+      "id": "e-prices-bt",
+      "from": "s1-ingest",
+      "to": "s1-outcomes",
+      "label": "prices for backtest",
+      "kind": "data",
+      "status": "live"
+    },
+    {
+      "id": "e-feat-regime",
+      "from": "s1-features",
+      "to": "s1-regime",
+      "label": "feature store",
+      "kind": "data",
+      "status": "live"
+    },
+    {
+      "id": "e-feat-gate",
+      "from": "s1-features",
+      "to": "s1-gate",
+      "label": "causal features",
+      "kind": "data",
+      "status": "live"
+    },
+    {
+      "id": "e-regime-attrib",
+      "from": "s1-regime",
+      "to": "s1-attrib",
+      "label": "causal regime label",
+      "kind": "data",
+      "status": "live"
+    },
+    {
+      "id": "e-outcomes-attrib",
+      "from": "s1-outcomes",
+      "to": "s1-attrib",
+      "label": "fact_trade_outcomes",
+      "kind": "data",
+      "status": "live"
+    },
+    {
+      "id": "e-attrib-vet",
+      "from": "s1-attrib",
+      "to": "s1-vet",
+      "label": "per-cell OOS metrics",
+      "kind": "data",
+      "status": "live"
+    },
+    {
+      "id": "e-vet-gate",
+      "from": "s1-vet",
+      "to": "s1-gate",
+      "label": "qualified cells",
+      "kind": "data",
+      "status": "live"
+    },
+    {
+      "id": "e-vet-pub",
+      "from": "s1-vet",
+      "to": "s1-pub",
+      "label": "regime map + weights",
+      "kind": "artifact",
+      "status": "live"
+    },
+    {
+      "id": "e-gate-pub",
+      "from": "s1-gate",
+      "to": "s1-pub",
+      "label": "champion + manifest",
+      "kind": "artifact",
+      "status": "live"
+    },
+    {
+      "id": "e-gate-queue",
+      "from": "s1-gate",
+      "to": "s1-queue",
+      "label": "scored signals",
+      "kind": "data",
+      "status": "live"
+    },
+    {
+      "id": "e-orch-pub",
+      "from": "s1-orch",
+      "to": "s1-pub",
+      "label": "promote only if gates pass",
+      "kind": "control",
+      "status": "live"
+    },
+    {
+      "id": "e-orch-regime",
+      "from": "s1-orch",
+      "to": "s1-regime",
+      "label": "trigger gated retrain",
+      "kind": "control",
+      "status": "live"
+    },
+    {
+      "id": "e-pub-gcs",
+      "from": "s1-pub",
+      "to": "gcs",
+      "label": "verify → pointer flip last",
+      "kind": "artifact",
+      "status": "live"
+    },
+    {
+      "id": "e-queue-topic",
+      "from": "s1-queue",
+      "to": "q-signal",
+      "label": "signal-message-contract",
+      "kind": "message",
+      "status": "live"
+    },
+    {
+      "id": "e-gcs-s2",
+      "from": "gcs",
+      "to": "s2-sync",
+      "label": "latest.json poll ~15 min",
+      "kind": "artifact",
+      "status": "live"
+    },
+    {
+      "id": "e-gcs-s3",
+      "from": "gcs",
+      "to": "s3-gate",
+      "label": "regime map, weights, thresholds",
+      "kind": "artifact",
+      "status": "live"
+    },
+    {
+      "id": "e-signal-s3",
+      "from": "q-signal",
+      "to": "s3-gate",
+      "label": "consumption unconfirmed",
+      "kind": "message",
+      "status": "degraded"
+    },
+    {
+      "id": "e-state-gate",
+      "from": "s3-state",
+      "to": "s3-gate",
+      "label": "state, budgets, streak",
+      "kind": "control",
+      "status": "planned"
+    },
+    {
+      "id": "e-db-state",
+      "from": "s3-db",
+      "to": "s3-state",
+      "label": "system of record",
+      "kind": "data",
+      "status": "planned"
+    },
+    {
+      "id": "e-gate-out",
+      "from": "s3-gate",
+      "to": "q-out",
+      "label": "approved + sized order",
+      "kind": "order",
+      "status": "planned"
+    },
+    {
+      "id": "e-state-journal",
+      "from": "s3-state",
+      "to": "s3-journal",
+      "label": "realised trades",
+      "kind": "data",
+      "status": "planned"
+    },
+    {
+      "id": "e-out-s2",
+      "from": "q-out",
+      "to": "s2-consumer",
+      "label": "order intent",
+      "kind": "order",
+      "status": "degraded"
+    },
+    {
+      "id": "e-sync-regime",
+      "from": "s2-sync",
+      "to": "s2-regime",
+      "label": "verified model cache",
+      "kind": "artifact",
+      "status": "live"
+    },
+    {
+      "id": "e-regime-tele",
+      "from": "s2-regime",
+      "to": "s2-tele",
+      "label": "live regime label",
+      "kind": "data",
+      "status": "live"
+    },
+    {
+      "id": "e-consumer-broker",
+      "from": "s2-consumer",
+      "to": "s2-broker",
+      "label": "validated intent",
+      "kind": "order",
+      "status": "live"
+    },
+    {
+      "id": "e-broker-market",
+      "from": "s2-broker",
+      "to": "market",
+      "label": "OANDA v20 order",
+      "kind": "order",
+      "status": "live"
+    },
+    {
+      "id": "e-market-broker",
+      "from": "market",
+      "to": "s2-broker",
+      "label": "fills, rejections",
+      "kind": "data",
+      "status": "live"
+    },
+    {
+      "id": "e-broker-pos",
+      "from": "s2-broker",
+      "to": "s2-pos",
+      "label": "open positions",
+      "kind": "data",
+      "status": "live"
+    },
+    {
+      "id": "e-pos-market",
+      "from": "s2-pos",
+      "to": "market",
+      "label": "stop moves, exits",
+      "kind": "order",
+      "status": "live"
+    },
+    {
+      "id": "e-pos-tele",
+      "from": "s2-pos",
+      "to": "s2-tele",
+      "label": "position state",
+      "kind": "data",
+      "status": "live"
+    },
+    {
+      "id": "e-broker-in",
+      "from": "s2-broker",
+      "to": "q-in",
+      "label": "fill confirmation",
+      "kind": "message",
+      "status": "degraded"
+    },
+    {
+      "id": "e-in-state",
+      "from": "q-in",
+      "to": "s3-state",
+      "label": "reconcile account",
+      "kind": "message",
+      "status": "planned"
+    },
+    {
+      "id": "e-journal-orch",
+      "from": "s3-journal",
+      "to": "s1-orch",
+      "label": "strategy decay → retrain trigger",
+      "kind": "control",
+      "status": "planned"
+    },
+    {
+      "id": "e-tele-op",
+      "from": "s2-tele",
+      "to": "operator",
+      "label": "dashboard",
+      "kind": "data",
+      "status": "live"
+    },
+    {
+      "id": "e-journal-op",
+      "from": "s3-journal",
+      "to": "operator",
+      "label": "Telegram + SMTP alerts",
+      "kind": "data",
+      "status": "planned"
+    }
+  ],
+  "flows": [
+    {
+      "id": "research",
+      "name": "Price history → sealed model",
+      "edges": [
+        "e-price",
+        "e-prices-feat",
+        "e-prices-bt",
+        "e-feat-regime",
+        "e-regime-attrib",
+        "e-outcomes-attrib",
+        "e-attrib-vet",
+        "e-vet-gate",
+        "e-feat-gate",
+        "e-gate-pub",
+        "e-vet-pub",
+        "e-pub-gcs"
+      ],
+      "technical": "The offline path. Raw candles become a feature store, a causal regime label and a set of historical trades; attribution joins trades to regime at entry; vetting applies fixed gates; the gatekeeper is fit on walk-forward folds; the bundle is verified and the pointer flipped last.",
+      "plain": "How research happens. Years of price history go in one end, and a sealed, serial-numbered package of trading rules comes out the other. Nothing on this path can place a trade."
+    },
+    {
+      "id": "signal",
+      "name": "Signal → risk gate → broker",
+      "edges": [
+        "e-gate-queue",
+        "e-queue-topic",
+        "e-signal-s3",
+        "e-gcs-s3",
+        "e-state-gate",
+        "e-gate-out",
+        "e-out-s2",
+        "e-consumer-broker",
+        "e-broker-market"
+      ],
+      "technical": "The live path. A scored signal crosses to System 3, is evaluated against the ten-layer gate with account state as context, and — if approved — is sized once and published as an order that System 2 executes verbatim.",
+      "plain": "How a trade idea becomes a real trade. It has to survive ten checkpoints, get an amount attached exactly once, and then be carried out without alteration. Two of the pipes on this path do not exist yet."
+    },
+    {
+      "id": "feedback",
+      "name": "Fill → account state → retrain",
+      "edges": [
+        "e-market-broker",
+        "e-broker-in",
+        "e-in-state",
+        "e-db-state",
+        "e-state-journal",
+        "e-journal-orch"
+      ],
+      "technical": "The only feedback path from live results into model building. Fills reconcile the account state machine against reality; the decay auditor detects sustained divergence from backtested expectation and raises a retrain trigger. Deliberately narrow — nothing else about live trading influences research.",
+      "plain": "The loop that closes. What actually happened at the broker is reported back, the account's running tally is updated, and if a strategy stops working in real life the research lab is told to think again. This is the only thread from reality back into the models — kept thin on purpose, so the research cannot start chasing recent luck."
+    },
+    {
+      "id": "artifacts",
+      "name": "Artifact distribution",
+      "edges": [
+        "e-pub-gcs",
+        "e-gcs-s2",
+        "e-gcs-s3",
+        "e-sync-regime"
+      ],
+      "technical": "Both consumers read the same immutable bundle from object storage and independently SHA256-verify it. Because the pointer flips last, a partially written bundle is unreachable, and because reads are pull-based, Computer 1 can be offline indefinitely.",
+      "plain": "How the model reaches the machines that use it. Both fetch the same sealed box and check the seal themselves. The research computer can be switched off for a month and nothing downstream notices."
+    },
+    {
+      "id": "adr001",
+      "name": "ADR-001 — the proposed change",
+      "edges": [
+        "e-gcs-s2",
+        "e-sync-regime",
+        "e-consumer-broker",
+        "e-broker-market"
+      ],
+      "technical": "Under ADR-001 the highlighted path replaces the signal producer: System 2 syncs a bundle that carries the strategy code, runs inference locally at bar close, and submits its own scored signals to System 3. System 1 keeps only the artifact hop and loses every live responsibility. PROPOSED — requires APPROVE from Systems 2 and 3 before any implementation.",
+      "plain": "The change currently on the table. Instead of the research machine posting trade ideas each night, the execution machine would run the shipped model itself, the moment each bar closes. The research machine would then be free to be switched off — which is what the original design always said."
+    }
+  ],
+  "legend": {
+    "kinds": [
+      {
+        "id": "data",
+        "label": "Data"
+      },
+      {
+        "id": "artifact",
+        "label": "Artifact"
+      },
+      {
+        "id": "message",
+        "label": "Queue message"
+      },
+      {
+        "id": "order",
+        "label": "Order"
+      },
+      {
+        "id": "control",
+        "label": "Control / trigger"
+      }
+    ],
+    "statuses": [
+      {
+        "id": "live",
+        "label": "Working today"
+      },
+      {
+        "id": "degraded",
+        "label": "Runs, but unverified or too slow"
+      },
+      {
+        "id": "blocked",
+        "label": "Cannot work"
+      },
+      {
+        "id": "planned",
+        "label": "Designed, not built"
+      }
+    ]
+  }
+}

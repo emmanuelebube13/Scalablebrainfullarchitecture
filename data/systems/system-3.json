@@ -1,0 +1,390 @@
+{
+  "schema_version": "1.0.0",
+  "id": "system-3",
+  "ordinal": 3,
+  "name": "The Guardian",
+  "role": "Risk governance",
+  "host": "Computer 3",
+  "duty_cycle": "Always on — 24/7",
+  "accent": "#f0a44a",
+  "repository": "../system-3-account-management/ (separate module, deployed on Computer 3)",
+  "code_root": "system-3-account-management/",
+  "status": {
+    "state": "designed",
+    "as_of": "2026-08-22",
+    "note": "Consolidated architecture ratified; nothing runs on Computer 3 yet. It is currently the blocking link in the signal path — System 1 publishes to `Scored_Signal_Queue` and cannot see whether anything consumes it, because its service account is publisher-only. A written reply naming the subscription is the open ask."
+  },
+  "summary": {
+    "technical": "System 3 is always-on risk middleware. Every scored signal must clear a ten-layer sequential decision gate (A–J) before it can become an order. It does arithmetic, not machine learning: account state, loss budgets, drawdown, exposure caps, correlation, Kelly sizing and calendar windows. It is the only component that sizes a position, and it holds no broker credential.",
+    "plain": "System 3 is the risk officer, and it never sleeps. Every trade idea has to walk past ten checkpoints in order, and any one of them can say no. It is also the only part that decides how much money goes on a trade. It cannot place the trade itself — it can only approve one and hand it on."
+  },
+  "facts": [
+    {
+      "label": "Decision latency",
+      "value": "< 100 ms median"
+    },
+    {
+      "label": "Datastore",
+      "value": "Own local PostgreSQL on Computer 3"
+    },
+    {
+      "label": "Sizing",
+      "value": "Quarter-Kelly — cap 2.0%, floor 0.1%"
+    },
+    {
+      "label": "Circuit breakers",
+      "value": "8 layers"
+    },
+    {
+      "label": "Broker access",
+      "value": "None, by design"
+    },
+    {
+      "label": "Notifications",
+      "value": "Telegram + SMTP, urgency-routed"
+    }
+  ],
+  "sections": [
+    {
+      "id": "ingestion",
+      "title": "Data Ingestion & Mapping",
+      "kind": "ingestion",
+      "body": {
+        "technical": [
+          "System 3 draws on four inputs, and the isolation rule governing them is strict: **it has zero runtime dependency on Computer 1.** System 1 artifacts reach it only as immutable objects in GCS. If Computer 1 is off — which it usually is — System 3 keeps operating on the last verified bundle.",
+          "Account truth comes from System 2 rather than from the broker directly, on a 30-second internal API snapshot plus event-driven fill confirmations on `AMS_Inbound_Queue`. Its own local database is the system of record for account state, and it is written before any approval is published, so a crash cannot lose a decision it already acted on."
+        ],
+        "plain": [
+          "Four things feed the risk officer, and the important rule is that none of them can leave it stranded.",
+          "The model package sits in cloud storage, so the research machine can be switched off for a week and nothing here notices. Account balance and open positions are reported in every thirty seconds by the execution machine. And the running tally of wins, losses and drawdown lives on its own hard drive, written down before it acts, so a power cut cannot make it forget a decision it already made."
+        ]
+      },
+      "tables": [
+        {
+          "title": "Inputs",
+          "columns": [
+            "Input",
+            "Source",
+            "Cadence",
+            "Isolation property"
+          ],
+          "rows": [
+            [
+              "Scored signals",
+              "Pub/Sub `Scored_Signal_Queue`",
+              "Event driven",
+              "Rejected if stale — no queue, no trades"
+            ],
+            [
+              "Model bundle / regime map / weights",
+              "GCS artifacts",
+              "On pointer change",
+              "Read-only; Computer 1 may be offline"
+            ],
+            [
+              "Account snapshot",
+              "System 2 internal API",
+              "Every 30 s",
+              "Missing snapshot → default REJECT"
+            ],
+            [
+              "Fill confirmations",
+              "Pub/Sub `AMS_Inbound_Queue`",
+              "Event driven",
+              "Reconciles state machine against reality"
+            ],
+            [
+              "Local account state",
+              "Own PostgreSQL",
+              "Continuous",
+              "System of record; survives every peer failing"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "core-logic",
+      "title": "Core Logic & Execution",
+      "kind": "pipeline",
+      "body": {
+        "technical": [
+          "The decision gate is **sequential and short-circuiting**. Layers A–J are evaluated in order and the first failure ends evaluation with a logged reason. Ordering is not cosmetic: cheap account-level vetoes run before expensive portfolio arithmetic, and every layer before H is a veto while H is where the number is produced.",
+          "Layer J is the only place an approval leaves the system. It publishes a fully-sized order to `AMS_Outbound_Queue`. Nothing downstream may adjust that size.",
+          "Running underneath the gate is an account state machine — DEMO → ACTIVE → CAUTION → PAUSED → CIRCUIT_BROKEN → RECOVERY — plus eight circuit breakers and a graduated deployment ladder (Paper → Micro → Small → Full) whose stage multiplies every position size."
+        ],
+        "plain": [
+          "Ten checkpoints, in a fixed order, and the first 'no' ends the conversation. The cheap questions come first — *is the account even allowed to trade today?* — before the system bothers with the expensive ones.",
+          "Nine of the ten can only refuse. Exactly one of them decides the amount. Once that amount is set, nothing downstream is permitted to change it.",
+          "The account also has a mood, and it changes automatically: healthy, cautious, paused, or shut down entirely. A bad enough day moves it down a level on its own, and moving back up takes evidence rather than time."
+        ]
+      },
+      "stages": [
+        {
+          "code": "A",
+          "name": "Account state",
+          "module": "State machine",
+          "output": "Reject unless ACTIVE",
+          "technical": "Gate on the current state. CAUTION halves size; PAUSED and CIRCUIT_BROKEN reject outright.",
+          "plain": "Is the account allowed to trade at all right now?"
+        },
+        {
+          "code": "B",
+          "name": "Daily loss budget",
+          "module": "Budget tracker",
+          "output": "Soft stop ≥ 2%, hard stop ≥ 3%",
+          "technical": "Soft stop halves size and pauses 30 minutes. Hard stop halts for 24 hours. Boundaries computed in UTC.",
+          "plain": "How much has today already cost? Past a point, the day is over."
+        },
+        {
+          "code": "C",
+          "name": "Drawdown guard",
+          "module": "Equity peak tracker",
+          "output": "≥ 20% → CIRCUIT_BROKEN",
+          "technical": "Max drawdown from equity peak. Breach transitions to CIRCUIT_BROKEN and closes all positions.",
+          "plain": "How far below the high-water mark is the account? Far enough, and everything closes."
+        },
+        {
+          "code": "D",
+          "name": "Consecutive losses",
+          "module": "Streak tracker",
+          "output": "5 in a row → 24 h cooling",
+          "technical": "Streak counter reset on any win. Five consecutive losses trigger a cooling-off period.",
+          "plain": "Five losses in a row means stop for a day. Usually the market changed, not the luck."
+        },
+        {
+          "code": "E",
+          "name": "Concurrent trades",
+          "module": "Portfolio state",
+          "output": "Cap 5 open",
+          "technical": "Hard cap on simultaneously open positions.",
+          "plain": "No more than five trades open at once."
+        },
+        {
+          "code": "F",
+          "name": "Per-pair exposure",
+          "module": "Exposure calculator",
+          "output": "Max 6% of equity",
+          "technical": "Aggregate risk on a single instrument.",
+          "plain": "No single currency pair gets more than 6% of the account at risk."
+        },
+        {
+          "code": "G",
+          "name": "Correlated exposure",
+          "module": "Correlation monitor",
+          "output": "Max 10% of equity",
+          "technical": "Groups correlated instruments and caps aggregate risk across the group. Prevents five 'different' trades that are one bet.",
+          "plain": "Prevents taking the same bet five times under five different names — EUR/USD and GBP/USD often move together."
+        },
+        {
+          "code": "H",
+          "name": "Kelly sizing",
+          "module": "Sizing engine",
+          "output": "Position size",
+          "technical": "Quarter-Kelly from the strategy's own historical edge, capped at 2.0% and floored at 0.1%, then multiplied by state, drawdown, streak and deployment-stage multipliers.",
+          "plain": "The one checkpoint that produces a number instead of a verdict: how much to risk, based on how strong the strategy's proven edge is — then deliberately cut to a quarter of the mathematically optimal amount, because the maths assumes the edge estimate is perfect and it never is."
+        },
+        {
+          "code": "I",
+          "name": "Duration, weekend, macro",
+          "module": "Calendar gates",
+          "output": "Reject or park",
+          "technical": "Session windows, expected trade duration vs time to the weekend gap, and high-impact macro event windows.",
+          "plain": "Do not open a three-day trade on a Friday afternoon, and stay out of the way of scheduled news."
+        },
+        {
+          "code": "J",
+          "name": "Approve, size, publish",
+          "module": "Outbound producer",
+          "output": "`AMS_Outbound_Queue`",
+          "technical": "Publishes the fully-sized approved order. This is the only egress point for an approval.",
+          "plain": "The single door an approved trade leaves by."
+        }
+      ],
+      "tables": [
+        {
+          "title": "Inviolable defaults",
+          "columns": [
+            "Threshold",
+            "Value"
+          ],
+          "rows": [
+            [
+              "Max risk per trade",
+              "2.0%"
+            ],
+            [
+              "Min risk per trade (floor)",
+              "0.1%"
+            ],
+            [
+              "Kelly fraction",
+              "0.25 — Quarter-Kelly"
+            ],
+            [
+              "Daily loss soft stop",
+              "≥ 2% → −50% size, 30 min pause"
+            ],
+            [
+              "Daily loss hard stop",
+              "≥ 3% → 24 h halt"
+            ],
+            [
+              "Weekly loss stop",
+              "≥ 6% → 0.5% risk next week"
+            ],
+            [
+              "Max drawdown circuit break",
+              "≥ 20% → RECOVERY mode"
+            ],
+            [
+              "Stage risk multipliers",
+              "Demo 0.5 · Micro 0.5 · Small 0.75 · Full 1.0"
+            ]
+          ]
+        },
+        {
+          "title": "Account state machine",
+          "columns": [
+            "State",
+            "Meaning",
+            "Exit condition"
+          ],
+          "rows": [
+            [
+              "DEMO",
+              "Practice account, half size",
+              "Manual promotion on evidence"
+            ],
+            [
+              "ACTIVE",
+              "Normal operation",
+              "Any breach demotes"
+            ],
+            [
+              "CAUTION",
+              "Recent losses — size reduced",
+              "Recovery of equity / streak reset"
+            ],
+            [
+              "PAUSED",
+              "Temporary halt, positions held",
+              "Timer expiry"
+            ],
+            [
+              "CIRCUIT_BROKEN",
+              "All positions closed, no new trades",
+              "Human decision only"
+            ],
+            [
+              "RECOVERY",
+              "Re-entry at reduced size",
+              "Sustained positive performance"
+            ]
+          ]
+        }
+      ],
+      "callouts": [
+        {
+          "tone": "info",
+          "title": "Why the guardian is the always-on one",
+          "technical": "Risk state is continuous; model building is not. An open position accrues risk every second, so the component tracking it cannot have a duty cycle. System 1 runs weekly, System 2 runs during market hours, System 3 runs forever.",
+          "plain": "The research machine can sleep. The trading machine sleeps at weekends. The thing watching your money cannot sleep at all, because the risk does not stop when the office closes."
+        }
+      ]
+    },
+    {
+      "id": "interfaces",
+      "title": "Outputs & Contracts",
+      "kind": "interfaces",
+      "tables": [
+        {
+          "title": "Published interfaces",
+          "columns": [
+            "Interface",
+            "Transport",
+            "Consumer"
+          ],
+          "rows": [
+            [
+              "Approved, sized orders",
+              "Pub/Sub `AMS_Outbound_Queue`",
+              "System 2"
+            ],
+            [
+              "Rejection log with reason codes",
+              "Local PostgreSQL",
+              "Audit / post-mortem"
+            ],
+            [
+              "Trade journal export",
+              "GCS",
+              "Analytics, tax, review"
+            ],
+            [
+              "Alerts",
+              "Telegram + SMTP, urgency-routed",
+              "Operator"
+            ],
+            [
+              "Strategy decay signals",
+              "Local → GCS",
+              "Feeds System 1 retrain triggers"
+            ]
+          ]
+        }
+      ],
+      "body": {
+        "technical": [
+          "The decay auditor closes the loop: sustained live underperformance against the backtested expectation is one of the triggers that can cause System 1 to retrain. That is the only feedback path from live results back into model building, and it is deliberately narrow."
+        ],
+        "plain": [
+          "There is one thread running back to the research lab: if a strategy stops working in real life, the lab is told to go and think again. Nothing else about live trading is allowed to influence the research, so that the research cannot start fitting itself to recent luck."
+        ]
+      }
+    },
+    {
+      "id": "open",
+      "title": "Known Gaps",
+      "kind": "issues",
+      "issues": [
+        {
+          "id": "GAP-S3-01",
+          "severity": "high",
+          "title": "Blocking the signal path, and invisible from System 1",
+          "text": "System 1 publishes to `Scored_Signal_Queue` but its service account is publisher-only and cannot list subscriptions. Needed in writing: the subscription name, confirmation a consumer is actually pulling it, and the topic approved orders are published to. Not “it should be set up”."
+        },
+        {
+          "id": "GAP-S3-02",
+          "severity": "high",
+          "title": "Schema and skeleton pending",
+          "text": "The design is ratified but the AMS database schema and service skeleton are not stood up on Computer 3, so the ten-layer gate has never been exercised."
+        },
+        {
+          "id": "GAP-S3-03",
+          "severity": "med",
+          "title": "Incoming strategies rest on 5–20 trades",
+          "text": "The three live cells qualified after the OOS gate was lowered to 12 months, and System 1 has no minimum trade-count gate. Their profit factors are small-sample artefacts. This is a knowingly accepted risk on a practice account and explicitly not a reason to refuse orders — but sizing is System 3's call, and a thin cell produces an unreliable Kelly fraction."
+        },
+        {
+          "id": "GAP-S3-04",
+          "severity": "med",
+          "title": "Arriving signals carry no exits",
+          "text": "All three live map entries have `exits: {}`. Layer I reasons about expected trade duration, which an empty exit specification does not supply."
+        },
+        {
+          "id": "GAP-S3-05",
+          "severity": "med",
+          "title": "Live evidence is 10 losing trades",
+          "text": "The only realised live record is 10 trades, all losers, expectancy −367 CAD/trade, from the 2026-07-22 audit. The sizing gate being shut is currently what prevents further loss — the safety machinery is protecting the account, not an edge."
+        },
+        {
+          "id": "GAP-S3-06",
+          "severity": "med",
+          "title": "ADR-001 changes who publishes to its inbound topic",
+          "text": "Responsibilities are unchanged, but the publisher would become System 2. System 3 must confirm whether the signal envelope needs a provenance, bundle id or producer identity field."
+        }
+      ]
+    }
+  ]
+}

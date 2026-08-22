@@ -1,0 +1,76 @@
+{
+  "schema_version": "1.0.0",
+  "generated_by": "hand-authored; safe for agents to edit",
+  "project": {
+    "name": "Scalable Brain",
+    "subtitle": "Multi-System Algorithmic Trading Architecture",
+    "thesis": "The code is not the asset. A verified out-of-sample track record is the asset.",
+    "as_of": "2026-08-22",
+    "source_repository": "https://github.com/emmanuelebube13/scalable-brain",
+    "site_repository": "https://github.com/emmanuelebube13/Scalablebrainfullarchitecture",
+    "principles": [
+      {
+        "title": "Preservation over profit",
+        "technical": "When a risk rule and a profit opportunity conflict, the rule wins. No override path exists in code.",
+        "plain": "Not losing the money matters more than making it. If a safety rule says no, nothing can talk it into yes."
+      },
+      {
+        "title": "No downstream recomputation",
+        "technical": "System 3 never re-scores a signal. System 2 never re-sizes an order. System 1 never knows whether it is live.",
+        "plain": "Each part does its own job once, and trusts the part before it. Nobody second-guesses anybody, so there is exactly one place to look when something is wrong."
+      },
+      {
+        "title": "Default-safe posture",
+        "technical": "Missing data, stale input or an internal error resolves to REJECT, never APPROVE. If System 3 is unreachable, System 2 pauses.",
+        "plain": "When in doubt, do nothing. Silence is treated as a no, never as a yes."
+      },
+      {
+        "title": "Deterministic, idempotent, auditable",
+        "technical": "The same signal, regime and model artifact must produce an identical decision. Replays are no-ops. Every decision is logged with full context.",
+        "plain": "Run it twice, get the same answer twice. Everything that happened is written down and can be replayed later."
+      }
+    ]
+  },
+  "systems": [
+    {
+      "id": "system-1",
+      "ordinal": 1,
+      "file": "data/systems/system-1.json"
+    },
+    {
+      "id": "system-2",
+      "ordinal": 2,
+      "file": "data/systems/system-2.json"
+    },
+    {
+      "id": "system-3",
+      "ordinal": 3,
+      "file": "data/systems/system-3.json"
+    }
+  ],
+  "status_vocabulary": {
+    "operational": {
+      "label": "Operational",
+      "tone": "good"
+    },
+    "engineering-complete": {
+      "label": "Engineering complete",
+      "tone": "warn"
+    },
+    "designed": {
+      "label": "Design ratified",
+      "tone": "info"
+    },
+    "blocked": {
+      "label": "Blocked",
+      "tone": "bad"
+    },
+    "planned": {
+      "label": "Planned",
+      "tone": "muted"
+    }
+  },
+  "decisions_file": "data/decisions.json",
+  "goals_file": "data/goals.json",
+  "architecture_file": "data/architecture.json"
+}

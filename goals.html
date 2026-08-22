@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Goals, milestones & tasks — Scalable Brain</title>
+<meta name="description" content="Milestone ladder, macro goals, cross-system dependency matrix and per-subsystem task tracker.">
+<link rel="stylesheet" href="assets/css/main.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header id="site-header"></header>
+
+<main id="main">
+  <section class="hero">
+    <div class="wrap">
+      <div class="eyebrow" id="goals-asof">Loading…</div>
+      <h1>Goals, milestones &amp; tasks</h1>
+      <p class="lede">One question decides whether a piece of work is worth doing: which rung of the ladder does it move?
+         Work that moves no rung is a cost, however good the engineering.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker">The ladder</span>
+        <h2>Value milestones</h2>
+        <p>Each rung is falsifiable and tied to a blocker that actually exists in the repository today.
+           A rung is not reached because it feels reached — it is reached when its falsifier stops applying.</p>
+      </div>
+      <div id="milestones"></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker">Macro &amp; subsystem goals</span>
+        <h2>What is being worked on</h2>
+      </div>
+      <div class="filters" id="goal-filters"></div>
+      <div class="grid grid-2" id="goals"></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap-wide">
+      <div class="section-head">
+        <span class="kicker">Cross-system dependencies</span>
+        <h2>Which systems have to change for each goal</h2>
+        <p>A goal owned by one system is rarely achievable by one system. This matrix is generated from the
+           <code>dependencies</code> array on each goal, so it cannot drift from the goal definitions.</p>
+      </div>
+      <div id="matrix"></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker">Task tracker</span>
+        <h2>Weekly work, by subsystem</h2>
+      </div>
+      <div class="filters" id="task-filters"></div>
+      <div id="tasks"></div>
+    </div>
+  </section>
+</main>
+
+<footer id="site-footer"></footer>
+<script type="module" src="assets/js/goals.js"></script>
+</body>
+</html>

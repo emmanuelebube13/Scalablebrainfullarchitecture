@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unified architecture map — Scalable Brain</title>
+<meta name="description" content="Interactive map of how System 1, System 2 and System 3 feed each other, with traceable data-flow paths.">
+<link rel="stylesheet" href="assets/css/main.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header id="site-header"></header>
+
+<main id="main">
+  <section class="section">
+    <div class="wrap-wide">
+      <div class="section-head">
+        <span class="kicker">Global architecture</span>
+        <h2>How the three systems form one trading system</h2>
+        <p>Every box is a real component and every arrow is a real handoff. Click a box for what it does;
+           pick a flow to trace one path end to end. Dashed red means the link is not proven to work today —
+           the map is drawn from the same file the status badges read, so it cannot flatter the system.</p>
+      </div>
+
+      <div class="map-layout">
+        <div>
+          <div class="map-shell">
+            <div class="map-toolbar">
+              <label for="flow-select" class="mono" style="font-size:.78rem;color:var(--text-faint)">Trace flow</label>
+              <select id="flow-select"><option value="">— none —</option></select>
+              <button type="button" id="btn-zoom-in" title="Zoom in">+</button>
+              <button type="button" id="btn-zoom-out" title="Zoom out">−</button>
+              <button type="button" id="btn-fit">Fit</button>
+              <button type="button" id="btn-reset">Reset</button>
+              <span class="spacer"></span>
+              <span class="mono" style="font-size:.72rem;color:var(--text-faint)" id="map-asof"></span>
+            </div>
+            <div class="map-viewport" id="map-viewport"></div>
+          </div>
+          <div class="flow-note" id="flow-note" hidden></div>
+          <div id="map-legend" style="margin-top:18px"></div>
+        </div>
+
+        <aside class="map-side">
+          <div class="side-panel" id="map-side"></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker">Open architectural decisions</span>
+        <h2>What is genuinely undecided</h2>
+        <p>A map that only shows the settled design hides the most important thing about a system —
+           the parts of it that are still being argued about.</p>
+      </div>
+      <div id="decisions"></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker">Contracts</span>
+        <h2>The handoffs, stated precisely</h2>
+      </div>
+      <div id="contracts"></div>
+    </div>
+  </section>
+</main>
+
+<footer id="site-footer"></footer>
+<script type="module" src="assets/js/architecture.js"></script>
+</body>
+</html>
