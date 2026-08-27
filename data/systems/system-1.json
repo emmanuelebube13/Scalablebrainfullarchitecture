@@ -5,14 +5,14 @@
   "name": "The Brain",
   "role": "Offline model building",
   "host": "Computer 1",
-  "duty_cycle": "Intermittent — training, plus a daily signal batch that ADR-001 proposes removing",
+  "duty_cycle": "Intermittent training, plus an hourly signal batch during market hours (cron fires :15 past every hour) that ADR-001 proposes moving off this machine",
   "accent": "#6aa9ff",
   "repository": "https://github.com/emmanuelebube13/scalable-brain",
-  "code_root": "src/system1/",
+  "code_root": "src/",
   "status": {
     "state": "operational",
-    "as_of": "2026-08-22",
-    "note": "Pipeline runs end to end and a model set is published. The signal producer was repaired on 2026-08-22 (FIX-S1-016) after never having emitted a single message; it currently runs once a day, which is too slow for the H4 strategies it serves."
+    "as_of": "2026-08-27",
+    "note": "Cadence was raised from daily to hourly (cron :15 past every hour) after FIX-S1-016. In the week of 2026-08-24 the producer published 46 real signals (5 Mon, 9 Tue, 10 Wed, quiet since — the live strategies fire roughly 3x/week/pair, so a quiet stretch on its own is not a fault) with zero dead-lettered. Heartbeat is WARN on one pre-existing, already-declared condition (`fact_trade_outcomes` staleness) and OK on everything else, including the retrain-cron hold. Whether any of this reaches a broker fill is outside what this machine can observe — see Operations below."
   },
   "summary": {
     "technical": "System 1 is the offline intelligence factory. It ingests OANDA multi-timeframe candles, builds a versioned trailing-only feature store, fits causal regime labels, attributes historical trade outcomes to the regime in force at entry, vets each (strategy x regime x granularity) cell against fixed gates, trains an XGBoost gatekeeper on walk-forward folds, and publishes a checksummed artifact bundle. It never emits an order and holds no credential capable of placing one. It also currently runs a live signal producer — a contradiction that ADR-001 exists to resolve.",
@@ -23,8 +23,9 @@
     { "label": "Database", "value": "PostgreSQL 16 + TimescaleDB 2.26.3" },
     { "label": "Models", "value": "XGBoost gatekeeper · Gaussian HMM regimes" },
     { "label": "Artifact store", "value": "GCS `scalable-brain-artifacts`" },
-    { "label": "Live model set", "value": "`2026-08-21T16-29-15Z-372f6956_gk-d614163c`" },
-    { "label": "Queue transport", "value": "Pub/Sub — publisher-only service account" }
+    { "label": "Live model set", "value": "`2026-08-24T10-08-20Z-cb697b59_gk-d614163c`, published 2026-08-24T10:51:09Z" },
+    { "label": "Signal cadence", "value": "Hourly cron, fires :15 past every hour" },
+    { "label": "Queue transport", "value": "Pub/Sub — publisher-only service account (can push, cannot list or pull)" }
   ],
   "sections": [
     {
@@ -236,27 +237,143 @@
       ]
     },
     {
+      "id": "operations",
+      "title": "Running It — Logs, Health Checks & Commands",
+      "kind": "operations",
+      "body": {
+        "technical": [
+          "System 1 has no dashboard of its own. Everything below is either a local file on Computer 1 or a single artifact mirrored to GCS that the other machines (and this documentation) can read without a database connection or SSH access.",
+          "Four cron jobs run the machine: an hourly job at **:15** (ingest → build/score/publish signals → publish health → mirror the model card), a legacy weekday-evening job at **22:30** that mostly duplicates the hourly one now, a daily heartbeat at **06:00**, and a Saturday catch-up ingest at **00:00**. The retrain cron is intentionally **not installed** — it is on a declared hold (`results/state/cron_holds.json`, expires 2026-09-15) at Computer 2's request.",
+          "The single most important state field in the whole system is `results/state/signal_emitter_state.json` → `last_signal_emitted_at`. It only advances on a real publish, never on a run — which is the direct fix for FIX-S1-016, where the producer ran on schedule for weeks, logged nothing alarming, and never once emitted a signal. A green heartbeat next to a null or stale `last_signal_emitted_at` is that failure mode recurring, not a healthy system."
+        ],
+        "plain": [
+          "Nothing here needs a login or a dashboard. It's cron jobs writing plain files, plus one snapshot copied to the cloud so the other two computers can check on this one without asking it anything.",
+          "The one number that matters more than any other is the timestamp of the last signal actually sent — not the last time the job ran. A job can run perfectly, on schedule, forever, and still never send anything. That exact failure happened here once for weeks before anyone noticed, because everything that could be checked said 'healthy' except the one thing nobody was reading."
+        ]
+      },
+      "tables": [
+        {
+          "title": "Log files (on Computer 1, under `logs/`)",
+          "columns": ["File", "What it shows", "Written by"],
+          "rows": [
+            ["`cron_hourly_signals.log`", "One block per run: ingest → build/score signals → publish → health publish → model-card mirror. The primary log for 'is it working right now'.", "Hourly, :15"],
+            ["`cron_signals.log`", "Legacy weekday-evening ingest + signal run. Mostly a no-op now — the hourly job has usually already processed the same bars.", "Weekdays, 22:30"],
+            ["`cron_heartbeat.log`", "Output of `monitoring.heartbeat` — the daily freshness rollup across prices, regimes, outcomes, the champion bundle and telemetry.", "Daily, 06:00"],
+            ["`cron_oanda_ingest.log`", "Saturday catch-up ingest, for the one day the hourly job's market-hours self-limiting makes a no-op.", "Saturdays, 00:00"],
+            ["`cron_system1_retrain.log`", "Retrain orchestrator. Currently silent — cron not installed while the hold is active.", "Not running (held)"]
+          ]
+        },
+        {
+          "title": "State & telemetry files",
+          "columns": ["File", "Field that matters", "What it means"],
+          "rows": [
+            ["`results/state/signal_emitter_state.json`", "`last_signal_emitted_at`", "Timestamp of the last SIGNAL actually published — not the last run. Null means never emitted."],
+            ["`results/state/signal_emitter_state.json`", "`signals_published_total`", "Running lifetime count, so a week's activity can be read from two snapshots without parsing logs."],
+            ["`results/state/watcher_state.json`", "one timestamp per instrument+granularity", "The last bar the signal watcher has committed as already processed — how caught-up signal generation is."],
+            ["`results/state/ingest_progress.json`", "`last_bar_utc` per instrument+granularity", "The ingest cursor — how current the price data itself is, upstream of signals entirely."],
+            ["`results/state/cron_holds.json`", "held checks, reason, expiry", "Declared, evidenced exceptions to the heartbeat — e.g. the retrain-cron hold. A hold suppresses the alarm, never the underlying measurement."],
+            ["`telemetry/s1_health.json` (GCS, not local)", "full heartbeat payload", "The one artifact System 2 and System 3 can read without touching this machine, its database, or its filesystem at all."]
+          ]
+        },
+        {
+          "title": "Commands worth having memorised",
+          "columns": ["Command", "What it tells you"],
+          "rows": [
+            ["`python -m src.monitoring.heartbeat --json`", "Overall health in one shot — exit 0 fresh / 1 warn / 2 critical, one row per underlying check (prices, regimes, outcomes, champion bundle, telemetry, retrain state, cron liveness, imports, holds)."],
+            ["`cat results/state/signal_emitter_state.json`", "Did the last run publish anything, and when did a signal last actually go out (see `last_signal_emitted_at` above)."],
+            ["`tail -f logs/cron_hourly_signals.log`", "Watch the current hour's run live — useful right after :15 past the hour."],
+            ["`crontab -l`", "Confirm which jobs are *actually installed*, not just documented. The retrain cron being absent here is deliberate; anything else missing is not."],
+            ["`python -m src.monitoring.publish_health`", "Force-publish the telemetry snapshot to GCS on demand, rather than waiting for the next hourly run."],
+            ["`python -m src.monitoring.model_card --verify`", "Check the locally mirrored model card matches the one actually pinned in the live published bundle."],
+            ["`python -m src.signals.run --once`", "Manually run one real signal pass in the foreground (a genuine emit, not a dry run)."],
+            ["`python -m src.signals.run --dry-run`", "Same, but only prints what it would emit — nothing is published."],
+            ["`gcloud pubsub subscriptions pull scored_signal_queue_sub --project=scalable-brain --limit=10 --format=json`", "Peek at the live signal queue's current backlog. Omit `--auto-ack` and nothing is consumed — messages become redeliverable again after the subscription's ack deadline (10s), so this is safe to run without taking anything away from System 3."],
+            ["`gcloud pubsub subscriptions pull scored_signal_dlq_sub --project=scalable-brain --limit=10 --format=json`", "Check for signals rejected as malformed rather than merely unconsumed."],
+            ["`psql -h localhost -p 5432 -U sa -d ForexBrainDB -c \"SELECT count(*) FROM fact_market_prices;\"`", "Confirm price ingest is actually landing rows, independent of anything downstream."]
+          ]
+        }
+      ],
+      "callouts": [
+        {
+          "tone": "info",
+          "title": "How to tell signals are actually running, not just that the cron fired",
+          "technical": "Three checks, in order. (1) `crontab -l` — is the hourly job installed at all. (2) `signal_emitter_state.json` — is `last_run_at` within the last hour; if so, the process is alive. (3) `last_signal_emitted_at` — this is the field that can lie by omission if you only check (2). A live `last_run_at` next to a null or many-hours-stale `last_signal_emitted_at` is not necessarily broken by itself — see the next callout — but it is the exact shape FIX-S1-016 took, so it always deserves a second look, not an assumption.",
+          "plain": "Three checks. Is the job even scheduled? Did it run in the last hour? And separately — did it actually *send* anything recently? The third question is the one that got missed for weeks before, because the first two can both be perfectly true while the third stays silent forever."
+        },
+        {
+          "tone": "warn",
+          "title": "A quiet queue is not automatically a broken one",
+          "technical": "The live strategies (`liquidity_grab_fade@H4`, `xard_ma_cross_daily_open@H1`, etc.) fire on a mechanical entry condition, not on a timer — roughly 3x/week/pair by design. A multi-hour gap between publishes during active market hours is normal variance, not evidence of failure. What *would* indicate a real problem: the hourly cron log shows `No signals generated` while a new closed bar was found (that's a routing or regime-coverage question, not a strategy-firing question), or `last_run_at` stops advancing altogether.",
+          "plain": "These trading rules don't fire on a schedule — they fire when their specific pattern shows up in the price, which for the strategies currently live is roughly three times a week per currency pair. Going most of a day without a new signal is completely normal and not, by itself, something to worry about."
+        },
+        {
+          "tone": "good",
+          "title": "Cadence gap closed — the producer now runs hourly, not once a day",
+          "technical": "Previously logged as GAP-S1-01: the producer fired once nightly at 22:30 while two of three live strategies were H4 (six bars/day), so signals could arrive up to 20 hours stale. `shell/cron_hourly_signals.sh` now runs at :15 past every hour; the cadence choice (hourly cron over a continuous service) was the smaller, more restartable change and matches the existing pattern. Verified against the live crontab and a week of `logs/cron_hourly_signals.log` (2026-08-24 through 2026-08-27): 24 runs/day, 46 real signals published across three trading days, zero dead-lettered.",
+          "plain": "Trade ideas used to get posted once a night, which meant some of them described a market moment up to 20 hours old — too stale to be useful. They now get checked and posted every hour instead, confirmed by a full week of logs."
+        },
+        {
+          "tone": "warn",
+          "title": "Downstream consumption looks real this week — a full fill is still unconfirmed",
+          "technical": "System 1's service account cannot list or pull Pub/Sub (GAP-S1-04), but a personal `gcloud` identity can, non-destructively (see the pull command above). On 2026-08-27, `scored_signal_dlq_sub` was empty and `scored_signal_queue_sub`'s entire backlog was a single stray `drill-003` message from `2026-08-23T23:21:53Z` — none of this week's 46 real signals were sitting there. Since a subscription only loses a message once something pulls and acks it, their absence is evidence something is actively consuming `scored_signal_queue_sub`. It is *not* evidence that any signal was approved, sized, forwarded to System 2, or filled — those decisions happen downstream of this queue and are invisible from here. As of the last cross-system status recorded in this repository (2026-08-22, see `data/goals.json` task T-206 and the `e-out-s2` edge in `data/architecture.json`), System 2 was reading a local file-based queue rather than Pub/Sub's `AMS_Outbound_Queue_sub` at all — if that is still true, it alone would fully explain signals flowing with nothing trading. Unconfirmed since; worth asking System 2/3 directly rather than assuming either way.",
+          "plain": "Something is now picking up System 1's signals — they don't pile up unread the way they used to. That's new and good. But picking up a signal is not the same as placing a trade: a risk system still has to approve it, size it, and hand it to the execution machine, and the last written record in this repository (five days old) said the execution machine was plugged into the wrong pipe entirely. That may well be fixed by now — nobody has re-checked."
+        }
+      ]
+    },
+    {
       "id": "state",
       "title": "Current State & Evidence",
       "kind": "evidence",
       "body": {
         "technical": [
-          "As of 2026-08-22 the pipeline is functioning end to end and a model set is published and loading. The honest qualification is that the three strategies in the live map qualified under a relaxed gate on very thin samples, and are being run on a practice account as a deliberate, stated risk rather than as an established edge."
+          "As of 2026-08-27 the pipeline is functioning end to end, the producer runs hourly, and a model set is published and loading. The live `regime_strategy_map.json` was regenerated 2026-08-24 and now carries 15 (strategy x regime) entries across three regimes — considerably more than the 6-entry map recorded here previously, which predates that republish. The honest qualification stands regardless of count: most of these strategies qualified, or were designated in, on small out-of-sample samples under a gate the owner deliberately relaxed, and are running on a practice account as a stated, accepted risk rather than an established edge."
         ],
         "plain": [
-          "Everything below is deliberately unflattering. The machinery works. What it has found so far does not yet amount to proof that any of these strategies makes money."
+          "Everything below is deliberately unflattering. The machinery works, and works more often now than it used to. What it has found so far still does not amount to proof that any of these strategies makes money."
         ]
       },
       "tables": [
         {
-          "title": "The live map — `regime_strategy_map.json` v2.0.0, generated 2026-08-21",
-          "columns": ["Regime", "Strategy", "Trades", "Profit factor", "Sharpe", "Max DD", "OOS months"],
-          "rows": [
-            ["Trending-Down", "`liquidity_grab_fade@H4`", "13", "8.28", "1.74", "0.05%", "23.6"],
-            ["High-Vol", "`macd_divergence@H4`", "20", "13.58", "2.92", "0.02%", "17.6"],
-            ["High-Vol", "`weekly_day_reversal_ea@D1`", "5", "6.76", "0.85", "1.01%", "23.4"]
+          "title": "The live map — `regime_strategy_map.json` v2.0.0, generated 2026-08-23T18:12Z, part of model set `2026-08-24T10-08-20Z-cb697b59`",
+          "columns": [
+            "Regime",
+            "Strategy",
+            "Basis",
+            "OOS trades",
+            "Profit factor",
+            "Sharpe",
+            "Max DD",
+            "OOS months"
           ],
-          "note": "Map `status` is **`proposed`**, not `qualified`. All three carry `exits: {}` — an empty exit specification, which is a known open defect in `vet.py`. Ranging and Trending-Up have no coverage."
+          "rows": [
+            ["Trending-Up", "`xard_ma_cross_daily_open@H1`", "designated", "224", "1.11", "0.53", "17.4%", "23.7"],
+            ["Trending-Up", "`nnfx_backtrader@D1`", "designated", "114", "1.61", "1.22", "7.4%", "46.4"],
+            ["Trending-Up", "`reference_pullback_continuation@H4`", "designated", "59", "1.56", "0.83", "4.5%", "40.7"],
+            ["Trending-Up", "`double_bottom_measured_move@D1`", "designated", "34", "1.46", "0.57", "1.9%", "40.9"],
+            ["Trending-Down", "`liquidity_grab_fade@H4`", "qualified", "13", "8.28", "1.74", "0.1%", "23.6"],
+            ["Trending-Down", "`nnfx_backtrader@D1`", "designated", "114", "1.61", "1.22", "7.4%", "46.4"],
+            ["Trending-Down", "`reference_pullback_continuation@H4`", "designated", "59", "1.56", "0.83", "4.5%", "40.7"],
+            ["Trending-Down", "`double_bottom_measured_move@D1`", "designated", "34", "1.46", "0.57", "1.9%", "40.9"],
+            ["High-Vol", "`macd_divergence@H4`", "qualified", "20", "13.58", "2.92", "0.0%", "17.6"],
+            ["High-Vol", "`weekly_day_reversal_ea@D1`", "qualified", "5", "6.76", "0.85", "1.0%", "23.4"],
+            ["High-Vol", "`xard_ma_cross_daily_open@H1`", "designated", "172", "1.25", "1.13", "14.4%", "17.7"],
+            ["High-Vol", "`weekly_gap_fade@H1`", "designated", "100", "1.30", "0.80", "2.1%", "17.7"],
+            ["High-Vol", "`nnfx_backtrader@D1`", "designated", "114", "1.61", "1.22", "7.4%", "46.4"],
+            ["High-Vol", "`reference_pullback_continuation@H4`", "designated", "59", "1.56", "0.83", "4.5%", "40.7"],
+            ["High-Vol", "`double_bottom_measured_move@D1`", "designated", "34", "1.46", "0.57", "1.9%", "40.9"]
+          ],
+          "note": "15 entries, not the 6 recorded here previously — this map was regenerated 2026-08-24, after the version this page used to describe. `nnfx_backtrader@D1`, `reference_pullback_continuation@H4` and `double_bottom_measured_move@D1` are designated identically into all three covered regimes (owner override, pooled-strength justification, not regime-specific). Gates: PF ≥ 1.5, Sharpe ≥ 0.8, MaxDD ≤ 25%, WinRate ≥ 40%, Recovery ≥ 3.0, OOS ≥ 12 months. Ranging still has zero coverage. Designated entries carry a written `designated_reason` in the source artifact — read it before relying on one."
+        },
+        {
+          "title": "Signal activity this week (as of 2026-08-27, hourly cron)",
+          "columns": ["Day", "Signals published", "Notes"],
+          "rows": [
+            ["Mon 2026-08-24", "5", "First full day on the new hourly cadence"],
+            ["Tue 2026-08-25", "9", ""],
+            ["Wed 2026-08-26", "10", "Last publish 21:15:36Z"],
+            ["Thu 2026-08-27", "0 (so far)", "~14h quiet — within normal variance, see the Operations section"]
+          ],
+          "note": "46 published total this week, 0 dead-lettered (`scored_signal_dlq_sub` empty). `scored_signal_queue_sub`'s backlog does not contain any of them, which is evidence — not proof — that something downstream is consuming. Source: `logs/cron_hourly_signals.log`, `results/state/signal_emitter_state.json`, and a non-destructive `gcloud pubsub subscriptions pull` (see Operations)."
         },
         {
           "title": "Data volumes",
@@ -301,10 +418,9 @@
       "title": "Known Gaps",
       "kind": "issues",
       "issues": [
-        { "id": "GAP-S1-01", "severity": "high", "title": "Producer cadence is once a day", "text": "`cron_daily_ingest_and_signals.sh` runs at 22:30 on weekdays. Two of three live strategies are H4. Signals arrive up to twenty hours stale, which is useless for execution. Owner decision pending: hourly cron (recommended) or continuous service." },
         { "id": "GAP-S1-02", "severity": "high", "title": "No minimum trade-count gate", "text": "`vet.py` treats `trade_count` only as a ranking tie-break. Combined with the 2026-08-21 reduction of `oos_months` from 60 to 12, cells with 5, 13 and 20 trades reached the live map. Worth adding regardless of where the OOS threshold lands." },
         { "id": "GAP-S1-03", "severity": "high", "title": "Qualified strategies published with empty exits", "text": "All three entries in the live map carry `exits: {}`. A strategy with no exit specification serializes cleanly and means nothing to whoever executes it. Open defect in `vet.py`." },
-        { "id": "GAP-S1-04", "severity": "high", "title": "Delivery is unverified past the first hop", "text": "System 1's service account is publisher-only and cannot list topics or subscriptions. It can prove it published; it cannot see whether System 3 consumed. Confirmation has to arrive as a written reply naming the subscription." },
+        { "id": "GAP-S1-04", "severity": "high", "title": "Delivery is unverified past the first hop", "text": "System 1's service account is publisher-only and cannot list topics or subscriptions. It can prove it published; it cannot see whether System 3 consumed, whether an order was sized, or whether System 2 filled anything. Partial, non-authoritative evidence gathered 2026-08-27 with a personal (non-service-account) gcloud identity: `scored_signal_queue_sub`'s backlog does not contain this week's 46 real signals, only one stray 2026-08-23 drill message — consistent with something consuming, not proof of a fill. Confirmation still has to arrive as a written reply from System 2/3 naming what actually happened to an approved order." },
         { "id": "GAP-S1-05", "severity": "med", "title": "Test fixtures leaked into the production queue artefact", "text": "A test run once wrote fixtures into the live queue — the `entry: 1.05` messages System 2 observed. The leak path is not yet closed." },
         { "id": "GAP-S1-06", "severity": "med", "title": "Trade outcomes writer is destructive", "text": "`persist_trade_outcomes` does DELETE-then-rebuild with no transaction. Snapshot first, and pass `--lookback-years 10` — the default of 5 silently discards half the history." },
         { "id": "GAP-S1-07", "severity": "med", "title": "Finding A — weight starvation", "text": "`gates.normalized_weights` shift-by-floor drives the lowest-scoring qualifier in a regime toward zero weight regardless of merit (Sharpe 1.74, PF 3.06 → weight 8e-8). Softmax or rank weighting proposed." },

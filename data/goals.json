@@ -135,12 +135,13 @@
       "kind": "system",
       "horizon": "week",
       "period": "2026-W34",
-      "status": "in_progress",
+      "status": "done",
       "metric": {
         "name": "Producer runs per trading day",
-        "current": 1,
+        "current": 24,
         "target": 24,
-        "unit": "runs"
+        "unit": "runs",
+        "note": "Confirmed via `crontab -l` and a full week of `logs/cron_hourly_signals.log` (2026-08-24 through 2026-08-27): hourly cron at :15, 24 runs/day."
       },
       "why": "The producer fires from `cron_daily_ingest_and_signals.sh` at 22:30 on weekdays. Two of the three live strategies are H4 — six bars a day — so a once-daily batch emits signals for bars that closed up to twenty hours earlier. `src/signals/run.py` already supports a continuous 60-second loop.",
       "plain": "Trade ideas are posted once a night, but most of the strategies produce a new idea every four hours. Almost everything posted is describing a moment that has already gone.",
@@ -149,7 +150,7 @@
         {
           "system": "system-1",
           "role": "owner",
-          "need": "Owner decision between hourly cron and continuous service, then implement"
+          "need": "Done 2026-08-2x: hourly cron installed (`shell/cron_hourly_signals.sh`, :15 past every hour). Verified against a full week of logs — 46 real signals published Mon-Wed, 0 dead-lettered."
         },
         {
           "system": "system-2",
@@ -695,6 +696,16 @@
       "title": "Export decay and quarantine verdicts where System 1 can read them",
       "detail": "The auditor and layer `Q` work locally, so a decayed strategy is refused here but System 1 is never told. Publish quarantine verdicts to GCS on the same read-only basis as everything else that crosses between systems. Keep it narrow — a verdict and its evidence, not live performance data, so the research side cannot start fitting to recent luck.",
       "evidence": ""
+    },
+    {
+      "id": "T-111",
+      "system": "system-1",
+      "goal": "G-001",
+      "period": "2026-W35",
+      "status": "in_progress",
+      "title": "Audit signal cadence and queue backlog for the week of 2026-08-24",
+      "detail": "Producer confirmed hourly and healthy: 46 real signals published (5 Mon, 9 Tue, 10 Wed, quiet Thu — normal for strategies that fire ~3x/week/pair), 0 dead-lettered. Checked `scored_signal_queue_sub` backlog directly with a personal gcloud identity (non-destructive, no --auto-ack): it holds exactly one message, a stray 2026-08-23 drill signal, not any of this week's real ones — evidence something is consuming, not proof of a fill. Still unconfirmed: whether System 2's local-queue misconfiguration (T-206, recorded 2026-08-22, status not_started as of that snapshot) has been fixed since. If not, that alone explains signals flowing with nothing trading.",
+      "evidence": "logs/cron_hourly_signals.log; results/state/signal_emitter_state.json; `gcloud pubsub subscriptions pull scored_signal_queue_sub --project=scalable-brain --limit=10` (no --auto-ack)"
     }
   ]
 }
