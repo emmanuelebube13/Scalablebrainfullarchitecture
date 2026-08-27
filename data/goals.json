@@ -105,7 +105,8 @@
         "name": "Links verified",
         "current": 1,
         "target": 3,
-        "unit": "hops"
+        "unit": "hops",
+        "note": "Link 1 (System 1 publish) is the only leg with any positive evidence. Links 2 and 3 are now negatively confirmed, not merely unverified — see dependencies."
       },
       "why": "Signals route `S1 → Scored_Signal_Queue → S3 → AMS_Outbound_Queue → S2`. System 1 publishes to link 1 and that is verified. Links 2 and 3 are unverified and System 1 is blind to them — its service account is publisher-only and cannot list topics or subscriptions. Nothing else about model quality can matter until a message is observed arriving.",
       "plain": "Three machines, two pipes between them. We can prove letters are going into the first pipe. Nobody has yet confirmed in writing that anyone is collecting them, or where the reply goes.",
@@ -119,12 +120,12 @@
         {
           "system": "system-2",
           "role": "required",
-          "need": "Answered 2026-08-22: consumes the local subscription `ams-outbound.executor` on a shared SQLite queue — **not** Pub/Sub, and it has never pulled `AMS_Outbound_Queue_sub`. The process is running, but its deployed `QUEUE_LOCAL_PATH` is a Windows path that resolved to an empty database beside its own source tree, so it has received nothing since 2026-08-20T15:09:24Z."
+          "need": "Per System 2's own trace (2026-08-27): the execution engine stopped 2026-08-24T17:07:55Z alongside System 3's gate, no restart since, no exception logged. Its only runtime window this week (10:52-17:07 Monday) shows no order or fill events at all — zero OANDA fills, confirmed operational rather than risk-gate related. Supersedes the 2026-08-22 note about the local-queue path; the process is not running at all now, so that misconfiguration is moot until it restarts."
         },
         {
           "system": "system-3",
           "role": "required",
-          "need": "Answered 2026-08-22 and **no longer the blocking link**: subscription `scored_signal_queue_sub` on topic `scored_signal_queue`, pulled continuously by `s3-signal-relay.service` since 2026-08-17 — 13,020 pull requests in the last 24 hours. Approved orders are published to `ams-outbound`. The capitalised `Scored_Signal_Queue` does not exist."
+          "need": "Per System 3's own trace (2026-08-27): `ams.service.main` stopped simultaneously with System 2 at 2026-08-24T17:07:53Z, never restarted. Separately and independently of the outage: System 3 has never had a real Pub/Sub consumer running — `pubsub_signal_relay.py` has no systemd unit and no log evidence it has ever executed. `ams_decision_log` holds one entry since 2026-08-23 (Sunday's drill) and zero for Mon/Tue/Wed; none of System 1's 46 real signals this week reached System 3. Supersedes the 2026-08-22 claim of an active relay pulling 13,020 times/24h — that claim does not hold up against the decision log."
         }
       ],
       "blocked_by": null
@@ -706,6 +707,16 @@
       "title": "Audit signal cadence and queue backlog for the week of 2026-08-24",
       "detail": "Producer confirmed hourly and healthy: 46 real signals published (5 Mon, 9 Tue, 10 Wed, quiet Thu — normal for strategies that fire ~3x/week/pair), 0 dead-lettered. Checked `scored_signal_queue_sub` backlog directly with a personal gcloud identity (non-destructive, no --auto-ack): it holds exactly one message, a stray 2026-08-23 drill signal, not any of this week's real ones — evidence something is consuming, not proof of a fill. Still unconfirmed: whether System 2's local-queue misconfiguration (T-206, recorded 2026-08-22, status not_started as of that snapshot) has been fixed since. If not, that alone explains signals flowing with nothing trading.",
       "evidence": "logs/cron_hourly_signals.log; results/state/signal_emitter_state.json; `gcloud pubsub subscriptions pull scored_signal_queue_sub --project=scalable-brain --limit=10` (no --auto-ack)"
+    },
+    {
+      "id": "T-112",
+      "system": "system-1",
+      "goal": "G-001",
+      "period": "2026-W35",
+      "status": "blocked",
+      "title": "Resolve the Pub/Sub backlog-vs-decision-log discrepancy",
+      "detail": "System 1's non-destructive check of `scored_signal_queue_sub` (2026-08-27) found this week's 46 real signals absent from the backlog. System 2/3's own trace of `ams_decision_log` the same day found zero decisions for Mon/Tue/Wed and no evidence the relay script has ever run. Both cannot be fully explained together yet. Narrowed so far: the subscription's IAM policy grants pubsub.subscriber to exactly one identity, `trading-vm@scalable-brain.iam.gserviceaccount.com`; Data Access audit logs are not enabled for Pub/Sub in this project, so the actual consuming caller and timestamp cannot be recovered retroactively. Ruled out: this machine's own two peek pulls this session (both non-acking, and the backlog was already down to one message on the very first pull). Next step: enable Pub/Sub Data Access audit logging, then re-run the producer and watch who acks in real time.",
+      "evidence": "gcloud pubsub subscriptions get-iam-policy scored_signal_queue_sub; gcloud logging read (Data Access logs absent); ams_decision_log query (System 2/3 side)"
     }
   ]
 }
