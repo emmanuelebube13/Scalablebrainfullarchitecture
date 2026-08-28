@@ -6,67 +6,48 @@
 <title>Goals, milestones & tasks — Scalable Brain</title>
 <meta name="description" content="Milestone ladder, macro goals, cross-system dependency matrix and per-subsystem task tracker.">
 <link rel="stylesheet" href="assets/css/main.css">
+<link rel="stylesheet" href="assets/css/goals.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
 <header id="site-header"></header>
 
-<main id="main">
-  <section class="hero">
-    <div class="wrap">
-      <div class="eyebrow" id="goals-asof">Loading…</div>
-      <h1>Goals, milestones &amp; tasks</h1>
-      <p class="lede">One question decides whether a piece of work is worth doing: which rung of the ladder does it move?
-         Work that moves no rung is a cost, however good the engineering.</p>
-    </div>
-  </section>
+<main id="main" class="goals-main">
 
-  <section class="section">
-    <div class="wrap">
-      <div class="section-head">
-        <span class="kicker">The ladder</span>
-        <h2>Value milestones</h2>
-        <p>Each rung is falsifiable and tied to a blocker that actually exists in the repository today.
-           A rung is not reached because it feels reached — it is reached when its falsifier stops applying.</p>
+  <!-- ── Compact hero ─────────────────────────────────────────── -->
+  <div class="goals-hero">
+    <div class="goals-hero-inner">
+      <div class="goals-hero-text">
+        <span class="kicker" id="goals-asof">Loading…</span>
+        <h1>Goals &amp; tasks</h1>
+        <p class="goals-lede">Which rung of the ladder does this move? Work that moves no rung is a cost.</p>
       </div>
-      <div id="milestones"></div>
+      <!-- Ladder pills — always visible at the top -->
+      <div class="goals-ladder-strip" id="ladder-strip"></div>
     </div>
-  </section>
+  </div>
 
-  <section class="section">
-    <div class="wrap">
-      <div class="section-head">
-        <span class="kicker">Macro &amp; subsystem goals</span>
-        <h2>What is being worked on</h2>
-      </div>
-      <div class="filters" id="goal-filters"></div>
-      <div class="grid grid-2" id="goals"></div>
+  <!-- ── Tab bar ───────────────────────────────────────────────── -->
+  <div class="goals-tabbar-wrap">
+    <div class="goals-tabbar" role="tablist" aria-label="Goals sections">
+      <button role="tab" aria-selected="true"  data-panel="panel-goals"    class="gtab active">Goals</button>
+      <button role="tab" aria-selected="false" data-panel="panel-ladder"   class="gtab">Ladder</button>
+      <button role="tab" aria-selected="false" data-panel="panel-matrix"   class="gtab">Dependencies</button>
+      <button role="tab" aria-selected="false" data-panel="panel-tasks"    class="gtab">Tasks</button>
     </div>
-  </section>
+    <!-- filters live here, contextual per tab -->
+    <div class="goals-tab-filters" id="tab-filters"></div>
+  </div>
 
-  <section class="section">
-    <div class="wrap-wide">
-      <div class="section-head">
-        <span class="kicker">Cross-system dependencies</span>
-        <h2>Which systems have to change for each goal</h2>
-        <p>A goal owned by one system is rarely achievable by one system. This matrix is generated from the
-           <code>dependencies</code> array on each goal, so it cannot drift from the goal definitions.</p>
-      </div>
-      <div id="matrix"></div>
-    </div>
-  </section>
+  <!-- ── Panels ───────────────────────────────────────────────── -->
+  <div class="goals-panels">
+    <div id="panel-goals"  class="goals-panel active" role="tabpanel"><div class="goals-panel-scroll" id="goals"></div></div>
+    <div id="panel-ladder" class="goals-panel"        role="tabpanel"><div class="goals-panel-scroll" id="milestones"></div></div>
+    <div id="panel-matrix" class="goals-panel"        role="tabpanel"><div class="goals-panel-scroll" id="matrix"></div></div>
+    <div id="panel-tasks"  class="goals-panel"        role="tabpanel"><div class="goals-panel-scroll" id="tasks"></div></div>
+  </div>
 
-  <section class="section">
-    <div class="wrap">
-      <div class="section-head">
-        <span class="kicker">Task tracker</span>
-        <h2>Weekly work, by subsystem</h2>
-      </div>
-      <div class="filters" id="task-filters"></div>
-      <div id="tasks"></div>
-    </div>
-  </section>
 </main>
 
 <footer id="site-footer"></footer>
