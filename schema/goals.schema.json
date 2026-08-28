@@ -8,6 +8,8 @@
     "as_of": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
     "current_period": { "type": "string" },
     "status_vocabulary": { "type": "object" },
+    "priority_vocabulary": { "type": "object" },
+    "urgency_vocabulary": { "type": "object" },
     "dependency_roles": { "type": "object" },
     "milestones": {
       "type": "array",
@@ -80,7 +82,9 @@
           "status": { "type": "string" },
           "title": { "type": "string" },
           "detail": { "type": "string" },
-          "evidence": { "type": "string" }
+          "evidence": { "type": "string" },
+          "priority": { "type": "string", "enum": ["high", "medium", "low"] },
+          "urgency": { "type": "string", "enum": ["immediate", "this_month", "next_month", "when_unblocked"] }
         }
       }
     }
