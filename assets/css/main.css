@@ -271,6 +271,28 @@ tbody tr:last-child td { border-bottom: 0; }
 tbody tr:hover { background: var(--bg-raised); }
 .table-note { font-size: 0.85rem; color: var(--text-faint); margin: -6px 0 18px; }
 
+/* ---------- Task tracker ----------
+   .pill sets its own colour and is declared after .tone-*, so a bare
+   .pill.tone-info loses on source order. These two-class rules win it back. */
+.pill.tone-good  { color: var(--good); }
+.pill.tone-warn  { color: var(--warn); }
+.pill.tone-bad   { color: var(--bad); }
+.pill.tone-info  { color: var(--info); }
+.pill.tone-muted { color: var(--muted); }
+
+.tasks td { vertical-align: top; }
+.tasks .need {
+  display: block; margin-top: 5px; max-width: 52ch;
+  font-family: var(--sans); font-size: 0.82rem; color: var(--text-faint);
+}
+/* A high-priority row should be findable without reading the priority column. */
+.tasks tr[data-priority="high"]   td:first-child { box-shadow: inset 3px 0 0 var(--bad); }
+.tasks tr[data-priority="medium"] td:first-child { box-shadow: inset 3px 0 0 var(--warn); }
+.tasks tr[data-status="done"] { opacity: 0.55; }
+
+.filters button.pill { cursor: pointer; padding: 6px 12px; }
+.filters button.pill:hover { color: var(--text); border-color: var(--text-faint); }
+
 /* ---------- Stage list (pipeline) ---------- */
 .stages { list-style: none; padding: 0; margin: 20px 0 0; }
 .stage {

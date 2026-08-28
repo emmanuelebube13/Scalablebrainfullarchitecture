@@ -1,6 +1,6 @@
 import {
   $, el, inline, voice, getMode, onModeChange, loadAll, loadJSON,
-  mountChrome, fatal, renderTable,
+  mountChrome, fatal,
 } from './core.js';
 
 const MILESTONE_TONE = {
@@ -17,7 +17,10 @@ try {
 
   $('#goals-asof').textContent = `State as of ${G.as_of} · current period ${G.current_period}`;
 
-  const state = { goalSystem: '', goalStatus: '', taskSystem: '', taskStatus: '', taskPeriod: '' };
+  const state = {
+    goalSystem: '', goalStatus: '',
+    taskSystem: '', taskStatus: '', taskPeriod: '', taskPriority: '', taskUrgency: '',
+  };
 
   buildFilters();
   renderAll(getMode());
@@ -114,29 +117,49 @@ try {
     const list = G.tasks.filter((t) =>
       (!state.taskSystem || t.system === state.taskSystem) &&
       (!state.taskStatus || t.status === state.taskStatus) &&
-      (!state.taskPeriod || t.period === state.taskPeriod));
+      (!state.taskPeriod || t.period === state.taskPeriod) &&
+      (!state.taskPriority || t.priority === state.taskPriority) &&
+      (!state.taskUrgency || t.urgency === state.taskUrgency));
 
     if (!list.length) { box.append(el('p', { class: 'side-empty', text: 'No tasks match these filters.' })); return; }
 
-    const rank = { blocked: 0, in_progress: 1, not_started: 2, deferred: 3, done: 4 };
-    list.sort((a, b) => rank[a.status] - rank[b.status] || a.id.localeCompare(b.id));
+    // Priority first, then how stuck it is, then id — so the top of the table is
+    // always the thing most worth doing next.
+    const prank = { high: 0, medium: 1, low: 2 };
+    const srank = { blocked: 0, in_progress: 1, not_started: 2, deferred: 3, done: 4 };
+    list.sort((a, b) =>
+      (prank[a.priority] ?? 9) - (prank[b.priority] ?? 9)
+      || (srank[a.status] ?? 9) - (srank[b.status] ?? 9)
+      || a.id.localeCompare(b.id));
 
-    box.append(...renderTable({
-      columns: ['ID', 'System', 'Task', 'Goal', 'Period', 'Status'],
-      rows: list.map((t) => {
+    const table = el('table', { class: 'tasks' },
+      el('thead', {}, el('tr', {},
+        ['ID', 'System', 'Priority', 'Urgency', 'Task', 'Goal', 'Period', 'Status']
+          .map((c) => el('th', { text: c })))),
+      el('tbody', {}, list.map((t) => {
         const s = systems.find((x) => x.id === t.system);
-        const v = G.status_vocabulary[t.status] ?? { label: t.status };
-        return [
-          `\`${t.id}\``,
-          `S${s?.ordinal ?? '?'}`,
-          `**${t.title}** — ${t.detail}${t.evidence ? ` *(evidence: \`${t.evidence}\`)*` : ''}`,
-          `\`${t.goal}\``,
-          t.period,
-          v.label,
-        ];
-      }),
-      note: 'Tasks live in `data/goals.json`. An agent adds one by appending an object to the `tasks` array and committing — no HTML changes.',
-    }));
+        const v = G.status_vocabulary[t.status] ?? { label: t.status, tone: 'muted' };
+        const p = (G.priority_vocabulary ?? {})[t.priority];
+        const u = (G.urgency_vocabulary ?? {})[t.urgency];
+        return el('tr', { 'data-priority': t.priority ?? '', 'data-status': t.status },
+          el('td', {}, el('code', { text: t.id })),
+          el('td', { style: { color: s?.accent }, text: `S${s?.ordinal ?? '?'}` }),
+          el('td', {}, p ? el('span', { class: `badge tone-${p.tone}`, title: p.note, text: p.label }) : '—'),
+          el('td', {}, u ? el('span', { class: `pill tone-${u.tone}`, title: u.note, text: u.label }) : '—'),
+          el('td', {},
+            el('strong', { text: t.title }),
+            t.detail ? el('div', { class: 'need', html: inline(t.detail) }) : null,
+            t.evidence ? el('div', { class: 'need', html: inline(`*evidence:* \`${t.evidence}\``) }) : null),
+          el('td', {}, el('code', { text: t.goal })),
+          el('td', { text: t.period }),
+          el('td', {}, el('span', { class: `badge tone-${v.tone}`, text: v.label })));
+      })));
+
+    box.append(el('div', { class: 'table-wrap' }, table));
+    box.append(el('p', { class: 'table-note', html: inline(
+      `Showing **${list.length}** of ${G.tasks.length} tasks. Tasks live in \`data/goals.json\`. An agent adds one `
+      + 'by appending an object to the `tasks` array — including `priority` and `urgency` — and committing. '
+      + 'No HTML changes.') }));
   }
 
   /* ---------- filters ---------- */
@@ -155,12 +178,24 @@ try {
       el('label', { text: 'System' }),
       sel(systems.map((s) => [s.id, `System ${s.ordinal} — ${s.name}`]), 'All systems',
         (v) => { state.taskSystem = v; renderTasks(); }),
+      el('label', { text: 'Priority' }),
+      sel(Object.entries(G.priority_vocabulary ?? {}).map(([k, v]) => [k, v.label]), 'Any priority',
+        (v) => { state.taskPriority = v; renderTasks(); }),
+      el('label', { text: 'Urgency' }),
+      sel(Object.entries(G.urgency_vocabulary ?? {}).map(([k, v]) => [k, v.label]), 'Any urgency',
+        (v) => { state.taskUrgency = v; renderTasks(); }),
       el('label', { text: 'Status' }),
       sel(Object.entries(G.status_vocabulary).map(([k, v]) => [k, v.label]), 'Any status',
         (v) => { state.taskStatus = v; renderTasks(); }),
       el('label', { text: 'Period' }),
       sel(periods.map((p) => [p, p]), 'Any period',
-        (v) => { state.taskPeriod = v; renderTasks(); }));
+        (v) => { state.taskPeriod = v; renderTasks(); }),
+      el('button', { class: 'pill', type: 'button', text: 'Reset',
+        onclick: () => {
+          Object.assign(state, { taskSystem: '', taskStatus: '', taskPeriod: '', taskPriority: '', taskUrgency: '' });
+          $('#task-filters').querySelectorAll('select').forEach((s) => { s.value = ''; });
+          renderTasks();
+        } }));
   }
 
   function sel(options, allLabel, onchange) {
