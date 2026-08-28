@@ -79,7 +79,7 @@
       "name": "Forward test",
       "state": "in_progress",
       "date": null,
-      "summary": "A signal travels the full three-system path on the practice account and its realised results track expectation. The drill design is specified: System 1 publishes one correctly-formed signal carrying `\"drill\": true`, System 3 processes it through the full risk path with the flag intact, System 2 runs it to the broker call and stops, logging the order it would have sent.",
+      "summary": "A signal travels the full three-system path on the practice account and its realised results track expectation. The drill design is specified: System 1 publishes one correctly-formed signal carrying `\"drill\": true`, System 3 processes it through the full risk path with the flag intact, System 2 runs it to the broker call and stops, logging the order it would have sent. Evidence since recorded: on 2026-08-24 a signal traversed System 1 -> Pub/Sub -> relay -> System 3 -> System 2 -> OANDA and produced three real fills (2617 / 2621 / 2625), with `correlation_id = signal_id` intact at each hop. The transport half of this rung is therefore demonstrated; what remains is a clean drill with the flag preserved, and realised results that track expectation.",
       "plain": "Prove the pipe before trusting it with anything. One clearly-marked test order is sent down the whole chain; the last machine stops just short of actually placing it and writes down exactly what it would have done.",
       "falsifier": "If the same `signal_id` is not visible at all three systems, the pipe is not proven, however healthy each machine looks on its own."
     },
@@ -551,6 +551,330 @@
         }
       ],
       "blocked_by": null
+    },
+    {
+      "id": "G-014",
+      "title": "Repair telemetry — no dead panels, no numbers without a source",
+      "kind": "system",
+      "horizon": "month",
+      "period": "2026-08",
+      "status": "not_started",
+      "metric": {
+        "name": "Dashboard panels serving live data",
+        "current": 15,
+        "target": 21,
+        "unit": "panels",
+        "note": "Six DB-backed panels still render \"awaiting endpoint\""
+      },
+      "why": "Telemetry is the only surface anyone actually looks at, and today it is partly blind. `CONNECTIONS.md` lists six panels — breakers, state transitions, sizing, fills, notifications, override audit — as `v2` awaiting a read endpoint, while the data already sits in the database. System 2's `/status` advertises a `gatekeeper` block that reads `{\"state\": \"unavailable\", \"reason\": \"no approval-rate provider wired\"}`, so the tile is empty *and* the watchdog check that depends on it can never fire. And `db_client.py` still carries an `ALLOW_SQLITE_FALLBACK` path that caches a degraded SQLite engine forever — a telemetry backend that keeps answering after it has lost the real database is worse than one that stops.",
+      "plain": "The dashboard has holes in it. Some boxes are blank because nobody built the small piece of plumbing behind them, and one part can quietly switch to a spare copy of the database and keep showing numbers as if nothing happened. Before telemetry can be trusted as the place you look, the blanks have to fill in and every number has to say where it came from.",
+      "definition_of_done": "Every panel on the dashboard either renders live data or states exactly which endpoint it is waiting on and why; no panel shows a constant; the gatekeeper provider is wired; and the SQLite fallback cannot be reached by anything a person reads.",
+      "dependencies": [
+        {
+          "system": "system-1",
+          "role": "consumer",
+          "need": "Its health and model-set fields are surfaced but need no change"
+        },
+        {
+          "system": "system-2",
+          "role": "owner",
+          "need": "Owns the publisher, the backend and the dashboard"
+        },
+        {
+          "system": "system-3",
+          "role": "required",
+          "need": "Must serve the six DB-backed read endpoints from the Guardian"
+        }
+      ],
+      "blocked_by": null
+    },
+    {
+      "id": "G-015",
+      "title": "Make telemetry the single source of truth, fed by a live stream",
+      "kind": "macro",
+      "horizon": "month",
+      "period": "2026-09",
+      "status": "not_started",
+      "metric": {
+        "name": "First-class telemetry sources streaming",
+        "current": 1,
+        "target": 4,
+        "unit": "sources",
+        "note": "Target: OANDA, System 1, System 2, System 3"
+      },
+      "why": "Right now telemetry is a derived view assembled by polling: the dashboard polls four HTTP surfaces every three seconds and the publisher writes GCS snapshots, so what you see is a reconstruction, not the event. Broker state only reaches telemetry through System 2's `/status`, which is why OANDA reporting `pendingOrderCount: 6` while `ams_open_positions` holds `sl = None, tp = None` for all three open trades was invisible until someone read both by hand. Every decision, fill and account change should land in one store as it happens, stamped with its source, so that divergence between broker-truth and system-truth is a visible alert rather than an archaeology exercise.",
+      "plain": "At the moment the dashboard keeps asking \"anything new?\" and stitches an answer together. It should instead be told the moment something happens, by each system directly — the broker included — and every number should carry a label saying who said it and when. Then when two sources disagree, the screen shows the disagreement instead of hiding it.",
+      "definition_of_done": "OANDA, System 1, System 2 and System 3 all push into one telemetry store; the dashboard receives updates over a stream rather than a 3-second poll; every field carries `source` and `as_of`; and a broker-vs-system divergence raises an alert without a human comparing two screens.",
+      "dependencies": [
+        {
+          "system": "system-1",
+          "role": "required",
+          "need": "Publish emitter, model-set and freshness events to the same store"
+        },
+        {
+          "system": "system-2",
+          "role": "owner",
+          "need": "Owns the publisher, the streaming backend and the broker feed"
+        },
+        {
+          "system": "system-3",
+          "role": "required",
+          "need": "Publish every gate decision and fill as it happens, not only into `ams.db`"
+        }
+      ],
+      "blocked_by": null
+    },
+    {
+      "id": "G-016",
+      "title": "Give telemetry a safe operator control plane",
+      "kind": "system",
+      "horizon": "month",
+      "period": "2026-09",
+      "status": "not_started",
+      "why": "Screen 4 of the dashboard already carries the full two-step confirm interface, but nothing is wired: confirming an action tells the operator which CLI command to go and type. Every real control path — `/pause`, `/unquarantine`, `/mode enforce` — runs through the Telegram bot and `ams.ctl` on `trading-1`, which means stopping the system requires SSH and knowing the vocabulary. That is the wrong latency for a force-stop. The counter-constraint is absolute and stays: the dashboard must never be the thing that flips the system to live.",
+      "plain": "The screen has the buttons drawn but they do not do anything — they just tell you what to go and type on the server. Stopping trading should not need a login and a memorised command. What the screen must never be able to do is turn live trading *on*; that stays double-locked.",
+      "definition_of_done": "An authenticated `POST /control` supports force-stop, per-pair or per-strategy opt-out, refresh, and a read-only debug view; every call is written to `override_audit` with the operator identity; the `go_live_enabled` gate remains unreachable from the dashboard; and a force-stop from the browser is demonstrated end to end on the practice account.",
+      "dependencies": [
+        {
+          "system": "system-1",
+          "role": "none",
+          "need": ""
+        },
+        {
+          "system": "system-2",
+          "role": "required",
+          "need": "Must honour a stop that arrives over HTTP as it honours one from the queue"
+        },
+        {
+          "system": "system-3",
+          "role": "owner",
+          "need": "Owns the override pipeline, the audit trail and the mode gate"
+        }
+      ],
+      "blocked_by": null
+    },
+    {
+      "id": "G-017",
+      "title": "Restore signal and trade alerting to Telegram",
+      "kind": "system",
+      "horizon": "month",
+      "period": "2026-08",
+      "status": "not_started",
+      "metric": {
+        "name": "Routed notification events with a live emitter",
+        "current": 15,
+        "target": 27,
+        "unit": "events",
+        "note": "12 routed events have no emitter anywhere in `src/ams/`"
+      },
+      "why": "The Telegram channel is not broken — `service_started`, breaker alerts and override replies all deliver. What is missing is the emitters. `config/risk_config.json` routes `trade_opened`, `trade_closed_win`, `trade_closed_loss`, `signal_rejected`, `caution_entered`, `caution_exited`, `soft_stop`, `state_transition`, `stale_snapshot`, `publish_failure`, `daily_summary` and `weekly_report`, and not one of them has a matching `notifier(...)` call anywhere in `src/ams/`. The routing table describes a system that was never wired, so the operator gets paged about service restarts and never about trades.",
+      "plain": "Telegram works — it just never gets told about trades. The list of things that are *supposed* to be announced exists in the config, but the code that would announce them was never written. So you hear about restarts and breakers and nothing about the actual trading.",
+      "definition_of_done": "Every event named in the notification routing table has an emitter and a rendered message; a live trade produces a Telegram message within one minute of the fill; and an alert fires if `notify_outbox` gains no row across an active trading session.",
+      "dependencies": [
+        {
+          "system": "system-1",
+          "role": "consumer",
+          "need": "Signal-level rejections it caused become visible to the operator"
+        },
+        {
+          "system": "system-2",
+          "role": "required",
+          "need": "Must emit fill and broker-rejection events into the same seam"
+        },
+        {
+          "system": "system-3",
+          "role": "owner",
+          "need": "Owns the notify dispatcher, the outbox and the routing table"
+        }
+      ],
+      "blocked_by": null
+    },
+    {
+      "id": "G-018",
+      "title": "Adopt a data governance and data-quality standard across build and deploy",
+      "kind": "macro",
+      "horizon": "month",
+      "period": "2026-08",
+      "status": "not_started",
+      "why": "The failures found this month are governance failures wearing engineering clothes. `strategy_status` holds zero rows, so no per-strategy state is recorded anywhere. `risk_state.size_multiplier = 0` sits in the risk table with a `halted_until` that expired on 2026-07-28, evidently unread, because live decisions still produce non-zero units. 532 dead account snapshots sit in `ams-inbound.ams` and 532 more in its DLQ, oldest from July. System 1 shipped a model set with `code_dirty: true` and a `freshness_checks.overall_status: WARN` naming an outcomes feed 171 hours past its grace window. None of that is a bug in a function; all of it is the absence of an owner, a retention rule and a gate.",
+      "plain": "Several of the problems we keep finding are not broken code — they are data nobody owns. A table nobody fills in, a safety number nobody reads, a queue nobody drains, a model built from an unclean copy of the code. The fix is boring and permanent: every piece of data gets a named owner, a defined shape, a rule for how long it lives, and an automatic check that fails the build when it goes bad.",
+      "definition_of_done": "A written standard names, for every table, topic and published artifact: its owner, its schema of record, its retention rule and its lineage. Freshness, row-count, null-rate and referential checks run in the deploy path and fail a promotion. No artifact is publishable from a dirty working tree.",
+      "dependencies": [
+        {
+          "system": "system-1",
+          "role": "required",
+          "need": "Model set, feature store and outcomes feed must pass the same gates"
+        },
+        {
+          "system": "system-2",
+          "role": "required",
+          "need": "Telemetry and regime tables come under the same ownership rules"
+        },
+        {
+          "system": "system-3",
+          "role": "owner",
+          "need": "Holds the contracts, migrations, audit ledger and export path the standard is enforced from"
+        }
+      ],
+      "blocked_by": null
+    },
+    {
+      "id": "G-019",
+      "title": "Publish one operations handbook a human can change the system from",
+      "kind": "macro",
+      "horizon": "month",
+      "period": "2026-08",
+      "status": "not_started",
+      "why": "Operational knowledge is scattered across `audit/communication/S2-*.md`, `CONNECTIONS.md`, `deployment-guide/`, `GO_LIVE.md`, `BACKUP.md` and the systemd units on `trading-1` — and it contradicts itself. `S2-REPLY-2026-08-27-signal-path-trace.md` states the processes died and never restarted, no relay unit exists, and this week's 46 signals never arrived; the live trace one day later shows all five units running, the relay enabled with a lifetime counter, 46 signals relayed and three real OANDA fills. Both documents are on file. A person deciding what to fix has no way to know which one is true, and no single place that tells them which credential or role they need to act.",
+      "plain": "The instructions for running this system live in a dozen documents, and two of them say opposite things about the same week. Anyone trying to debug it has to guess which is current. There should be one document, kept current, that a human can read and edit — how each service runs, how to read each screen, what to do when each known thing breaks, and exactly what access you need to do it.",
+      "definition_of_done": "One versioned handbook covers every running service and its unit on `trading-1`, how to read each health surface, a playbook per known failure mode, and the security envelope — which secret, service account and IAM role each action needs. Superseded traces are marked retracted. A human can make a change from the handbook alone, without an agent and without reading source.",
+      "dependencies": [
+        {
+          "system": "system-1",
+          "role": "consumer",
+          "need": "Its runbook entries are referenced, not rewritten here"
+        },
+        {
+          "system": "system-2",
+          "role": "owner",
+          "need": "Owns the live traces, the deployment guide and the dashboard documentation"
+        },
+        {
+          "system": "system-3",
+          "role": "required",
+          "need": "Must document the decision vocabulary, override commands and recovery semantics"
+        }
+      ],
+      "blocked_by": null
+    },
+    {
+      "id": "G-020",
+      "title": "Turn every recurring job into a versioned skill or agent",
+      "kind": "system",
+      "horizon": "month",
+      "period": "2026-09",
+      "status": "not_started",
+      "why": "The same jobs are re-derived from scratch every time: the pipeline trace, the weekly readiness reply, queue and DLQ inspection, deploy verification, the telemetry panel audit, the cleanup pass. Quality varies by run, and the 08-27 trace is the proof — it reached five wrong conclusions because it read the local mirror instead of `trading-1`, a mistake a fixed procedure would have made impossible. There is no `.claude/skills` directory in the repository at all; every run starts from a blank prompt.",
+      "plain": "We keep asking for the same pieces of work, and each time the answer is built from nothing, so the quality moves around. One of those runs got five facts wrong because it read the wrong copy of the system. Writing the recurring jobs down as fixed, reusable procedures — with a stated output shape — makes the good version the default instead of the lucky one.",
+      "definition_of_done": "Each recurring job exists as a checked-in skill with a stated input, a fixed output contract and a verification step; two consecutive runs of the same skill on unchanged inputs produce materially the same report; and every skill that reads system state names `trading-1` as the source and the local checkout as a mirror.",
+      "dependencies": [
+        {
+          "system": "system-1",
+          "role": "consumer",
+          "need": "May adopt the same skills; requires no change to be unblocked"
+        },
+        {
+          "system": "system-2",
+          "role": "owner",
+          "need": "Owns the agent definitions and the recurring trace and audit work"
+        },
+        {
+          "system": "system-3",
+          "role": "required",
+          "need": "Must define the output contract for queue, DLQ and reconciliation inspections"
+        }
+      ],
+      "blocked_by": null
+    },
+    {
+      "id": "G-021",
+      "title": "Close the last mile — an approved order must reach the broker",
+      "kind": "system",
+      "horizon": "month",
+      "period": "2026-08",
+      "status": "not_started",
+      "metric": {
+        "name": "Last-mile rejections in the last 6 orders",
+        "current": 6,
+        "target": 0,
+        "unit": "orders"
+      },
+      "why": "The pipe is not the problem any more. Signals on 08-25 and 08-26 were decided, sized and written to the outbound queue, and then none of them reached OANDA — for three distinct reasons. Four of the last six were stopped by `backup_guard` because a position from 2026-08-24 is still open on that pair, and since EUR_USD, GBP_USD and USD_CAD carry essentially all the flow, the strategy cannot re-enter on its own main pairs for as long as those three sit there. One was rejected by System 2's §7.2 cap after System 3 sized it at 9,234,723 notional against a 5,000,000 limit System 3 does not know exists. One carried a stop-loss above entry on a BUY. Each is a contract or state defect, not a market condition.",
+      "plain": "Orders are being made correctly and then blocked at the very last step. Three old trades from 24 August are still open and, by design, they lock out every new trade on the same currency pairs — which happen to be nearly all of them. Separately, the risk system approves sizes the trading system is not allowed to send, and something is producing trades with the stop-loss on the wrong side.",
+      "definition_of_done": "A decided signal on a main pair reaches OANDA and fills; the notional cap is a shared, versioned limit rather than a private constant; bracket direction is asserted at every hop that can construct one; and the three 08-24 positions have an explicit, recorded disposition.",
+      "dependencies": [
+        {
+          "system": "system-1",
+          "role": "consumer",
+          "need": "Its signals are the input; no change required for this goal"
+        },
+        {
+          "system": "system-2",
+          "role": "owner",
+          "need": "Owns `backup_guard`, the §7.2 last-line validation and the broker call"
+        },
+        {
+          "system": "system-3",
+          "role": "required",
+          "need": "Sizing must respect the notional cap and never emit an inverted bracket"
+        }
+      ],
+      "blocked_by": null
+    },
+    {
+      "id": "G-022",
+      "title": "Harden the queue and Pub/Sub transport before the cloud cutover",
+      "kind": "system",
+      "horizon": "month",
+      "period": "2026-08",
+      "status": "not_started",
+      "why": "Two permanently-invalid messages — `drill-003`, missing `schema_version`, and a diagnostic `DIRECT-b61a5fab` — fail validation, are never acked, and redeliver roughly every six seconds forever. The relay's lifetime counter reads `forwarded: 48, rejected: 23,566`. The cause is structural: not one of the five subscriptions has a `deadLetterPolicy`, all sit at `ackDeadlineSeconds: 10`, and the `scored_signal_dlq` topic exists wired to nothing, so an invalid message has nowhere to go but round again. Alongside it, `scored-signals.heartbeat` has accumulated 9,511 rows in `ready` that no consumer subscribes to. Moving this transport into the cloud without fixing it moves a log-flooding retry loop into a billed environment.",
+      "plain": "Two bad messages from a test are stuck going round and round the system every six seconds, and have been for weeks — twenty-three thousand rejections against forty-eight real deliveries. Nothing was ever set up to catch a message that can never be processed, so it retries forever. There is also a queue quietly growing with nine and a half thousand messages nobody reads. All of this should be fixed before it is moved to the cloud, where it costs money to run in circles.",
+      "definition_of_done": "Every subscription has a dead-letter policy pointing at a real DLQ topic; the two poison messages are drained; the relay's rejected counter stops climbing while idle; no local queue grows without a consumer; and the stale `ams-inbound.ams` and `bridge.unrouted` backlogs are drained or explicitly routed.",
+      "dependencies": [
+        {
+          "system": "system-1",
+          "role": "consumer",
+          "need": "Publishes into the same topics; requires no change"
+        },
+        {
+          "system": "system-2",
+          "role": "required",
+          "need": "Must drain `bridge.unrouted` control events and stop the heartbeat topic growing"
+        },
+        {
+          "system": "system-3",
+          "role": "owner",
+          "need": "Owns the relay, the subscriptions and the local queue database"
+        }
+      ],
+      "blocked_by": null
+    },
+    {
+      "id": "G-023",
+      "title": "Sign off the three-system architecture as complete, then hand it to the cloud",
+      "kind": "macro",
+      "horizon": "month",
+      "period": "2026-09",
+      "status": "not_started",
+      "metric": {
+        "name": "Architecture nodes at status `live`",
+        "current": 0,
+        "target": 1,
+        "unit": "map (all nodes)",
+        "note": "Measured against `data/architecture.json` — any node or edge not `live` fails the sign-off"
+      },
+      "why": "The build phase should end next month. The evidence that it can is already on the record: on 2026-08-24 a signal travelled System 1 to Pub/Sub to the relay to System 3 to System 2 to OANDA and produced three real fills, `2617 / 2621 / 2625`, still open today with `correlation_id = signal_id` intact at every hop. What remains is not new architecture — it is closing the last mile, the transport hardening, the alerting and the telemetry gaps, then freezing the contract surface so the cloud migration moves a finished system rather than a moving one.",
+      "plain": "The design work should be finished next month. It has already been shown to work once, end to end, with real trades at the broker. What is left is tidying the known gaps and then declaring the shape final — because moving a half-finished system into the cloud means debugging two problems at once.",
+      "definition_of_done": "Every node and edge on the architecture map is `live` with no `planned` or `degraded` remaining; the v1 contract surface is frozen and every future change is versioned; a clean drill signal is visible with the same `signal_id` at all three systems; and only then does the signal path move to managed infrastructure under G-009.",
+      "dependencies": [
+        {
+          "system": "system-1",
+          "role": "required",
+          "need": "Signal envelope, gatekeeper coverage and model-set publication must be final"
+        },
+        {
+          "system": "system-2",
+          "role": "owner",
+          "need": "Owns the end-to-end trace, the sign-off evidence and the execution last mile"
+        },
+        {
+          "system": "system-3",
+          "role": "required",
+          "need": "Contracts, sizing, transport and alerting must be closed and frozen"
+        }
+      ],
+      "blocked_by": null
     }
   ],
   "tasks": [
@@ -681,8 +1005,8 @@
       "period": "2026-W34",
       "status": "done",
       "title": "State which topic and subscription System 2 consumes",
-      "detail": "Answered in full. Consumes the local subscription `ams-outbound.executor` and publishes to `ams-inbound` / `ams-inbound.ams`, all topics in a shared SQLite queue under `QUEUE_PROVIDER=local`. It has never consumed from Pub/Sub: `AMS_Outbound_Queue_sub` has no `pull_request_count` time series at all over seven days. So yes — the whole order path is a file-based queue, and it can never receive anything System 1 publishes to Pub/Sub.",
-      "evidence": "`gcloud pubsub subscriptions list`; Cloud Monitoring `subscription/pull_request_count`, 7 d; deployed `config/.env.system2`",
+      "detail": "Answered, then partly superseded by the live trace of 2026-08-28. System 2 consumes the local subscription `ams-outbound.executor` and publishes to `ams-inbound` / `ams-inbound.ams`, all topics in a shared SQLite queue under `QUEUE_PROVIDER=local`, and it has never consumed from Pub/Sub directly. The conclusion drawn from that — that nothing System 1 publishes can ever reach System 2 — was wrong: `s3-signal-relay.service` bridges Pub/Sub `scored_signal_queue` into the local queue, and 46 signals arrived that way, three of which became real OANDA fills on 2026-08-24.",
+      "evidence": "`gcloud pubsub subscriptions list`; deployed `config/.env.system2`; S2-STATUS-2026-08-28 §0 and §2",
       "priority": "high",
       "urgency": "immediate"
     },
@@ -693,7 +1017,7 @@
       "period": "2026-W34",
       "status": "in_progress",
       "title": "Add alarming on a silent inbound queue",
-      "detail": "Partly built and demonstrably insufficient. EXEC-008 pauses at queue age over 300 s in-session, and `ops-watchdog.timer` pages Telegram every 30 minutes on a composite *running but not trading* condition — but that composite needs at least 8 gate decisions in a 3-hour window before *all rejected* means anything, which never happens when nothing arrives at all. Two days of a stranded queue produced no page. Missing rule: lifetime `messages_seen == 0` while queue depth is non-zero is broken, not quiet.",
+      "detail": "Partly built and demonstrably insufficient, though the paging logic itself is sound — it correctly raised `s2:queue_silent` at `2026-08-28T06:19:33Z`. EXEC-008 pauses at queue age over 300 s in-session, and `ops-watchdog.timer` pages Telegram every 30 minutes on a composite *running but not trading* condition — but that composite needs at least 8 gate decisions in a 3-hour window before *all rejected* means anything, which never happens when nothing arrives at all. Missing rule: lifetime `messages_seen == 0` while queue depth is non-zero is broken, not quiet.",
       "evidence": "`bridge/ops_watchdog.py`; `bridge/state/watchdog_state.json`; S2 `/status` showing `messages_seen: 0`",
       "priority": "medium",
       "urgency": "this_month"
@@ -741,10 +1065,10 @@
       "period": "2026-W34",
       "status": "not_started",
       "title": "Repair the queue binding and assert it at startup",
-      "detail": "The deployed `.env.system2` sets `QUEUE_LOCAL_PATH` to a Windows absolute path; on the Linux host that is a filename, so System 2 opened an empty database beside its own source tree while System 3 and the bridge use `/opt/scalablebrain/shared/queue/queue.db`. Two parts: correct the value, and make `build_queue()` refuse to start unless the resolved path is absolute and already exists. A queue that silently creates itself when misconfigured is how two systems end up on two queues twice.",
-      "evidence": "5,587 messages stranded on `ams-outbound.executor` since 2026-08-20T15:09:24Z",
-      "priority": "high",
-      "urgency": "immediate"
+      "detail": "Reframed by the 08-28 trace: the binding is not broken. `s3-signal-relay.service` is enabled and running, its lifetime counter reads `forwarded: 48`, and its last real forward lagged the last signal that existed by four seconds. What is still missing is the startup assertion — the relay and the executor should refuse to start, loudly, if the topic and subscription they are bound to are not the ones the configuration names. The current drought is at the source: System 1 has built zero signals since 2026-08-26T21:15Z.",
+      "evidence": "relay journal and lifetime counter; S2-STATUS-2026-08-28 §1",
+      "priority": "medium",
+      "urgency": "this_month"
     },
     {
       "id": "T-207",
@@ -789,9 +1113,9 @@
       "period": "2026-W34",
       "status": "not_started",
       "title": "Clear the standing false-positive watchdog alert",
-      "detail": "`watchdog_state.json` has carried the episode `s2:producer` — *signal producer running=false* — open since 2026-08-15T18:09:26Z. That became correct behaviour the day local signal production was removed. A permanently-lit alert trains the operator to ignore the one channel that is meant to carry the real one.",
-      "evidence": "`bridge/state/watchdog_state.json`",
-      "priority": "low",
+      "detail": "Still open, and now 13 days old. Episode `s2:producer` has been firing since `2026-08-15T18:09:26Z`, flagging \"signal producer running=false\" — but System 2's signal production was *deliberately removed* that same day, and `/signal` now returns `{\"running\": false, \"removed\": true}`. The check must treat `removed: true` as expected. This matters more than it looks: a permanently-firing alert is what masks a real one, and a genuine `s2:queue_silent` episode opened underneath it on 08-28.",
+      "evidence": "`bridge/state/watchdog_state.json`; S2-STATUS-2026-08-28 finding #4",
+      "priority": "medium",
       "urgency": "this_month"
     },
     {
@@ -1321,6 +1645,449 @@
       "evidence": "",
       "priority": "low",
       "urgency": "next_month"
+    },
+    {
+      "id": "T-212",
+      "system": "system-2",
+      "goal": "G-021",
+      "period": "2026-08",
+      "status": "not_started",
+      "title": "Decide the fate of the three 08-24 positions that are locking out every main pair",
+      "detail": "EUR_USD, GBP_USD and USD_CAD were opened `2026-08-24T11:15` and have never closed. `backup_guard` refuses any new order on a pair that already holds a position, so it rejected four of the last six orders — signals `d48d503b`, `f5a19573`, `c2b3f00e`, `e8998559` across 08-26. Those three pairs carry essentially all the signal flow, so the strategy cannot re-enter anywhere while they sit there. This is a trading decision, not an engineering one, but it needs a recorded answer and a rule: how long may one position hold a pair hostage before it is force-reviewed? Note also that `ams_open_positions` records `sl = None, tp = None` for all three while OANDA reports `pendingOrderCount: 6` — AMS holds no record of stops that exist at the broker.",
+      "priority": "high",
+      "urgency": "immediate",
+      "evidence": "System 2 log, backup_guard rejections 08-26; `ams_open_positions`; S2-STATUS-2026-08-28 §3a"
+    },
+    {
+      "id": "T-213",
+      "system": "system-2",
+      "goal": "G-021",
+      "period": "2026-08",
+      "status": "not_started",
+      "title": "Publish the §7.2 notional cap where System 3 can size against it",
+      "detail": "AMS sized signal `a7d1ffbd` at 57,935 units of USD_JPY — 9,234,723 notional — and System 2 rejected it at the last line against a 5,000,000 cap that System 3 has no knowledge of. The cap must become a shared, versioned limit on the contract or on `/status`, not a constant private to the executor, or System 3 will keep approving orders that are structurally un-executable. Pairs with T-317.",
+      "priority": "high",
+      "urgency": "immediate",
+      "evidence": "`system2.execution.pipeline`: `notional 9234723.13 > cap 5000000.0`, 08-26 14:15"
+    },
+    {
+      "id": "T-214",
+      "system": "system-2",
+      "goal": "G-021",
+      "period": "2026-08",
+      "status": "not_started",
+      "title": "Assert bracket direction at every hop that can construct one",
+      "detail": "Signal `38503355` reached the broker call as `GBP_USD: BUY SL=1.361345 TP=1.374215 entry=1.36051` — the stop-loss above entry on a long. Same defect class as the `drill-003` test message, so it is not drill-only: something upstream inverts brackets on live signals. Catching it at the broker call is the last possible moment; the assertion belongs at the producer, in the contract schema, and in a test that fails on an inverted bracket.",
+      "priority": "high",
+      "urgency": "immediate",
+      "evidence": "System 2 ERROR `invalid order; rejected` 08-26; S2-STATUS-2026-08-28 §3c"
+    },
+    {
+      "id": "T-215",
+      "system": "system-2",
+      "goal": "G-014",
+      "period": "2026-08",
+      "status": "not_started",
+      "title": "Wire the gatekeeper approval-rate provider that `/status` already advertises",
+      "detail": "System 2 `/status` returns `\"gatekeeper\": {\"state\": \"unavailable\", \"reason\": \"no approval-rate provider wired\"}`. Two things fail from that one gap: the dashboard's gatekeeper tile has nothing to render, and the watchdog's `s2:approval_rate` check can never fire, so a gatekeeper that silently starts rejecting everything would page nobody.",
+      "priority": "high",
+      "urgency": "this_month",
+      "evidence": "System 2 `/status`; S2-STATUS-2026-08-28 finding #7"
+    },
+    {
+      "id": "T-216",
+      "system": "system-2",
+      "goal": "G-014",
+      "period": "2026-08",
+      "status": "not_started",
+      "title": "Serve the account tiles with a reconciliation stamp, not a bare number",
+      "detail": "NAV, balance and margin reach the dashboard from `/status.account_summary` and nothing asserts they still match OANDA. Publish `reconciled_at` and the broker-vs-system delta alongside the value, and mark the tile stale when the delta or the age crosses a threshold. The dashboard already degrades honestly on unreachable services; it should degrade the same way on a number that is merely old.",
+      "priority": "medium",
+      "urgency": "this_month",
+      "evidence": "`telemetry-dashboard/CONNECTIONS.md` money tiles; `services/layer4_client.py`"
+    },
+    {
+      "id": "T-217",
+      "system": "system-2",
+      "goal": "G-014",
+      "period": "2026-08",
+      "status": "not_started",
+      "title": "Make the SQLite fallback unreachable in anything a person reads",
+      "detail": "`db_client.py` falls back to `sqlite:///telemetry_fallback.db` when Postgres is unavailable and caches that engine in `_ENGINE_CACHE` — the code's own comment notes it would otherwise reuse the fallback forever. A telemetry backend that keeps answering after losing the real database produces confident wrong numbers, which is worse than an outage. Restrict it to tests, or make every response it serves carry a `degraded` flag the UI must render.",
+      "priority": "low",
+      "urgency": "this_month",
+      "evidence": "`cloud/telemetry-web/services/db_client.py:108-179`"
+    },
+    {
+      "id": "T-218",
+      "system": "system-2",
+      "goal": "G-019",
+      "period": "2026-08",
+      "status": "not_started",
+      "title": "Retract the 08-27 signal-path trace and record the correction",
+      "detail": "`S2-REPLY-2026-08-27-signal-path-trace.md` is on file as the current understanding and is wrong on five load-bearing points: it states both processes died Monday and never restarted, that no systemd unit exists for `pubsub_signal_relay.py`, that there are zero log lines for it, that this week's 46 signals never arrived, and that `0 APPROVED` means nothing completes the journey. The live trace a day later contradicts every one. Anything planned off that document is planned off fiction — mark it retracted at the top rather than deleting it, and link the correction.",
+      "priority": "high",
+      "urgency": "immediate",
+      "evidence": "S2-STATUS-2026-08-28 §0"
+    },
+    {
+      "id": "T-219",
+      "system": "system-2",
+      "goal": "G-019",
+      "period": "2026-08",
+      "status": "not_started",
+      "title": "Stand up the operations handbook as one living, human-editable document",
+      "detail": "Today the operating knowledge is spread over `audit/communication/S2-*.md`, `telemetry-dashboard/CONNECTIONS.md`, `deployment-guide/`, `GO_LIVE.md`, `BACKUP.md`, `RESTORE.md` and the systemd units themselves. The handbook needs: every service and its unit on `trading-1`, how to read each health surface, what each decision label actually means, a playbook per known failure mode, and how to make a change safely. It must be editable by a human directly — not generated, not agent-only — and reviewed on a fixed cadence so it cannot rot into a second contradictory trace.",
+      "priority": "medium",
+      "urgency": "this_month",
+      "evidence": "`deployment-guide/`; `telemetry-dashboard/CONNECTIONS.md`; the 08-27 vs 08-28 contradiction"
+    },
+    {
+      "id": "T-220",
+      "system": "system-2",
+      "goal": "G-019",
+      "period": "2026-08",
+      "status": "not_started",
+      "title": "Write down the security envelope for every operator action",
+      "detail": "A person cannot safely change a system whose access model is undocumented. For each action the handbook describes, state the secret, service account, IAM role and host required: the OANDA practice token, the Telegram bot token, the Pub/Sub publisher account, the GCS artifact bucket, Postgres on `34.52.232.110`, and the dashboard access token. Note as part of this that `link_to_telemetry.md` carries a live dashboard token and is only kept out of git by a `.gitignore` line — the envelope should say where such material is *supposed* to live.",
+      "priority": "medium",
+      "urgency": "this_month",
+      "evidence": "`.gitignore` (EXEC-4, 2026-08-15); `.env_system1`; `cloud/telemetry-web/DEPLOY.md`"
+    },
+    {
+      "id": "T-221",
+      "system": "system-2",
+      "goal": "G-020",
+      "period": "2026-08",
+      "status": "not_started",
+      "title": "Inventory the recurring jobs that should become skills",
+      "detail": "Candidates already visible in the record: the live pipeline trace, the weekly readiness reply, queue and DLQ inspection, deploy verification, the telemetry panel audit, and the repository cleanup pass. For each, capture what it reads, what it must never read (the local mirror, when the question is about production), and the shape of the report it produces. This is the design step for G-020 — no skills are written yet.",
+      "priority": "medium",
+      "urgency": "this_month",
+      "evidence": "`audit/communication/S2-REPLY-*.md` series; `.agents/`"
+    },
+    {
+      "id": "T-222",
+      "system": "system-2",
+      "goal": "G-018",
+      "period": "2026-08",
+      "status": "not_started",
+      "title": "Bring telemetry's tables under the governance standard",
+      "detail": "Name the owner, schema of record, retention rule and lineage for `fact_live_trades`, `dim_asset`, `dim_strategy`, the regime grid, the GCS telemetry snapshots and the analytics mirror. State which of them is authoritative when two disagree — today `fact_live_trades`, the GCS snapshot and the broker can each be read as the answer to \"what did we trade\", and the September streaming work in G-015 will make that ambiguity worse before it makes it better.",
+      "priority": "medium",
+      "urgency": "this_month",
+      "evidence": "`PROJECT.md` architecture; `cloud/telemetry-web/services/`"
+    },
+    {
+      "id": "T-223",
+      "system": "system-2",
+      "goal": "G-022",
+      "period": "2026-08",
+      "status": "not_started",
+      "title": "Drain `bridge.unrouted` and stop the heartbeat topic growing",
+      "detail": "`bridge.unrouted` holds 19 messages, all `control:STOPPED:signal:SIGTERM` shutdown events the bridge cannot route, newest at the 08-27 restart — confirming F-406. Separately `scored-signals.heartbeat` has 9,511 rows sitting in `ready` because nothing subscribes to that topic; it grows without bound. Either give each a consumer or stop publishing to it, and add a bound so an unconsumed local topic raises rather than accumulates.",
+      "priority": "medium",
+      "urgency": "this_month",
+      "evidence": "`queue.db`; S2-STATUS-2026-08-28 findings #3, #9"
+    },
+    {
+      "id": "T-224",
+      "system": "system-2",
+      "goal": "G-015",
+      "period": "2026-09",
+      "status": "not_started",
+      "title": "Finish the streaming path and retire the 3-second poll",
+      "detail": "Both halves already exist in skeleton — `cloud/telemetry-web/routes/streaming.py` on the backend and `src/hooks/useSSE.ts` in the dashboard — while `CONNECTIONS.md` still describes the transport as polling four HTTP surfaces every three seconds. Complete it so the dashboard is event-driven, with the poll retained only as a reconnect fallback, and bound the end-to-end latency from event to pixel.",
+      "priority": "high",
+      "urgency": "next_month",
+      "evidence": "`cloud/telemetry-web/routes/streaming.py`; `telemetry-dashboard/src/hooks/useSSE.ts`; `CONNECTIONS.md` Transport"
+    },
+    {
+      "id": "T-225",
+      "system": "system-2",
+      "goal": "G-015",
+      "period": "2026-09",
+      "status": "not_started",
+      "title": "Make OANDA a first-class telemetry source rather than a derived one",
+      "detail": "Broker state reaches telemetry only through System 2's `/status`, so the system can only ever show its own opinion of the account. Publish OANDA's account and transaction stream into the telemetry store directly, beside the system's view, and alert on divergence — the `pendingOrderCount: 6` at the broker against `sl = None, tp = None` in `ams_open_positions` is exactly the class of gap this makes visible.",
+      "priority": "high",
+      "urgency": "next_month",
+      "evidence": "S2-STATUS-2026-08-28 §3a and §4"
+    },
+    {
+      "id": "T-226",
+      "system": "system-2",
+      "goal": "G-015",
+      "period": "2026-09",
+      "status": "not_started",
+      "title": "Stamp every telemetry field with its provenance",
+      "detail": "Each value carries `source` (broker, system-1, system-2, system-3, derived) and `as_of`, and the UI renders both. A number with no provenance is indistinguishable from a hardcoded one, which is how the current class of \"is this real?\" question keeps arising.",
+      "priority": "medium",
+      "urgency": "next_month"
+    },
+    {
+      "id": "T-227",
+      "system": "system-2",
+      "goal": "G-009",
+      "period": "2026-09",
+      "status": "not_started",
+      "title": "Containerise System 2 and move its config off local disk",
+      "detail": "There is no Dockerfile for the execution engine and its configuration lives in `config/.env.system2` on `trading-1`. The cutover in G-009 cannot proceed while the executor is a host-bound process with host-bound secrets. Pairs with System 1's T-126 and T-127.",
+      "priority": "high",
+      "urgency": "next_month",
+      "evidence": "`PROJECT.md`; G-009"
+    },
+    {
+      "id": "T-228",
+      "system": "system-2",
+      "goal": "G-009",
+      "period": "2026-09",
+      "status": "not_started",
+      "title": "Execute the three-process Pub/Sub cutover planned in T-211",
+      "detail": "T-211 produces the plan; this is the change itself, run as one atomic switch across the relay, the bridge and the executor, with the local SQLite queue kept as a rollback path for one trading week before it is retired.",
+      "priority": "high",
+      "urgency": "next_month",
+      "evidence": "T-211"
+    },
+    {
+      "id": "T-229",
+      "system": "system-2",
+      "goal": "G-023",
+      "period": "2026-09",
+      "status": "not_started",
+      "title": "Freeze the v1 contract surface and version every change after it",
+      "detail": "`ScoredSignal`, `ApprovedOrder`, `AccountSnapshot`, `FillEvent`, `Command` and `ProducerHeartbeat` are the interface between three independently-deployed systems, and both `ScoredSignal` and `ApprovedOrder` are `additionalProperties: false` — which is why T-308 blocks the drill. Land the outstanding field additions, then freeze: after the freeze, every change ships as a new version with both accepted during a stated overlap.",
+      "priority": "medium",
+      "urgency": "next_month",
+      "evidence": "`system3/ams/contracts/v1/`; T-308"
+    },
+    {
+      "id": "T-230",
+      "system": "system-2",
+      "goal": "G-020",
+      "period": "2026-09",
+      "status": "not_started",
+      "title": "Build the first three skills and hold them to a rubric",
+      "detail": "Start with the three highest-frequency jobs from T-221 — the pipeline trace, the queue and DLQ inspection, and deploy verification. Each states its inputs, its output contract, and a verification step; each names `trading-1` as the source of truth for live questions. Test: two runs on unchanged inputs produce materially the same report.",
+      "priority": "medium",
+      "urgency": "next_month",
+      "evidence": "T-221"
+    },
+    {
+      "id": "T-231",
+      "system": "system-2",
+      "goal": "G-023",
+      "period": "2026-09",
+      "status": "not_started",
+      "title": "Reconcile the architecture map against the running system and close the gaps",
+      "detail": "Sign-off for G-023 is measured against `data/architecture.json` on the architecture site: every node and edge must be `live`, with no `planned` or `degraded` left. Walk the map against `trading-1` as it actually runs, correct the map where it is optimistic, and turn every remaining non-`live` element into a task with an owner.",
+      "priority": "medium",
+      "urgency": "next_month",
+      "evidence": "`data/architecture.json`; S2-STATUS-2026-08-28 §2"
+    },
+    {
+      "id": "T-312",
+      "system": "system-3",
+      "goal": "G-017",
+      "period": "2026-08",
+      "status": "not_started",
+      "title": "Write the trade and signal lifecycle emitters that the routing table already assumes",
+      "detail": "`config/risk_config.json` routes twelve events that no code emits: `trade_opened`, `trade_closed_win`, `trade_closed_loss`, `signal_rejected`, `caution_entered`, `caution_exited`, `soft_stop`, `state_transition`, `stale_snapshot`, `publish_failure`, `daily_summary`, `weekly_report`. A grep for `notifier(` across `src/ams/` finds emitters only for restarts, breakers, stage changes, overrides, reconciliation, sweeps, exports and backups. The channel is healthy — the emitters were never written, which is the whole reason signals never appear in Telegram. Confirm against the deployed config on `trading-1` before starting; this reads the checked-in copy, which is a mirror.",
+      "priority": "high",
+      "urgency": "immediate",
+      "evidence": "`system3/ams/config/risk_config.json` notifications.events vs `grep -rn 'notifier(' src/ams/`"
+    },
+    {
+      "id": "T-313",
+      "system": "system-3",
+      "goal": "G-017",
+      "period": "2026-08",
+      "status": "not_started",
+      "title": "Alert when the notification path itself goes quiet",
+      "detail": "The failure mode just found is silence that looks like calm: routed events, a working channel, and nothing delivered for weeks. Add a check that `notify_outbox` gains at least one row across an active trading session, and page when it does not. Without it, the next time the emitters regress it will again take a manual audit to notice.",
+      "priority": "high",
+      "urgency": "this_month",
+      "evidence": "`src/ams/notify/outbox.py`"
+    },
+    {
+      "id": "T-314",
+      "system": "system-3",
+      "goal": "G-022",
+      "period": "2026-08",
+      "status": "not_started",
+      "title": "Attach a dead-letter policy to all five subscriptions and drain the two poison messages",
+      "detail": "`drill-003` (no `schema_version`) and a diagnostic `{\"diag\": true, \"id\": \"DIRECT-b61a5fab\"}` published 08-27 11:47 fail validation, are never acked, and redeliver every six seconds indefinitely — lifetime `forwarded: 48, rejected: 23,566`. No subscription carries a `deadLetterPolicy`, all five sit at `ackDeadlineSeconds: 10`, and the `scored_signal_dlq` topic exists wired to nothing. Fix the structural cause and the symptom together, before the cutover moves this loop into a billed environment.",
+      "priority": "high",
+      "urgency": "immediate",
+      "evidence": "relay journal; `gcloud pubsub subscriptions list`; S2-STATUS-2026-08-28 findings #1, #2"
+    },
+    {
+      "id": "T-315",
+      "system": "system-3",
+      "goal": "G-021",
+      "period": "2026-08",
+      "status": "not_started",
+      "title": "Teach the sizing layer System 2's notional cap",
+      "detail": "The sizing layer approved 57,935 units of USD_JPY — 9,234,723 notional against System 2's 5,000,000 §7.2 cap — because it has no knowledge the cap exists. Consume the shared limit from T-213 and reject or reduce at sizing time, so an order that cannot be executed is never approved. Approving un-executable orders also corrupts the decision statistics, since they count as approvals that produced no trade.",
+      "priority": "high",
+      "urgency": "immediate",
+      "evidence": "T-213; S2-STATUS-2026-08-28 §3b"
+    },
+    {
+      "id": "T-316",
+      "system": "system-3",
+      "goal": "G-014",
+      "period": "2026-08",
+      "status": "not_started",
+      "title": "Serve the six DB-backed read endpoints the dashboard is waiting on",
+      "detail": "Every blank panel on the dashboard is one small Guardian endpoint away, and the data is already in the database: `/breakers` from `ams_circuit_breaker_log`, `/transitions` from `stage_history`, `/sizing` from `strategy_performance` and `ams_decision_log`, `/fills` from `trade_journal`, `/notifications` from `notify_outbox`, `/audit` from `override_audit`. `CONNECTIONS.md` already specifies each one.",
+      "priority": "high",
+      "urgency": "this_month",
+      "evidence": "`telemetry-dashboard/CONNECTIONS.md`, \"Not yet on the HTTP surface\""
+    },
+    {
+      "id": "T-317",
+      "system": "system-3",
+      "goal": "G-018",
+      "period": "2026-08",
+      "status": "not_started",
+      "title": "Resolve the zero size multiplier sitting unread in the risk table",
+      "detail": "`risk_state.size_multiplier = 0` with `halted_until = 2026-07-28T06:01:57Z` — expired a month ago — and a note reading `consecutive_losses`. Recent decisions produce non-zero units, so the row is evidently not applied anywhere. Either it governs sizing, in which case trading should be halted, or it does not, in which case it must be cleared. A zero multiplier that nobody reads is the most dangerous kind of dead state.",
+      "priority": "high",
+      "urgency": "this_month",
+      "evidence": "`ams.db` `risk_state`; S2-STATUS-2026-08-28 finding #6"
+    },
+    {
+      "id": "T-318",
+      "system": "system-3",
+      "goal": "G-018",
+      "period": "2026-08",
+      "status": "not_started",
+      "title": "Make one table the system of record for per-strategy state",
+      "detail": "`strategy_status` holds zero rows — no per-strategy state is recorded anywhere — while `strategy_performance`, the quarantine verdicts in the auditor and System 1's live map all hold overlapping views of the same question. Pick the authoritative one, populate it, and make the others derived or drop them.",
+      "priority": "medium",
+      "urgency": "this_month",
+      "evidence": "`ams.db` `strategy_status`; S2-STATUS-2026-08-28 finding #10"
+    },
+    {
+      "id": "T-319",
+      "system": "system-3",
+      "goal": "G-022",
+      "period": "2026-08",
+      "status": "not_started",
+      "title": "Drain the 532 dead account snapshots and their DLQ backlog",
+      "detail": "`ams-inbound.ams` carries 532 `dead` rows and 532 more in `.dlq`, account snapshots from July through 08-21. They are unrelated to this week's incident but they are unbounded historical debt sitting in the queue database that is about to be migrated. Drain them, and add a retention rule under G-018 so a dead row has a defined lifetime.",
+      "priority": "low",
+      "urgency": "this_month",
+      "evidence": "`queue.db`; S2-STATUS-2026-08-28 finding #8"
+    },
+    {
+      "id": "T-320",
+      "system": "system-3",
+      "goal": "G-016",
+      "period": "2026-08",
+      "status": "not_started",
+      "title": "Specify the control API before any of it is built",
+      "detail": "Design first: force-stop, per-pair and per-strategy opt-out, refresh, and a read-only debug view. The specification must state authentication, the audit record written for each call, which actions need a second confirmation, and — as a hard invariant — that no path in it can set `go_live_enabled` or flip mode to enforce. The dashboard surfaces state; it must never be the thing that turns live trading on.",
+      "priority": "medium",
+      "urgency": "this_month",
+      "evidence": "`telemetry-dashboard/CONNECTIONS.md`, \"Operator controls (Screen 4)\""
+    },
+    {
+      "id": "T-321",
+      "system": "system-3",
+      "goal": "G-019",
+      "period": "2026-08",
+      "status": "not_started",
+      "title": "Document the decision vocabulary — starting with what `REDUCED` means",
+      "detail": "The account sits in `RECOVERY`, which reduces size, so the gate stamps `REDUCED` rather than `APPROVED`: lifetime 99 `REDUCED`, 4,094 `REJECTED`, 0 `APPROVED`. `REDUCED` emits a real order with real units — signal `a7d1ffbd` became 57,935 units — and reading `0 APPROVED` as \"nothing can trade\" sent a whole analysis down the wrong path. Put the decision labels, the account states and the gate layer names into the handbook and onto the dashboard legend, so the next reader cannot make the same inference.",
+      "priority": "medium",
+      "urgency": "this_month",
+      "evidence": "S2-STATUS-2026-08-28 §2; `ams/gate/layers.py`"
+    },
+    {
+      "id": "T-322",
+      "system": "system-3",
+      "goal": "G-016",
+      "period": "2026-09",
+      "status": "not_started",
+      "title": "Build the authenticated control endpoint",
+      "detail": "Implement the T-320 specification: `POST /control` supporting force-stop, opt-out, refresh and debug, with every call written to `override_audit` carrying the operator identity, and the mode gate provably unreachable. Demonstrate a force-stop initiated from the browser on the practice account, end to end, with the audit row as evidence.",
+      "priority": "high",
+      "urgency": "next_month",
+      "evidence": "T-320"
+    },
+    {
+      "id": "T-323",
+      "system": "system-3",
+      "goal": "G-016",
+      "period": "2026-09",
+      "status": "not_started",
+      "title": "Expose a read-only debug surface so diagnosis does not need SSH",
+      "detail": "The last N decisions with their per-layer reason codes, queue depths, the configuration actually in effect, and the running versions of each service. Every investigation this month required shell access to `trading-1`; most of them needed only these four things.",
+      "priority": "medium",
+      "urgency": "next_month",
+      "evidence": "S2-STATUS-2026-08-28 method note"
+    },
+    {
+      "id": "T-324",
+      "system": "system-3",
+      "goal": "G-015",
+      "period": "2026-09",
+      "status": "not_started",
+      "title": "Publish every gate decision to the telemetry store as it happens",
+      "detail": "`ams_decision_log` lives only in `ams.db` on `trading-1`, so the decision funnel on the dashboard is reconstructed from counters rather than read from events. Stream each decision — signal id, layer, reason code, sizing, outcome — into the telemetry store, which also makes the funnel exact instead of inferred.",
+      "priority": "high",
+      "urgency": "next_month",
+      "evidence": "`CONNECTIONS.md` decision funnel; `ams_decision_log`"
+    },
+    {
+      "id": "T-325",
+      "system": "system-3",
+      "goal": "G-009",
+      "period": "2026-09",
+      "status": "not_started",
+      "title": "Run AMS against managed PostgreSQL instead of local SQLite",
+      "detail": "T-302 provisions Postgres on Computer 3; this migrates AMS onto it and retires the local SQLite path, including the queue database, so the cutover in G-009 does not leave state on a machine that has to stay awake.",
+      "priority": "high",
+      "urgency": "next_month",
+      "evidence": "T-302; G-009"
+    },
+    {
+      "id": "T-326",
+      "system": "system-3",
+      "goal": "G-023",
+      "period": "2026-09",
+      "status": "not_started",
+      "title": "Re-run the drill on the cloud path with the flag intact",
+      "detail": "Once T-308 lands the contract fields and the cutover completes, run the drill again: one signal, the same `signal_id` visible at System 1, System 3 and System 2, the drill flag preserved end to end, stopping at the broker call. That is the sign-off evidence for G-023 and the falsifier for milestone M3.",
+      "priority": "high",
+      "urgency": "next_month",
+      "evidence": "T-308; T-203; T-306; M3 falsifier"
+    },
+    {
+      "id": "T-327",
+      "system": "system-3",
+      "goal": "G-018",
+      "period": "2026-09",
+      "status": "not_started",
+      "title": "Put schema migration and rollback into the deploy gate",
+      "detail": "`migrations/` exists but nothing proves a migration is reversible before it ships. Add a gate that applies each migration forward and back against a copy of production data, and refuses promotion on failure — the same gate that will carry the freshness and null-rate checks from G-018.",
+      "priority": "medium",
+      "urgency": "next_month",
+      "evidence": "`system3/ams/migrations/`"
+    },
+    {
+      "id": "T-328",
+      "system": "system-3",
+      "goal": "G-020",
+      "period": "2026-09",
+      "status": "not_started",
+      "title": "Turn queue inspection and daily reconciliation into scheduled agents",
+      "detail": "Both are run by hand today and both found real defects this month. Each becomes a scheduled agent with a fixed output contract — depth per topic, dead and DLQ counts, unconsumed topics, position and stop divergence against the broker — so the finding arrives before someone thinks to look.",
+      "priority": "medium",
+      "urgency": "next_month",
+      "evidence": "T-221; S2-STATUS-2026-08-28 §4"
     }
   ],
   "priority_vocabulary": {
