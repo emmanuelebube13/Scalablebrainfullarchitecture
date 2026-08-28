@@ -1,0 +1,572 @@
+/* ============================================================
+   goals.css — compact, tab-based layout for goals.html
+   Apple HIG + Material Design principles:
+     • Everything above the fold — tabs keep all four sections
+       reachable without a full-page scroll.
+     • One primary action surface (the goal card) does one job.
+     • Colour only carries meaning; it never decorates.
+     • Motion is purposeful and short (<= 160ms).
+   ============================================================ */
+
+/* ── Page shell ──────────────────────────────────────────────── */
+
+.goals-main {
+  display: flex;
+  flex-direction: column;
+  /* fill the viewport below the sticky site header (~58px) */
+  height: calc(100dvh - 58px);
+  overflow: hidden;
+}
+
+/* ── Compact hero ────────────────────────────────────────────── */
+
+.goals-hero {
+  flex: none;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent) 6%, var(--bg)) 0%,
+    var(--bg) 100%
+  );
+  padding: 22px 24px 16px;
+}
+
+.goals-hero-inner {
+  max-width: 1560px;
+  margin: 0 auto;
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.goals-hero-text {
+  flex: 1;
+  min-width: 220px;
+}
+
+.goals-hero-text h1 {
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
+  margin-bottom: 0.2em;
+}
+
+.goals-lede {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  margin: 0;
+  max-width: 60ch;
+}
+
+/* ── Ladder strip (always visible milestone pills) ───────────── */
+
+.goals-ladder-strip {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.lstrip-rung {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 4px 10px 4px 8px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+  background: color-mix(in srgb, currentColor 8%, var(--bg));
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms;
+  white-space: nowrap;
+}
+
+.lstrip-rung:hover {
+  background: color-mix(in srgb, currentColor 16%, var(--bg));
+}
+
+.lstrip-rung .lstrip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+
+.lstrip-rung.tone-good   { color: var(--good); }
+.lstrip-rung.tone-info   { color: var(--info); }
+.lstrip-rung.tone-warn   { color: var(--warn); }
+.lstrip-rung.tone-bad    { color: var(--bad); }
+.lstrip-rung.tone-muted  { color: var(--muted); }
+
+/* ── Tab bar ─────────────────────────────────────────────────── */
+
+.goals-tabbar-wrap {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  overflow-x: auto;
+}
+
+.goals-tabbar {
+  display: flex;
+  gap: 0;
+  flex: none;
+}
+
+.gtab {
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 540;
+  border: 0;
+  background: transparent;
+  color: var(--text-dim);
+  padding: 10px 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 100ms, border-color 100ms;
+}
+
+.gtab:hover { color: var(--text); }
+
+.gtab.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
+/* ── Contextual filter row ───────────────────────────────────── */
+
+.goals-tab-filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+  align-items: center;
+  flex: 1;
+  overflow-x: auto;
+  padding: 6px 0;
+  min-height: 40px;
+}
+
+.goals-tab-filters select {
+  font: inherit;
+  font-size: 0.82rem;
+  background: var(--bg-sunken);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  white-space: nowrap;
+}
+
+.goals-tab-filters button.pill {
+  cursor: pointer;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+
+.goals-tab-filters button.pill:hover {
+  color: var(--text);
+  border-color: var(--text-faint);
+}
+
+/* ── Panel container ─────────────────────────────────────────── */
+
+.goals-panels {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.goals-panel {
+  display: none;
+  position: absolute;
+  inset: 0;
+}
+
+.goals-panel.active {
+  display: block;
+}
+
+.goals-panel-scroll {
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 20px 24px 40px;
+  max-width: 1560px;
+  margin: 0 auto;
+}
+
+/* ── Goal cards — tighter, bolder ───────────────────────────── */
+
+.goals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 14px;
+}
+
+.gcard {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--tone, var(--border-strong));
+  border-radius: var(--radius);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 140ms, box-shadow 140ms;
+  cursor: default;
+}
+
+.gcard:hover {
+  border-color: var(--border-strong);
+  box-shadow: 0 4px 18px rgba(0,0,0,0.22);
+}
+
+/* Header bar — always visible */
+.gcard-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px 8px;
+  flex-wrap: wrap;
+}
+
+.gcard-head .goal-id { flex: none; }
+
+.gcard-head h3 {
+  flex: 1;
+  font-size: 0.95rem;
+  margin: 0;
+  min-width: 160px;
+  line-height: 1.3;
+}
+
+/* Progress meter strip — subtle, directly under the header */
+.gcard-meter {
+  height: 3px;
+  background: var(--bg-sunken);
+  flex: none;
+  overflow: hidden;
+}
+
+.gcard-meter > i {
+  display: block;
+  height: 100%;
+  background: var(--tone, var(--accent));
+  border-radius: 999px;
+}
+
+/* Body — collapsed until hover / expanded */
+.gcard-body {
+  padding: 10px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.gcard-pills {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.gcard-why {
+  color: var(--text-dim);
+  font-size: 0.86rem;
+  line-height: 1.55;
+  /* Clamp to 3 lines by default; expand on card focus */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: -webkit-line-clamp 0ms;
+}
+
+.gcard:hover .gcard-why,
+.gcard:focus-within .gcard-why {
+  -webkit-line-clamp: unset;
+}
+
+.gcard-dod {
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+}
+
+.gcard-dod strong {
+  color: var(--text-faint);
+  display: block;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 2px;
+}
+
+.gcard-metric-label {
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  color: var(--text-faint);
+  padding: 0 14px 10px;
+}
+
+.gcard-blocked {
+  font-size: 0.8rem;
+  color: var(--bad);
+  padding: 4px 14px 12px;
+  font-family: var(--mono);
+}
+
+/* ── Milestone ladder — timeline strip ──────────────────────── */
+
+.gladder {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+  padding-left: 36px;
+  max-width: 860px;
+}
+
+/* vertical track line */
+.gladder::before {
+  content: '';
+  position: absolute;
+  left: 11px;
+  top: 14px;
+  bottom: 14px;
+  width: 2px;
+  background: var(--border);
+  border-radius: 999px;
+}
+
+.gladder-item {
+  position: relative;
+  padding: 16px 0 20px;
+}
+
+/* dot on the track */
+.gladder-item::before {
+  content: '';
+  position: absolute;
+  left: -28px;
+  top: 20px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--tone, var(--muted));
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 0 1px var(--tone, var(--muted));
+  z-index: 1;
+}
+
+.gladder-item + .gladder-item {
+  border-top: 1px solid var(--border);
+}
+
+.gladder-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.gladder-id {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--tone, var(--muted));
+}
+
+.gladder-head h3 {
+  font-size: 1rem;
+  margin: 0;
+  flex: 1;
+}
+
+.gladder-state {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.gladder-summary {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  margin: 0 0 8px;
+}
+
+.gladder-falsifier {
+  font-size: 0.83rem;
+  color: var(--text-faint);
+  border-left: 2px solid var(--border-strong);
+  padding-left: 12px;
+}
+
+.gladder-falsifier strong { color: var(--warn); }
+
+/* ── Dependency matrix — sticky-col table ───────────────────── */
+
+.gmatrix-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.gmatrix {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.86rem;
+}
+
+.gmatrix thead th {
+  background: var(--bg-sunken);
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-dim);
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+/* first col always visible */
+.gmatrix th:first-child,
+.gmatrix td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+}
+
+.gmatrix thead th:first-child { z-index: 3; background: var(--bg-sunken); }
+
+.gmatrix tbody td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.gmatrix tbody tr:last-child td { border-bottom: 0; }
+.gmatrix tbody tr:hover td { background: var(--bg-raised); }
+.gmatrix tbody tr:hover td:first-child { background: var(--bg-raised); }
+
+.gmatrix td.role { text-align: center; font-size: 1rem; font-family: var(--mono); }
+.gmatrix td.role[data-role="owner"]    { color: var(--good); }
+.gmatrix td.role[data-role="required"] { color: var(--warn); }
+.gmatrix td.role[data-role="consumer"] { color: var(--text-faint); }
+.gmatrix td.role[data-role="none"]     { color: var(--border-strong); }
+.gmatrix .need {
+  font-size: 0.74rem;
+  color: var(--text-faint);
+  display: block;
+  font-family: var(--sans);
+  max-width: 28ch;
+}
+
+.gmatrix-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin-top: 12px;
+}
+
+.gmatrix-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+}
+
+/* ── Task table — compact, scannable ────────────────────────── */
+
+.gtask-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.gtask-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.86rem;
+}
+
+.gtask-table thead th {
+  background: var(--bg-sunken);
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-dim);
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.gtask-table tbody td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.gtask-table tbody tr:last-child td { border-bottom: 0; }
+.gtask-table tbody tr:hover { background: var(--bg-raised); }
+.gtask-table tbody tr[data-status="done"] { opacity: 0.52; }
+.gtask-table tbody tr[data-priority="high"]   td:first-child { box-shadow: inset 3px 0 0 var(--bad); }
+.gtask-table tbody tr[data-priority="medium"] td:first-child { box-shadow: inset 3px 0 0 var(--warn); }
+
+.gtask-detail {
+  display: block;
+  margin-top: 3px;
+  max-width: 44ch;
+  font-size: 0.8rem;
+  color: var(--text-faint);
+}
+
+.gtask-note {
+  font-size: 0.82rem;
+  color: var(--text-faint);
+  margin: 10px 0 0;
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+
+@media (max-width: 720px) {
+  .goals-hero { padding: 14px 16px 12px; }
+  .goals-tabbar-wrap { padding: 0 12px; }
+  .goals-panel-scroll { padding: 14px 16px 32px; }
+  .goals-grid { grid-template-columns: 1fr; }
+  .goals-ladder-strip { display: none; }
+  .goals-main {
+    /* on small screens let the page scroll naturally */
+    height: auto;
+    overflow: visible;
+  }
+  .goals-panels { position: static; }
+  .goals-panel { position: static; }
+  .goals-panel-scroll { height: auto; overflow: visible; }
+}
