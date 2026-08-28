@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scalable Brain — Operations & Queries</title>
+<link rel="stylesheet" href="assets/css/main.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header id="site-header"></header>
+<main id="main">
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker">Runbooks</span>
+        <h2>Operations & Manual Ingestion</h2>
+        <p>Commands and templates for running manual data updates and querying the Postgres database.</p>
+      </div>
+
+      <h3>1. Manual Python Commands for Ingestion</h3>
+      <p>The ingestion pipeline can be run manually to backfill data or troubleshoot gaps. Run these from the <code>scalable-brain</code> project root directory.</p>
+      
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Command</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>python src/layer0/ingest_data/ingest_oanda_prices.py</code></td>
+              <td>Full ingestion (All supported timeframes and assets).</td>
+            </tr>
+            <tr>
+              <td><code>python src/layer0/ingest_data/ingest_oanda_prices.py --granularity M30</code></td>
+              <td>Specific Timeframe (e.g., M30 only).</td>
+            </tr>
+            <tr>
+              <td><code>python src/layer0/ingest_data/ingest_oanda_prices.py --symbol EUR_USD</code></td>
+              <td>Specific Asset (e.g., EUR_USD only).</td>
+            </tr>
+            <tr>
+              <td><code>./shell/cron_daily_ingest_and_signals.sh</code></td>
+              <td>Daily Cron execution (Prices + Signals).</td>
+            </tr>
+            <tr>
+              <td><code>./shell/cron_oanda_ingest_saturday.sh</code></td>
+              <td>Saturday full multi-timeframe batch ingestion.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <br><br>
+
+      <h3>2. SQL Templates for Fact_Market_Prices</h3>
+      <p>Run these in pgAdmin to verify and analyze the price data.</p>
+      
+      <h4>Check Latest Ingested Data per Timeframe</h4>
+      <pre style="background: var(--bg-card); padding: 15px; border-radius: 4px; overflow-x: auto;">
+SELECT 
+    a."Symbol", 
+    p."Granularity", 
+    MAX(p."Timestamp") as latest_candle_time,
+    COUNT(*) as total_candles
+FROM "Fact_Market_Prices" p
+JOIN "Dim_Asset" a ON p."Asset_ID" = a."Asset_ID"
+-- Uncomment to filter by granularity:
+-- WHERE p."Granularity" = 'M30'
+GROUP BY a."Symbol", p."Granularity"
+ORDER BY a."Symbol", p."Granularity";</pre>
+
+      <br>
+
+      <h4>View the Most Recent 100 Candles for an Asset</h4>
+      <pre style="background: var(--bg-card); padding: 15px; border-radius: 4px; overflow-x: auto;">
+SELECT 
+    a."Symbol", 
+    p."Granularity", 
+    p."Timestamp", 
+    p."Close", 
+    p."Volume"
+FROM "Fact_Market_Prices" p
+JOIN "Dim_Asset" a ON p."Asset_ID" = a."Asset_ID"
+WHERE a."Symbol" = 'EUR_USD' AND p."Granularity" = 'H1'
+ORDER BY p."Timestamp" DESC
+LIMIT 100;</pre>
+    </div>
+  </section>
+</main>
+<footer id="site-footer"></footer>
+<script type="module">
+  import { mountChrome } from './assets/js/core.js';
+  mountChrome('operations');
+</script>
+</body>
+</html>

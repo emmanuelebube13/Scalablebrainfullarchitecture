@@ -147,6 +147,7 @@ const NAV = [
   ['system.html?id=system-1', 'Systems'],
   ['goals.html', 'Goals & tasks'],
   ['contribute.html', 'Editing the data'],
+  ['operations.html', 'Operations'],
 ];
 
 export function mountChrome(activeKey) {
