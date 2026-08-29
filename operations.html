@@ -16,7 +16,7 @@
       <div class="section-head">
         <span class="kicker">Runbooks</span>
         <h2>Operations & Manual Ingestion</h2>
-        <p>Commands and templates for running manual data updates and querying the Postgres database.</p>
+        <p>Commands and templates for running manual data updates, querying the Postgres database, and deploying code to <code>trading-1</code>.</p>
       </div>
 
       <h3>1. Manual Python Commands for Ingestion</h3>
@@ -89,6 +89,95 @@ JOIN "Dim_Asset" a ON p."Asset_ID" = a."Asset_ID"
 WHERE a."Symbol" = 'EUR_USD' AND p."Granularity" = 'H1'
 ORDER BY p."Timestamp" DESC
 LIMIT 100;</pre>
+
+      <h3>3. Deploying to <code>trading-1</code></h3>
+      <p><strong>The single most important fact:</strong> <code>/opt/scalablebrain</code> on the VM is
+      <em>not</em> a git checkout. It has no <code>.git</code>, no remote, and there is no deploy
+      script. It is a separate copy updated by hand, file by file. Editing the repository therefore
+      changes nothing in production, and restarting a service afterwards restarts the old code while
+      looking like a successful deploy.</p>
+
+      <div class="callout">
+        <p><strong>This has already happened.</strong> On 2026-08-29 seven System&nbsp;3 endpoints were
+        implemented, the repo was edited, <code>s3-ams</code> and <code>telemetry-pub</code> were
+        restarted, and the work was reported as shipped. All seven were still returning 404. The
+        restart interrupted the live gate for no benefit.</p>
+        <p><em>&ldquo;I restarted the service&rdquo; is not evidence. &ldquo;I called the endpoint and
+        got the expected value&rdquo; is.</em></p>
+      </div>
+
+      <h4>The repo and production diverge in both directions</h4>
+      <p>Neither side is globally newer, so there is no safe general rule &mdash; diff before every
+      copy. Measured 2026-08-29:</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>File</th><th>Relationship to production</th></tr></thead>
+          <tbody>
+            <tr><td><code>system3/ams/src/ams/service/api.py</code></td><td>was <strong>identical</strong> before the change</td></tr>
+            <tr><td><code>system2/&hellip;/execution/lifecycle.py</code></td><td>repo <strong>ahead</strong> &mdash; carries <code>shadow_fn</code></td></tr>
+            <tr><td><code>bridge/telemetry_publisher.py</code></td><td>repo <strong>ahead ~322 lines</strong> of unrelated work</td></tr>
+            <tr><td><code>bridge/ops_watchdog.py</code></td><td><strong>production is ahead of the repo</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4>Two outages, one cause</h4>
+      <p>A file can be in sync while its collaborators are not. Check what the file <em>calls</em>,
+      not just the file.</p>
+      <ul>
+        <li><strong>2026-08-28 &mdash; <code>lifecycle.py</code>.</strong> Copied wholesale, it passed
+        <code>shadow_fn=</code> to a <code>HealthReporter</code> that production does not accept.
+        System&nbsp;2 crash-looped for ~2 minutes.</li>
+        <li><strong>2026-08-29 &mdash; <code>api.py</code>.</strong> The file itself was in sync and
+        syntax-clean, but it called <code>source.producer_liveness()</code>, which production&rsquo;s
+        <code>Service</code> lacks and its <code>build_health</code> does not accept.
+        <code>/health</code> returned 500, which also blinds the ops watchdog&rsquo;s heartbeat check.
+        Rolled back in under a minute, fixed to probe both sides, redeployed.</li>
+      </ul>
+
+      <h4>Procedure</h4>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Step</th><th>Command / check</th></tr></thead>
+          <tbody>
+            <tr><td>1. Diff against production</td>
+                <td><code>gcloud compute ssh trading-1 --zone europe-west1-b --tunnel-through-iap --command='cat /opt/scalablebrain/&lt;path&gt;'</code></td></tr>
+            <tr><td>2. Separate your change from pre-existing divergence</td>
+                <td><code>git -C &lt;nested repo&gt; show HEAD~1:&lt;path&gt; | diff - prod_file.py</code> &mdash; if non-empty, <strong>splice onto the production file, do not copy</strong></td></tr>
+            <tr><td>3. Check the collaborators, in the service&rsquo;s own venv</td>
+                <td><code>sudo -u trader ./.venv/bin/python -c "import inspect; from ams.service.health import build_health; print(sorted(inspect.signature(build_health).parameters))"</code></td></tr>
+            <tr><td>4. Back up with checksums</td>
+                <td><code>BK=/opt/scalablebrain/backups/&lt;name&gt;-$(date -u +%Y%m%dT%H%M%SZ)</code>, then <code>md5sum * &gt; MD5SUMS.before</code></td></tr>
+            <tr><td>5. Syntax-check on the VM</td>
+                <td><code>python3 -c "import ast; ast.parse(open('/tmp/incoming.py').read())"</code> &mdash; not <code>py_compile</code>, which fails on <code>__pycache__</code> permissions</td></tr>
+            <tr><td>6. Install and restart</td>
+                <td><code>sudo install -o trader -g trader -m 644 /tmp/incoming.py &lt;prod path&gt;</code> then <code>sudo systemctl restart &lt;units&gt;</code></td></tr>
+            <tr><td>7. Verify behaviour, not liveness</td>
+                <td><code>NRestarts</code> must be <code>0</code> &mdash; <code>active</code> alone does not rule out a crash loop. Then call the endpoint and compare to source of truth.</td></tr>
+            <tr><td>8. Rollback</td>
+                <td><code>sudo install -o trader -g trader -m 644 "$BK/&lt;file&gt;" &lt;prod path&gt;</code> then restart</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Units are <code>system2</code>, <code>s3-ams</code>, <code>s2s3-bridge</code>,
+      <code>s3-signal-relay</code>, <code>telemetry-pub</code> &mdash; note it is <code>s3-ams</code>,
+      not <code>system3-ams</code>. System&nbsp;2 is <code>:8002</code>, System&nbsp;3 is
+      <code>:8300</code>. Restarting <code>system2</code> or <code>s3-ams</code> interrupts live
+      execution: get approval, and prefer a market-closed window (forex closes Friday ~21:00&nbsp;UTC).</p>
+
+      <div class="callout">
+        <p><strong>The dashboard is a different path entirely.</strong> It does not live on
+        <code>trading-1</code>. It is Cloud Run service <code>telemetry-dashboard</code>
+        (<code>europe-west1</code>), built from <code>telemetry-dashboard/</code> and shipped as a new
+        revision. The VM&rsquo;s copy under <code>/opt/scalablebrain/telemetry-dashboard</code> is a
+        stale leftover &mdash; do not deploy to it.</p>
+        <p><strong>Standing invariant:</strong> nothing in any deploy may set
+        <code>go_live_enabled</code> or flip mode to <code>enforce</code>. These surfaces report
+        state; they must never be the thing that turns live trading on.</p>
+      </div>
+
     </div>
   </section>
 </main>
