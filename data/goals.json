@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "as_of": "2026-08-28",
+  "as_of": "2026-08-29",
   "current_period": "2026-W35",
   "status_vocabulary": {
     "done": {
@@ -362,17 +362,17 @@
         {
           "system": "system-1",
           "role": "required",
-          "need": "Publish the drill signal at a realistic live price"
+          "need": "Publish the drill signal at a realistic live price. **This is now the only thing standing between the project and M3** — System 1 was told on 2026-08-29 that stamping and drill publication are cleared."
         },
         {
           "system": "system-2",
           "role": "required",
-          "need": "Can already stop at the broker call — `EXEC_SHADOW=true` constructs the order and does not submit — and log what it would have sent. **Blocked** on the flag never reaching it: both System 3 contracts are `additionalProperties: false`."
+          "need": "**Unblocked 2026-08-29.** Runs a drill to the broker call and stops there: decision `drill_not_submitted`, order constructed and fully validated, nothing submitted. Proven on production against a real `drill: true` `ApprovedOrder`, with the caveat in T-203 that the final hop was run with a substituted clock because the market was shut."
         },
         {
           "system": "system-3",
           "role": "required",
-          "need": "**Blocked.** `ScoredSignal.schema.json` is `additionalProperties: false`, so a signal carrying `\"drill\": true` fails validation at the relay, which by design never acks an invalid message — System 1 would publish and hear nothing back, ever. `ApprovedOrder.schema.json` has the same setting, so the flag could not be forwarded either. Contract change first, drill second."
+          "need": "**Unblocked 2026-08-29.** Both contracts now carry `producer`, `bundle_id` and `drill` (all optional for now — see T-308) while still rejecting unknown fields, so a drill validates at the relay, passes the gate with the flag intact, and is forwarded to System 2."
         }
       ],
       "blocked_by": "G-001"
@@ -1027,10 +1027,10 @@
       "system": "system-2",
       "goal": "G-008",
       "period": "2026-W34",
-      "status": "blocked",
+      "status": "done",
       "title": "Run the drill signal to the broker call and stop",
-      "detail": "The stopping half is ready — `EXEC_SHADOW=true` already constructs the order and does not submit, and the practice endpoint is confirmed (`OANDA_ENV=practice`, account `101-002-38449021-001`). Blocked because the flag cannot arrive: System 3's `ScoredSignal` and `ApprovedOrder` schemas are both `additionalProperties: false`. Unblocked by T-308.",
-      "evidence": "`execution/pipeline.py` `resolve_shadow`; `contracts/v1/ApprovedOrder.schema.json`",
+      "detail": "Done 2026-08-29. `drill: true` now survives every hop — relay -> gate -> `ApprovedOrder` -> bridge -> System 2 — and System 2 stops **immediately before the broker submit**, after construction, §7.2 last-line validation and the backup guard have all run, so a drill proves the path rather than bypassing it. Two properties were tested explicitly: a drill is not a bypass (an inverted stop still fails layer J, one over the notional cap still fails §7.2, one that trips the backup guard still fails there), and a drill does not consume the idempotency key, so a real order with the same key immediately after still executes. Verified on production with a real `drill: true` `ApprovedOrder` published into the live `ams-outbound`: decision `drill_not_submitted`, order constructed at SL/TP 1.14800 / 1.16600 on entry 1.15400, 0 submitted to broker, broker state unchanged afterwards. **One caveat, and it is the open half.** The market was shut when this was run (Saturday), so the live System 2 parked the message `out of session` before reaching the drill check; the final hop was exercised by feeding the bridge's real output through the pipeline with the clock set inside a session. Every component and the real message shape were live, only the clock was substituted. The running-consumer traversal is proven by the first real drill after Sunday's open, and is the one thing this does not yet cover.",
+      "evidence": "`DRILL_NOT_SUBMITTED = \"drill_not_submitted\"` at `system2/system-2-execution-engine/src/system2/execution/pipeline.py:87` on `trading-1`, read from the VM 2026-08-29; `audit/communication/S2-REPLY-2026-08-29-drill-honoured.md`",
       "priority": "high",
       "urgency": "immediate"
     },
@@ -1111,10 +1111,10 @@
       "system": "system-2",
       "goal": "G-001",
       "period": "2026-W34",
-      "status": "not_started",
+      "status": "done",
       "title": "Clear the standing false-positive watchdog alert",
-      "detail": "Still open, and now 13 days old. Episode `s2:producer` has been firing since `2026-08-15T18:09:26Z`, flagging \"signal producer running=false\" — but System 2's signal production was *deliberately removed* that same day, and `/signal` now returns `{\"running\": false, \"removed\": true}`. The check must treat `removed: true` as expected. This matters more than it looks: a permanently-firing alert is what masks a real one, and a genuine `s2:queue_silent` episode opened underneath it on 08-28.",
-      "evidence": "`bridge/state/watchdog_state.json`; S2-STATUS-2026-08-28 finding #4",
+      "detail": "Done 2026-08-28. The check now treats `removed: true` as designed absence, so the `s2:producer` episode — open continuously since 2026-08-15T18:09:26Z, paging about a component that was *deliberately* deleted the same day — is cleared. System 2's `/status.gatekeeper` also now returns an honest reason (`System 2 has no runtime gatekeeper: signal production removed 2026-08-15`) with `alarm: false`, rather than a permanently-firing page. This mattered more than its severity suggests: a check that always fires is what trains an operator to ignore the channel, and a genuine `s2:queue_silent` episode had opened underneath it on 08-28.",
+      "evidence": "`bridge/state/watchdog_state.json` on `trading-1`, read 2026-08-29: no `s2:producer` episode. The two episodes now open are `recon:underinformed:EUR_USD` and `recon:underinformed:GBP_USD`, both since 2026-08-29T19:33:33Z — unrelated, and see T-212",
       "priority": "medium",
       "urgency": "this_month"
     },
@@ -1195,10 +1195,10 @@
       "system": "system-3",
       "goal": "G-008",
       "period": "2026-W34",
-      "status": "blocked",
+      "status": "done",
       "title": "Process the drill signal with the flag intact",
-      "detail": "Cannot run. `ScoredSignal.schema.json` is `additionalProperties: false`, so a signal carrying `\"drill\": true` fails validation at the relay — which by design never acks and never forwards an invalid message, so it retries and dead-letters and System 1 hears nothing back. `ApprovedOrder.schema.json` is the same, so the flag could not be forwarded to System 2 either. Layer `P` adds a second trap: `selection_basis` must be present or the signal is rejected outright. Unblocked by T-308.",
-      "evidence": "`contracts/v1/ScoredSignal.schema.json`; `scripts/pubsub_signal_relay.py` safety posture",
+      "detail": "Done 2026-08-29. `ScoredSignal.schema.json` accepts `producer`, `bundle_id` and `drill`, so a drill no longer fails validation at the relay, and `ApprovedOrder.schema.json` carries `drill` so the flag survives egress to the bridge. Verified against the deployed validator on `trading-1`: plain signal VALID, +producer/bundle/drill VALID, +drill=true VALID, **unknown field still REJECTED**. That last line is the point — widening for three named fields did not make the contract permissive, so a producer typo still surfaces as a rejection instead of being silently accepted. Shipped in the order with no unsafe window: System 2's short-circuit first (honouring), then the contract and bridge (accepting), so the flag was never acceptable-but-ignored, which is the state where a drill executes as a real order.",
+      "evidence": "`system3/ams/contracts/v1/ScoredSignal.schema.json` on `trading-1`, read 2026-08-29: `additionalProperties: false` with `producer`, `bundle_id`, `drill` all present; `ApprovedOrder.schema.json` carries `drill`",
       "priority": "high",
       "urgency": "immediate"
     },
@@ -1219,10 +1219,10 @@
       "system": "system-3",
       "goal": "G-008",
       "period": "2026-W34",
-      "status": "not_started",
+      "status": "done",
       "title": "Add producer, bundle id and drill to the contracts",
-      "detail": "Blocking G-008 and blocking ADR-001's transition. `ScoredSignal.schema.json` gains a **required** `producer`, a `bundle_id` and an optional `drill` boolean; `ApprovedOrder.schema.json` gains `drill` so the flag survives our egress. `producer` is required rather than optional so an unexpected publisher can be rejected outright during the transition, which is the only thing that catches two producers emitting different `signal_id`s for the same bar. Publish the updated contracts to `gs://scalable-brain-artifacts/contracts/v1/`.",
-      "evidence": "`contracts/v1/ScoredSignal.schema.json`, `contracts/v1/ApprovedOrder.schema.json`",
+      "detail": "Deployed 2026-08-29, with one deliberate deviation to record. **All three fields shipped optional, including `producer`.** The plan called for `producer` to be `required` so an unexpected publisher is rejected outright during the transition — but the safe orders are opposite for the two changes: widening an `additionalProperties: false` consumer is consumer-accepts-first, while promoting a field to `required` is producer-emits-first, and System 1 had not yet enabled stamping. Agreed sequence: all three stay optional until one real drill completes after Sunday's open, then System 1 tells us before flipping them to `required` and we confirm we are reading them first. While `drill` is optional, absent is read as `false` (a real order) — the fail-safe reading, and unambiguous only because System 1 stamps the flag on every message including real ones. The contract change never shipped alone: it went out together with System 2's drill short-circuit, because the schema half on its own moves the system from *safely rejects* to *silently executes*. **Still open:** publication of the updated contracts to `gs://scalable-brain-artifacts/contracts/v1/` is not verified, and the `required` promotion of `producer` remains outstanding.",
+      "evidence": "deployed `contracts/v1/ScoredSignal.schema.json` + `ApprovedOrder.schema.json` on `trading-1`, read 2026-08-29 — all three fields present, `required` does *not* yet include `producer`; `audit/communication/S2-REPLY-2026-08-29-drill-honoured.md`",
       "priority": "high",
       "urgency": "immediate"
     },
