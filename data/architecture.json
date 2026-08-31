@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "as_of": "2026-08-22",
+  "as_of": "2026-08-31",
   "layout": {
     "column_width": 252,
     "row_height": 74,
@@ -151,12 +151,12 @@
       "id": "s1-gate",
       "column": "s1",
       "row": 6,
-      "label": "MODEL-006 · Gatekeeper",
+      "label": "MODEL-006 · Gatekeeper (shadow)",
       "kind": "process",
-      "status": "live",
+      "status": "degraded",
       "detail": {
-        "technical": "XGBoost on causal-regime features, expanding-window walk-forward, per-regime thresholds, bootstrap-significant OOS uplift required.",
-        "plain": "Trains the referee that vetoes individual trades even when the rule and the weather both look right."
+        "technical": "XGBoost on causal-regime features, expanding-window walk-forward, per-regime thresholds, bootstrap-significant OOS uplift required. **It scores live but does not gate**: `Scorer` never loads its own manifest, so the calibrated cutoffs (0.60–0.80) are never read at inference and the caller stamps a hardcoded 0.5. Enforcing them would refuse 14 of 15 live map cells, so the gate runs in shadow — verdict recorded, never applied. FIX-S1-018.",
+        "plain": "Trains the referee that vetoes individual trades. The referee does watch every live signal and forms an opinion — but nobody is currently listening to it. Its verdicts are written down so we can measure what obeying them would cost, which turns out to be about 93% of all signals."
       }
     },
     {
@@ -181,6 +181,18 @@
       "detail": {
         "technical": "`src/signals/` + `queue_producer/producer.py`. Schema-validated, idempotent by `message_id`, backpressure + DLQ. Repaired 2026-08-22 (FIX-S1-016) after never having emitted a message. `QUEUE_PROVIDER=pubsub`. Runs once a day at 22:30 weekdays — too slow for the two H4 strategies it serves. **ADR-001 proposes removing it entirely.**",
         "plain": "Posts each scored trade idea to a real cloud postbox. Until 2026-08-22 it had never successfully posted anything at all. It now works, but only fires once a night, while most of the strategies it serves produce a new idea every four hours."
+      }
+    },
+    {
+      "id": "s1-ledger",
+      "column": "s1",
+      "row": 8.6,
+      "label": "Gate-1 signal ledger",
+      "kind": "store",
+      "status": "live",
+      "detail": {
+        "technical": "One durable NDJSON row per candidate at every gatekeeper exit — scored, unscored, or dropped for a corrupt feature — fsync'd before the message is published. Pairs `model_score` with `threshold_calibrated` and a `shadow_verdict`, and `gatekeeper_model_sha256` with `bundle_id`. Uploaded hourly to `telemetry/signals/` as immutable per-run objects.",
+        "plain": "The logbook. Before a signal is sent anywhere, one line is written down recording what the referee scored it, what the cut-off would have been, and whether it went out. Dropped candidates used to vanish entirely; now they leave a row."
       }
     },
     {
@@ -740,6 +752,22 @@
       "kind": "message",
       "status": "live",
       "label": "AccountSnapshot every ~60 s"
+    },
+    {
+      "id": "e-queue-ledger",
+      "from": "s1-queue",
+      "to": "s1-ledger",
+      "label": "one row per candidate, pre-publish",
+      "kind": "data",
+      "status": "live"
+    },
+    {
+      "id": "e-ledger-gcs",
+      "from": "s1-ledger",
+      "to": "gcs",
+      "label": "telemetry/signals/ NDJSON, hourly",
+      "kind": "artifact",
+      "status": "live"
     }
   ],
   "flows": [
@@ -768,6 +796,7 @@
       "name": "Signal → risk gate → broker",
       "edges": [
         "e-gate-queue",
+        "e-queue-ledger",
         "e-queue-topic",
         "e-signal-s3",
         "e-gcs-s3",
@@ -777,8 +806,8 @@
         "e-consumer-broker",
         "e-broker-market"
       ],
-      "technical": "The live path. A scored signal crosses to System 3, is evaluated against the ten-layer gate with account state as context, and — if approved — is sized once and published as an order that System 2 executes verbatim.",
-      "plain": "How a trade idea becomes a real trade. It has to survive ten checkpoints, get an amount attached exactly once, and then be carried out without alteration. Two of the pipes on this path do not exist yet."
+      "technical": "The live path. Every candidate is scored, written to the Gate-1 ledger **before** anything is published, and then crossed to System 3, evaluated against the ten-layer gate with account state as context, and — if approved — sized once and published as an order System 2 executes verbatim. Note what is NOT on this path: System 1's own gatekeeper threshold. It scores and records a verdict, but does not veto, so today every scorable signal reaches System 3 regardless of that score.",
+      "plain": "How a trade idea becomes a real trade. Before anything is sent, the idea is written into a logbook along with what System 1's referee thought of it. Then it has to survive ten checkpoints on another machine, get an amount attached exactly once, and be carried out without alteration. The first referee's opinion is currently recorded but not enforced — it stops nothing."
     },
     {
       "id": "feedback",

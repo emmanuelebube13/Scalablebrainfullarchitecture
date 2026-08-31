@@ -11,8 +11,8 @@
   "code_root": "src/",
   "status": {
     "state": "operational",
-    "as_of": "2026-08-27",
-    "note": "Cadence was raised from daily to hourly (cron :15 past every hour) after FIX-S1-016, and 46 real signals were published this week with zero dead-lettered. But per System 2/3's own trace (2026-08-27): none of those 46 ever reached System 3 — its decision log holds zero entries for Mon/Tue/Wed, and both System 3's gate process and System 2's execution engine stopped simultaneously at 2026-08-24T17:07:53Z (Monday afternoon) and never restarted. Zero OANDA fills this week, confirmed operational rather than risk-gate related. System 1's own queue check found the signals gone from the backlog anyway — an unresolved discrepancy, see Operations below. Heartbeat on this machine is WARN on one pre-existing, already-declared condition (`fact_trade_outcomes` staleness) and OK on everything else that is actually this machine's to measure."
+    "as_of": "2026-08-31",
+    "note": "Operational. 49 signals published to date; the Gate-1 signal ledger went live 2026-08-30 and records one durable row per candidate at every gatekeeper exit. The material finding this week is that **the ML gatekeeper scores but does not gate**: it computes a real score for every live signal, but nothing compares that score to the champion's calibrated per-regime cutoff — `run.py` stamps a hardcoded 0.5, which is below all four of them. Measured 2026-08-30, applying the real cutoffs would refuse 14 of the 15 live map cells (~93%). The owner therefore declined activation and the gate runs in **shadow mode**: every ledger row carries what the gate *would* have decided, while live routing stays permissive and unchanged. Seven days of shadow data, then a decision. Heartbeat is WARN on `fact_trade_outcomes` staleness and 12-of-67 strategy instantiation failures — none of the 12 are in the live map."
   },
   "summary": {
     "technical": "System 1 is the offline intelligence factory. It ingests OANDA multi-timeframe candles, builds a versioned trailing-only feature store, fits causal regime labels, attributes historical trade outcomes to the regime in force at entry, vets each (strategy x regime x granularity) cell against fixed gates, trains an XGBoost gatekeeper on walk-forward folds, and publishes a checksummed artifact bundle. It never emits an order and holds no credential capable of placing one. It also currently runs a live signal producer — a contradiction that ADR-001 exists to resolve.",
@@ -25,7 +25,9 @@
     { "label": "Artifact store", "value": "GCS `scalable-brain-artifacts`" },
     { "label": "Live model set", "value": "`2026-08-24T10-08-20Z-cb697b59_gk-d614163c`, published 2026-08-24T10:51:09Z" },
     { "label": "Signal cadence", "value": "Hourly cron, fires :15 past every hour" },
-    { "label": "Queue transport", "value": "Pub/Sub — publisher-only service account (can push, cannot list or pull)" }
+    { "label": "Queue transport", "value": "Pub/Sub — publisher-only service account (can push, cannot list or pull)" },
+    { "label": "Gate-1 state", "value": "**Shadow** — scored and recorded, never enforced (FIX-S1-018)" },
+    { "label": "Signal ledger", "value": "`results/signals/<date>.ndjson` -> `telemetry/signals/` in GCS, hourly" }
   ],
   "sections": [
     {
@@ -33,15 +35,8 @@
       "title": "Data Ingestion & Mapping",
       "kind": "ingestion",
       "body": {
-        "technical": [
-          "Ingestion is a single governed writer: `src/system1/ingestion/multi_timeframe_ingest.py`, fronted by `dq.py` data-quality gates. It pulls **MBA candles** (mid, bid and ask in one request) from the OANDA v20 REST practice endpoint across H1, H4 and D1, and writes to the `fact_market_prices` hypertable with `INSERT … ON CONFLICT (<pk>)` so a re-run is a no-op rather than a duplicate.",
-          "Every write goes through `src/common/db.py`. No module builds a connection string inline. Session timezone is pinned to UTC, because every day and week boundary in the risk layer downstream is computed in UTC and a local-time drift would silently move a daily loss budget.",
-          "Column casing is a real hazard in this schema: only `\"Open\"` and `\"Close\"` are mixed-case and `\"timestamp\"` is reserved, so all three are double-quoted; everything else is lowercase. Code is written schema-aware — optional columns are never assumed to exist, because the live schema has drifted from the original design."
-        ],
-        "plain": [
-          "This step is the delivery bay. It phones the broker, asks for the price history of each currency pair at three different zoom levels — hourly, four-hourly and daily — and files it away.",
-          "Two things make it boring on purpose. First, asking twice does not create two copies; the second delivery is recognised and thrown away. Second, everything is stamped in one single timezone, so 'Tuesday' means the same Tuesday everywhere in the system."
-        ]
+        "technical": ["Ingestion is a single governed writer: `src/system1/ingestion/multi_timeframe_ingest.py`, fronted by `dq.py` data-quality gates. It pulls **MBA candles** (mid, bid and ask in one request) from the OANDA v20 REST practice endpoint across H1, H4 and D1, and writes to the `fact_market_prices` hypertable with `INSERT … ON CONFLICT (<pk>)` so a re-run is a no-op rather than a duplicate.", "Every write goes through `src/common/db.py`. No module builds a connection string inline. Session timezone is pinned to UTC, because every day and week boundary in the risk layer downstream is computed in UTC and a local-time drift would silently move a daily loss budget.", "Column casing is a real hazard in this schema: only `\"Open\"` and `\"Close\"` are mixed-case and `\"timestamp\"` is reserved, so all three are double-quoted; everything else is lowercase. Code is written schema-aware — optional columns are never assumed to exist, because the live schema has drifted from the original design."],
+        "plain": ["This step is the delivery bay. It phones the broker, asks for the price history of each currency pair at three different zoom levels — hourly, four-hourly and daily — and files it away.", "Two things make it boring on purpose. First, asking twice does not create two copies; the second delivery is recognised and thrown away. Second, everything is stamped in one single timezone, so 'Tuesday' means the same Tuesday everywhere in the system."]
       },
       "tables": [
         {
@@ -79,17 +74,8 @@
       "title": "Core Logic & Execution",
       "kind": "pipeline",
       "body": {
-        "technical": [
-          "The runtime is organised as tasks MODEL-001…010. Every module is a `python -m` entry point, separates pure math from I/O, and registers runs to MLflow. Walk-forward folds are shared from `validation/walk_forward.py` — min train 36 months, 6-month step, 6-month out-of-sample, anchored — so regimes, attribution and the gatekeeper all cut time the same way.",
-          "The controlling design decision is **strategy first, gatekeeper vetoes**. Strategies run blind on mechanical price rules with no idea what the regime is. The regime model labels history separately. Attribution joins the two *after the fact* at the trade's entry timestamp, using the causal label. This is what makes it possible to throw hundreds of dumb strategies at the wall without hand-coding regime logic into each one.",
-          "Promotion-capable stages default to dry-run. `vet` writes `results/reports/proposed_*` unless `--live`; `gatekeeper.train --dry-run` never touches the live champion. The orchestrator is the **single governed writer** of the champion bundle (FIX-S1-009) — a second promotion path is prohibited, not merely discouraged."
-        ],
-        "plain": [
-          "Think of it as a hiring process for trading rules.",
-          "First, every candidate rule is let loose on decades of history with a blindfold on — it just follows its mechanical instructions and every trade it would have made is written down. Separately, a second program goes through the same history and marks each day with what the market was doing: trending, drifting sideways, or violent.",
-          "Then the two lists are laid on top of each other. Now you can ask a sharp question: *this rule made money — but was that in calm markets or wild ones?* Rules that only work in one kind of weather get used only in that weather.",
-          "Finally, a machine-learning referee learns to spot the trades that tend to fail even when the rule and the weather both look right, and gets a veto. Nothing is promoted automatically; almost every stage refuses to change anything unless explicitly told to."
-        ]
+        "technical": ["The runtime is organised as tasks MODEL-001…010. Every module is a `python -m` entry point, separates pure math from I/O, and registers runs to MLflow. Walk-forward folds are shared from `validation/walk_forward.py` — min train 36 months, 6-month step, 6-month out-of-sample, anchored — so regimes, attribution and the gatekeeper all cut time the same way.", "The controlling design decision is **strategy first, gatekeeper vetoes**. Strategies run blind on mechanical price rules with no idea what the regime is. The regime model labels history separately. Attribution joins the two *after the fact* at the trade's entry timestamp, using the causal label. This is what makes it possible to throw hundreds of dumb strategies at the wall without hand-coding regime logic into each one.", "Promotion-capable stages default to dry-run. `vet` writes `results/reports/proposed_*` unless `--live`; `gatekeeper.train --dry-run` never touches the live champion. The orchestrator is the **single governed writer** of the champion bundle (FIX-S1-009) — a second promotion path is prohibited, not merely discouraged."],
+        "plain": ["Think of it as a hiring process for trading rules.", "First, every candidate rule is let loose on decades of history with a blindfold on — it just follows its mechanical instructions and every trade it would have made is written down. Separately, a second program goes through the same history and marks each day with what the market was doing: trending, drifting sideways, or violent.", "Then the two lists are laid on top of each other. Now you can ask a sharp question: *this rule made money — but was that in calm markets or wild ones?* Rules that only work in one kind of weather get used only in that weather.", "Finally, a machine-learning referee learns to spot the trades that tend to fail even when the rule and the weather both look right, and gets a veto. Nothing is promoted automatically; almost every stage refuses to change anything unless explicitly told to."]
       },
       "stages": [
         {
@@ -157,6 +143,14 @@
           "plain": "Puts each scored trade idea in an envelope with a unique reference number and posts it. It is the only part of the research lab that has to be awake during market hours — which is precisely the problem an open architecture decision is trying to fix."
         },
         {
+          "code": "S1-LEDGER-001",
+          "name": "Gate-1 signal ledger",
+          "module": "`signals/ledger.py` + `signals/publish_ledger.py`",
+          "output": "`results/signals/<UTC date>.ndjson` -> `telemetry/signals/` in GCS",
+          "technical": "One durable NDJSON row per trade candidate at **every** gatekeeper exit — scored, unscored, or dropped for a corrupt feature. The dropped case previously left a single log line with no `signal_id` and was unrecoverable once the log rotated. `fsync` per row, then a byte-offset delta upload to GCS on the same hourly cron, so a transport outage cannot touch emission. Each row pairs `model_score` with `threshold_calibrated` and a `shadow_verdict`, keyed on `regime_structural` — the label the model actually consumed, not the routing label — which is what makes the shadow rejection rate computable. It also records `gatekeeper_model_sha256` beside `bundle_id`, exposing per signal that the scoring model is not the published one.",
+          "plain": "A logbook for the referee. Every candidate it looks at gets exactly one line written down: what it scored, what the cut-off would have been, and whether the signal was sent on anyway. Because the referee's verdict is recorded but not acted on, we can measure exactly what switching it on would cost before switching it on."
+        },
+        {
           "code": "MODEL-009",
           "name": "Retrain orchestrator",
           "module": "`scheduler/orchestrator.py` + `triggers.py`",
@@ -179,6 +173,11 @@
           "title": "The gates were relaxed, and one gate was never there",
           "technical": "On 2026-08-21 the owner lowered `oos_months` from 60 to 12. Separately, `vet.py` has never had a minimum trade-count gate — `trade_count` participates only as a ranking tie-break. The two together are why cells resting on 5, 13 and 20 out-of-sample trades now appear as `qualified` in the live map with profit factors of 6.8 to 13.6 and drawdowns of 0.02% to 1%.",
           "plain": "Two things happened. The owner deliberately shortened the minimum track record a strategy needs, from five years to one. And there has never been any rule about *how many* trades that track record must contain. Put together, a strategy with five trades in its history can now be waved through with a spectacular-looking score — and a five-trade score is noise, not skill."
+        },
+        {
+          "tone": "warn",
+          "title": "The gatekeeper scores, but it does not gate",
+          "text": "`Scorer.score()` returns `{status, score}` and never loads its own manifest, so the champion's calibrated per-regime cutoffs (High-Vol 0.80, Ranging 0.75, Trending-Down 0.60, Trending-Up 0.75) are never read at inference. The consumer stamps a hardcoded `threshold_applied = 0.5` — below every one of them — so every scored signal is published regardless of score, and the only true drop is a corrupt feature. A prior code comment claimed the gatekeeper could not score live at all; that described the previous champion and was retracted on 2026-08-30 after measurement showed 15 of 15 pair/granularity combinations scoring. Live scores cluster 0.42-0.46 against cutoffs of 0.60-0.80, so enforcing the gate today would refuse 14 of the 15 live map cells. That is the calibration working as designed — `shipped_approval_rate` is 0.079 — which is precisely why it is an owner decision about trading activity and not a bug fix. Tracked as FIX-S1-018."
         }
       ]
     },
@@ -187,16 +186,8 @@
       "title": "Outputs & Contracts",
       "kind": "interfaces",
       "body": {
-        "technical": [
-          "System 1 emits exactly two kinds of thing: **artifacts** to object storage and **messages** to a Pub/Sub topic. It never emits an order, and it holds no broker credential capable of placing one.",
-          "The publish contract is ordering-critical: upload to an immutable versioned prefix → SHA256 verify the round trip → only then flip `latest.json`. A consumer that reads the pointer therefore can never observe a half-written bundle. Retention trims the oldest versions; it never overwrites.",
-          "`QUEUE_PROVIDER` is now `pubsub` — it was `local` until recently, which meant signals landed in a directory on Computer 1 that no other machine could ever read. System 1's service account is **publisher-only**: it can push to `Scored_Signal_Queue` but cannot list topics or subscriptions, so it has no way to confirm anyone is on the other end."
-        ],
-        "plain": [
-          "Two outputs, both one-way. A sealed model package on cloud storage, and a stream of scored trade ideas.",
-          "Nothing here can place a trade. That is deliberate — the machine that decides what is a good idea is physically incapable of acting on its own opinion.",
-          "The trade ideas now go into a real cloud postbox rather than a folder on one desk. But System 1 has posting rights only: it cannot look inside the postbox to check whether anyone is collecting. Confirmation has to come back from the other machines in writing."
-        ]
+        "technical": ["System 1 emits exactly two kinds of thing: **artifacts** to object storage and **messages** to a Pub/Sub topic. It never emits an order, and it holds no broker credential capable of placing one.", "The publish contract is ordering-critical: upload to an immutable versioned prefix → SHA256 verify the round trip → only then flip `latest.json`. A consumer that reads the pointer therefore can never observe a half-written bundle. Retention trims the oldest versions; it never overwrites.", "`QUEUE_PROVIDER` is now `pubsub` — it was `local` until recently, which meant signals landed in a directory on Computer 1 that no other machine could ever read. System 1's service account is **publisher-only**: it can push to `Scored_Signal_Queue` but cannot list topics or subscriptions, so it has no way to confirm anyone is on the other end."],
+        "plain": ["Two outputs, both one-way. A sealed model package on cloud storage, and a stream of scored trade ideas.", "Nothing here can place a trade. That is deliberate — the machine that decides what is a good idea is physically incapable of acting on its own opinion.", "The trade ideas now go into a real cloud postbox rather than a folder on one desk. But System 1 has posting rights only: it cannot look inside the postbox to check whether anyone is collecting. Confirmation has to come back from the other machines in writing."]
       },
       "tables": [
         {
@@ -208,7 +199,9 @@
             ["Regime→strategy map", "GCS artifact", "`contracts/regime-map-contract.json`", "System 2, System 3"],
             ["Strategy weights", "GCS artifact", "`contracts/weights-contract.json`", "System 3"],
             ["Regime status", "GCS artifact", "`contracts/regime-status-contract.json`", "System 2"],
-            ["Analytics bundle", "GCS `system1/analytics/`", "Versioned + pointer flip", "Telemetry / simulation"]
+            ["Analytics bundle", "GCS `system1/analytics/`", "Versioned + pointer flip", "Telemetry / simulation"],
+            ["Gate-1 signal ledger", "GCS `telemetry/signals/<date>/<ts>-<sha8>.ndjson`", "28-field NDJSON row; enums `gate1_outcome` / `wire_action` / `shadow_verdict`", "Telemetry ingester -> Postgres `s1_scored_signals_log`"],
+            ["System 1 health", "GCS `telemetry/s1_health.json`", "`emitter.gate1` (outcome mix + `shadow`), `emitter.dlq` (by reason)", "Dashboard"]
           ]
         },
         {
@@ -233,6 +226,11 @@
           "title": "The producer runs once a day, for strategies that trade six times a day",
           "technical": "The producer fires from `cron_daily_ingest_and_signals.sh` at 22:30, weekdays only. Two of the three live strategies are H4 — six bars per day — so a once-daily batch emits signals for bars that closed up to twenty hours earlier. `src/signals/run.py` already supports a continuous 60-second loop; the open decision is hourly cron versus continuous service, with hourly cron recommended as the smaller, restartable change.",
           "plain": "The trade ideas are posted once a night. But two of the three live strategies produce a new idea every four hours, so most of what gets posted is describing a moment that passed the previous afternoon. An idea that stale is not tradeable."
+        },
+        {
+          "tone": "warn",
+          "title": "`wire_action: published` does not mean the broker saw it",
+          "text": "The ledger row is written before publication. The producer then dead-letters individual messages after that point — BUILD_ERROR, SCHEMA_INVALID, BAD_REGIME, QUEUE_FULL, PUBLISH_NACK — and counts idempotent replays as deduped. So a `published` row with no matching `ams_decision_log` entry is either a lost message or a dead-letter. Under Pub/Sub `dead_letter()` publishes nothing to a DLQ topic, so those two are separated by the per-reason `dlq` counters in `s1_health.json` — a rate, never which row. It cannot support per-row wire-drop alerting."
         }
       ]
     },
@@ -241,15 +239,8 @@
       "title": "Running It — Logs, Health Checks & Commands",
       "kind": "operations",
       "body": {
-        "technical": [
-          "System 1 has no dashboard of its own. Everything below is either a local file on Computer 1 or a single artifact mirrored to GCS that the other machines (and this documentation) can read without a database connection or SSH access.",
-          "Four cron jobs run the machine: an hourly job at **:15** (ingest → build/score/publish signals → publish health → mirror the model card), a legacy weekday-evening job at **22:30** that mostly duplicates the hourly one now, a daily heartbeat at **06:00**, and a Saturday catch-up ingest at **00:00**. The retrain cron is intentionally **not installed** — it is on a declared hold (`results/state/cron_holds.json`, expires 2026-09-15) at Computer 2's request.",
-          "The single most important state field in the whole system is `results/state/signal_emitter_state.json` → `last_signal_emitted_at`. It only advances on a real publish, never on a run — which is the direct fix for FIX-S1-016, where the producer ran on schedule for weeks, logged nothing alarming, and never once emitted a signal. A green heartbeat next to a null or stale `last_signal_emitted_at` is that failure mode recurring, not a healthy system."
-        ],
-        "plain": [
-          "Nothing here needs a login or a dashboard. It's cron jobs writing plain files, plus one snapshot copied to the cloud so the other two computers can check on this one without asking it anything.",
-          "The one number that matters more than any other is the timestamp of the last signal actually sent — not the last time the job ran. A job can run perfectly, on schedule, forever, and still never send anything. That exact failure happened here once for weeks before anyone noticed, because everything that could be checked said 'healthy' except the one thing nobody was reading."
-        ]
+        "technical": ["System 1 has no dashboard of its own. Everything below is either a local file on Computer 1 or a single artifact mirrored to GCS that the other machines (and this documentation) can read without a database connection or SSH access.", "Four cron jobs run the machine: an hourly job at **:15** (ingest → build/score/publish signals → publish health → mirror the model card), a legacy weekday-evening job at **22:30** that mostly duplicates the hourly one now, a daily heartbeat at **06:00**, and a Saturday catch-up ingest at **00:00**. The retrain cron is intentionally **not installed** — it is on a declared hold (`results/state/cron_holds.json`, expires 2026-09-15) at Computer 2's request.", "The single most important state field in the whole system is `results/state/signal_emitter_state.json` → `last_signal_emitted_at`. It only advances on a real publish, never on a run — which is the direct fix for FIX-S1-016, where the producer ran on schedule for weeks, logged nothing alarming, and never once emitted a signal. A green heartbeat next to a null or stale `last_signal_emitted_at` is that failure mode recurring, not a healthy system."],
+        "plain": ["Nothing here needs a login or a dashboard. It's cron jobs writing plain files, plus one snapshot copied to the cloud so the other two computers can check on this one without asking it anything.", "The one number that matters more than any other is the timestamp of the last signal actually sent — not the last time the job ran. A job can run perfectly, on schedule, forever, and still never send anything. That exact failure happened here once for weeks before anyone noticed, because everything that could be checked said 'healthy' except the one thing nobody was reading."]
       },
       "tables": [
         {
@@ -325,26 +316,13 @@
       "title": "Current State & Evidence",
       "kind": "evidence",
       "body": {
-        "technical": [
-          "As of 2026-08-27 the pipeline is functioning end to end, the producer runs hourly, and a model set is published and loading. The live `regime_strategy_map.json` was regenerated 2026-08-24 and now carries 15 (strategy x regime) entries across three regimes — considerably more than the 6-entry map recorded here previously, which predates that republish. The honest qualification stands regardless of count: most of these strategies qualified, or were designated in, on small out-of-sample samples under a gate the owner deliberately relaxed, and are running on a practice account as a stated, accepted risk rather than an established edge."
-        ],
-        "plain": [
-          "Everything below is deliberately unflattering. The machinery works, and works more often now than it used to. What it has found so far still does not amount to proof that any of these strategies makes money."
-        ]
+        "technical": ["As of 2026-08-27 the pipeline is functioning end to end, the producer runs hourly, and a model set is published and loading. The live `regime_strategy_map.json` was regenerated 2026-08-24 and now carries 15 (strategy x regime) entries across three regimes — considerably more than the 6-entry map recorded here previously, which predates that republish. The honest qualification stands regardless of count: most of these strategies qualified, or were designated in, on small out-of-sample samples under a gate the owner deliberately relaxed, and are running on a practice account as a stated, accepted risk rather than an established edge."],
+        "plain": ["Everything below is deliberately unflattering. The machinery works, and works more often now than it used to. What it has found so far still does not amount to proof that any of these strategies makes money."]
       },
       "tables": [
         {
           "title": "The live map — `regime_strategy_map.json` v2.0.0, generated 2026-08-23T18:12Z, part of model set `2026-08-24T10-08-20Z-cb697b59`",
-          "columns": [
-            "Regime",
-            "Strategy",
-            "Basis",
-            "OOS trades",
-            "Profit factor",
-            "Sharpe",
-            "Max DD",
-            "OOS months"
-          ],
+          "columns": ["Regime", "Strategy", "Basis", "OOS trades", "Profit factor", "Sharpe", "Max DD", "OOS months"],
           "rows": [
             ["Trending-Up", "`xard_ma_cross_daily_open@H1`", "designated", "224", "1.11", "0.53", "17.4%", "23.7"],
             ["Trending-Up", "`nnfx_backtrader@D1`", "designated", "114", "1.61", "1.22", "7.4%", "46.4"],
@@ -418,15 +396,84 @@
       "title": "Known Gaps",
       "kind": "issues",
       "issues": [
-        { "id": "GAP-S1-02", "severity": "high", "title": "No minimum trade-count gate", "text": "`vet.py` treats `trade_count` only as a ranking tie-break. Combined with the 2026-08-21 reduction of `oos_months` from 60 to 12, cells with 5, 13 and 20 trades reached the live map. Worth adding regardless of where the OOS threshold lands." },
-        { "id": "GAP-S1-03", "severity": "high", "title": "Qualified strategies published with empty exits", "text": "All three entries in the live map carry `exits: {}`. A strategy with no exit specification serializes cleanly and means nothing to whoever executes it. Open defect in `vet.py`." },
-        { "id": "GAP-S1-04", "severity": "high", "title": "Delivery is unverified past the first hop", "text": "System 1's service account is publisher-only and cannot list topics or subscriptions. It can prove it published; it cannot see whether System 3 consumed, whether an order was sized, or whether System 2 filled anything. Partial, non-authoritative evidence gathered 2026-08-27 with a personal (non-service-account) gcloud identity: `scored_signal_queue_sub`'s backlog does not contain this week's 46 real signals, only one stray 2026-08-23 drill message — consistent with something consuming, not proof of a fill. Confirmation still has to arrive as a written reply from System 2/3 naming what actually happened to an approved order." },
-        { "id": "GAP-S1-05", "severity": "med", "title": "Test fixtures leaked into the production queue artefact", "text": "A test run once wrote fixtures into the live queue — the `entry: 1.05` messages System 2 observed. The leak path is not yet closed." },
-        { "id": "GAP-S1-06", "severity": "med", "title": "Trade outcomes writer is destructive", "text": "`persist_trade_outcomes` does DELETE-then-rebuild with no transaction. Snapshot first, and pass `--lookback-years 10` — the default of 5 silently discards half the history." },
-        { "id": "GAP-S1-07", "severity": "med", "title": "Finding A — weight starvation", "text": "`gates.normalized_weights` shift-by-floor drives the lowest-scoring qualifier in a regime toward zero weight regardless of merit (Sharpe 1.74, PF 3.06 → weight 8e-8). Softmax or rank weighting proposed." },
-        { "id": "GAP-S1-08", "severity": "low", "title": "`src/registry/` imports a removed package", "text": "Retains imports of the deleted `regime_aware` package, gated behind the `regime_aware_port` universe. Latent — will not fire for the current three strategies." },
-        { "id": "GAP-S1-09", "severity": "low", "title": "`layer2_config_adapter` emits T-SQL", "text": "A leftover from the SQL Server era. Emits SQL that will not run against PostgreSQL. Reconcile or retire." },
-        { "id": "GAP-S1-10", "severity": "low", "title": "T6 ATR case mismatch", "text": "`engine_adapter` writes `df['atr']`, `StrategyBase` reads `df['ATR']`. Affects research verdicts only — the ten legacy strategies set uppercase themselves. Unfixed, no FIX doc." }
+        {
+          "id": "GAP-S1-02",
+          "severity": "high",
+          "title": "No minimum trade-count gate",
+          "text": "`vet.py` treats `trade_count` only as a ranking tie-break. Combined with the 2026-08-21 reduction of `oos_months` from 60 to 12, cells with 5, 13 and 20 trades reached the live map. Worth adding regardless of where the OOS threshold lands."
+        },
+        {
+          "id": "GAP-S1-03",
+          "severity": "high",
+          "title": "Qualified strategies published with empty exits",
+          "text": "Map cells serialize with `exits: {}`. A strategy with no exit specification serializes cleanly and means nothing to whoever executes it. The map now carries 15 cells across 8 strategies — 12 `designated` (an owner override of a failed gate) and 3 `qualified` — so this affects considerably more than the three cells recorded when this gap was first written. Open defect in `vet.py`."
+        },
+        {
+          "id": "GAP-S1-04",
+          "severity": "high",
+          "title": "Delivery is unverified past the first hop",
+          "text": "System 1's service account is publisher-only and cannot list topics or subscriptions. It can prove it published; it cannot see whether System 3 consumed, whether an order was sized, or whether System 2 filled anything. Partial, non-authoritative evidence gathered 2026-08-27 with a personal (non-service-account) gcloud identity: `scored_signal_queue_sub`'s backlog does not contain this week's 46 real signals, only one stray 2026-08-23 drill message — consistent with something consuming, not proof of a fill. Confirmation still has to arrive as a written reply from System 2/3 naming what actually happened to an approved order."
+        },
+        {
+          "id": "GAP-S1-05",
+          "severity": "med",
+          "title": "Test fixtures leaked into the production queue artefact",
+          "text": "A test run once wrote fixtures into the live queue — the `entry: 1.05` messages System 2 observed. The leak path is not yet closed."
+        },
+        {
+          "id": "GAP-S1-06",
+          "severity": "low",
+          "title": "RETRACTED — the outcomes writer is not destructive",
+          "text": "**This entry was wrong and is kept only so the correction is on the record.** It claimed `persist_trade_outcomes` did DELETE-then-rebuild with no transaction and that the default `--lookback-years 5` silently discarded half the history. Neither is true: the writer is `INSERT … ON CONFLICT DO UPDATE` and never deletes, and the default is 10 years. Corrected 2026-08-29. The belief that the writer was dangerous to run is part of why it was only ever run by hand, and why the table went stale for thirteen days before it was given a cron."
+        },
+        {
+          "id": "GAP-S1-07",
+          "severity": "med",
+          "title": "Finding A — weight starvation",
+          "text": "`gates.normalized_weights` shift-by-floor drives the lowest-scoring qualifier in a regime toward zero weight regardless of merit (Sharpe 1.74, PF 3.06 → weight 8e-8). Softmax or rank weighting proposed."
+        },
+        {
+          "id": "GAP-S1-08",
+          "severity": "low",
+          "title": "`src/registry/` imports a removed package",
+          "text": "Retains imports of the deleted `regime_aware` package, gated behind the `regime_aware_port` universe. Latent — will not fire for the current three strategies."
+        },
+        {
+          "id": "GAP-S1-09",
+          "severity": "low",
+          "title": "`layer2_config_adapter` emits T-SQL",
+          "text": "A leftover from the SQL Server era. Emits SQL that will not run against PostgreSQL. Reconcile or retire."
+        },
+        {
+          "id": "GAP-S1-10",
+          "severity": "low",
+          "title": "T6 ATR case mismatch",
+          "text": "`engine_adapter` writes `df['atr']`, `StrategyBase` reads `df['ATR']`. Affects research verdicts only — the ten legacy strategies set uppercase themselves. Unfixed, no FIX doc."
+        },
+        {
+          "id": "GAP-S1-11",
+          "severity": "high",
+          "title": "The gatekeeper does not gate — running in shadow",
+          "text": "Nothing at inference compares the model score to the champion's calibrated cutoff; `run.py` stamps a hardcoded 0.5, below all four. There is therefore no below-threshold refusal, and the runtime approval rate is undefined rather than zero. Scoring itself works — 15 of 15 pair/granularity combinations measured 2026-08-30. Enforcing the calibrated cutoffs today would refuse 14 of 15 live map cells (~93% fewer signals), so activation was declined and the gate records its verdict without acting on it. FIX-S1-018."
+        },
+        {
+          "id": "GAP-S1-12",
+          "severity": "high",
+          "title": "The live scorer runs an unpublished champion",
+          "text": "`Scorer` loads a directory, not a pointer, so the model doing the scoring (`champion_model.pkl`, sha `23b6d4ca…`, written 2026-08-24 and never published) is not the artifact the wire names in `bundle_id` (`gk-d614163c`, sha `8845b442…`). The retrain that produced it did not promote — `oos_uplift_ok` failed — so this is drift, not a promotion. It compounds the shadow review: every `threshold_calibrated` and `shadow_verdict` is computed against a manifest nobody downstream can reproduce from the published bundle, so the review's own inputs are unverifiable until the model set is republished."
+        },
+        {
+          "id": "GAP-S1-13",
+          "severity": "med",
+          "title": "The ledger does not record what was never built",
+          "text": "It records what the gatekeeper did to a fully-formed signal. `build_signals` discards candidates at roughly a dozen earlier points — no structural regime, no stop price, no take-profit, no ATR, an undecodable direction — all before `signal_id` is minted, so none of them leave a row. **Absence of a ledger row is not evidence a candidate never existed.** The no-ATR path is the one recorded as having once dropped 100% of signals silently."
+        },
+        {
+          "id": "GAP-S1-14",
+          "severity": "low",
+          "title": "Remote ledger retention is stated but not enforced",
+          "text": "365 days is declared for `telemetry/signals/` and there is no GCS lifecycle rule behind it; the `system1-rw` service account lacks even `storage.buckets.get`, so System 1 cannot set one. The local copy prunes at 90 days, after which the bucket is the sole archive. Any rule must be scoped to `telemetry/signals/` and nothing wider — `delete_prefix` is an undelimited prefix match, and `--lifecycle-file` replaces the whole config rather than appending to it."
+        }
       ]
     }
   ]
