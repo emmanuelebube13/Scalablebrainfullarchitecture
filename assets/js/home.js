@@ -95,12 +95,13 @@ try {
     }
 
     /* ---- next ---- */
-    main.append(section('Where to go next', 'This site, in four places', null,
+    main.append(section('Where to go next', 'This site, in five places', null,
       el('div', { class: 'grid grid-4' },
         link('architecture.html', 'Unified map', 'Every component and every handoff, with traceable flows.'),
         link('system.html?id=system-1', 'Subsystem pages', 'Ingestion, logic, contracts and gaps for each system.'),
         link('goals.html', 'Goals & tasks', 'The milestone ladder, dependency matrix and weekly work.'),
-        link('contribute.html', 'Editing the data', 'How agents and humans change this content through Git.'))
+        link('contribute.html', 'Editing the data', 'How agents and humans change this content through Git.'),
+        link('runbook.html', 'Master Runbook', 'Operational procedures, maintenance scripts, and troubleshooting.'))
     ));
   }
 } catch (err) {

@@ -148,6 +148,7 @@ const NAV = [
   ['goals.html', 'Goals & tasks'],
   ['contribute.html', 'Editing the data'],
   ['operations.html', 'Operations'],
+  ['runbook.html', 'Runbook'],
 ];
 
 export function mountChrome(activeKey) {
