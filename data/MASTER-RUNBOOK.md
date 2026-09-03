@@ -1458,13 +1458,172 @@ preview before the CONFIRM.
 
 ### 16.5 Reset a circuit breaker — human only
 
+**[LIVE]** Verified end-to-end against the deployed code and a real reset performed
+2026-09-03T10:28:50Z. Read all of it before running anything: **the command does roughly half
+of what its name implies**, and the half it omits is the half that actually lets trading
+resume.
+
+Resetting is a **logged decision** (`src/ams/override/commands.py:308`), not a cleanup step.
+**I-3 applies: a human decides this.** An agent may gather the evidence and stage the command;
+it does not run it unless the owner explicitly authorises that specific reset, and the
+authorisation goes in the record. Do not write code that resets a breaker.
+
+#### 16.5.1 The nine breakers
+
+`src/ams/risk/breakers.py`. The five in **bold** halt the account; the rest only reduce size.
+
+| name | severity | halts? |
+|---|--:|---|
+| **`max_drawdown`** | 100 | flatten all → `CIRCUIT_BROKEN` |
+| **`weekly_loss`** | 80 | halt to start of next ISO week |
+| **`hard_daily_loss`** | 70 | halt `hard_daily_halt_hours` |
+| **`consecutive_losses`** | 60 | halt `consecutive_losses_halt_hours` + require review |
+| **`margin_act`** | 55 | halt |
+| `margin_warn` | 40 | size reduction |
+| `soft_daily_loss` | 30 | size reduction + short pause |
+| `correlation_shock` | 25 | size reduction |
+| `volatility_spike` | 20 | size reduction |
+
+#### 16.5.2 Before you touch it — capture the before-state
+
+The record is part of the procedure, not paperwork after it.
+
 ```bash
-sudo -u trader ./.venv/bin/python -m ams.ctl reset_breaker <name> CONFIRM
+DB=/opt/scalablebrain/system3/ams/state/db/ams.db
+date -u +%Y-%m-%dT%H:%M:%SZ
+sudo sqlite3 -line    $DB "SELECT * FROM risk_state;"
+sudo sqlite3 -line    $DB "SELECT * FROM ams_account_state;"
+sudo sqlite3 -header -column $DB \
+  "SELECT id,breaker_name,fired_at,reset_at,reset_by FROM ams_circuit_breaker_log ORDER BY id DESC LIMIT 3;"
+sudo sqlite3 -header -column $DB "SELECT * FROM ams_open_positions;"
 ```
 
-The account has been `CIRCUIT_BROKEN` before. Resetting is a **logged decision**
-(`src/ams/override/commands.py:308`), not a cleanup step. Do not reset it, and do not write
-code that resets it.
+Note every open position. §16.5.6 explains why they decide whether the reset survives.
+
+#### 16.5.3 The command — two steps, 60-second window
+
+```bash
+cd /opt/scalablebrain/system3/ams
+
+# 1. preview — prints what it will do and opens a pending confirm
+sudo -u trader ./.venv/bin/python -m ams.ctl reset_breaker consecutive_losses
+
+# 2. commit — must land within 60s of step 1
+sudo -u trader ./.venv/bin/python -m ams.ctl reset_breaker consecutive_losses CONFIRM
+```
+
+Expected final line: `Breaker 'consecutive_losses' reset. state -> RECOVERY.`
+
+The same command exists over Telegram as `/reset_breaker <name> CONFIRM` (§9). Both entry
+points run the identical audited executor, so either is valid; the CLI is the precedent
+(breaker id 1, reset 2026-08-17).
+
+**`reset_by` is recorded as `ams-cli`, not as the human.** The CLI uses a fixed operator id, so
+the DB cannot tell you who decided. Whoever ran it must be named in the written record —
+nothing else captures it.
+
+#### 16.5.4 What it changes
+
+1. `ams_circuit_breaker_log.reset_at` / `.reset_by` populated for every active row of that name.
+2. The breaker's CRITICAL notification is auto-acked (`dedup_key
+   circuit_breaker_fired:<name>:<id>`) so it stops re-paging. Failure here cannot fail the
+   reset — the reset is already committed.
+3. **Only if the account is currently `CIRCUIT_BROKEN`:** a `MANUAL_RESET` transition to
+   `RECOVERY` (`state/machine.py:58`). From any other state the state is left alone.
+
+`RECOVERY` is trading-allowed at full size multiplier but under an absolute risk-percent cap
+(`state/machine.py:93`). `clear_recovery CONFIRM` moves `RECOVERY → ACTIVE` and removes that
+cap — a separate decision, deliberately.
+
+#### 16.5.5 What it does **not** change — the part that catches people
+
+`reset_breaker` never touches `risk_state`. Verify it yourself on the box:
+
+```bash
+grep -c risk_state /opt/scalablebrain/system3/ams/src/ams/override/commands.py   # → 0
+```
+
+| field | after the reset | consequence |
+|---|---|---|
+| `risk_state.halted_until` | **unchanged** | **Layer A still rejects every signal** until that time passes |
+| `ams_account_state.consecutive_losses` | **unchanged** | the breaker can re-fire immediately — see §16.5.6 |
+| `risk_state.size_multiplier` | unchanged (often `0`) | inert; see below |
+| `risk_state.updated_at` | **not bumped** | cannot be used to confirm your own reset landed (finding P-10) |
+
+**`halted_until` is the real gate.** `layer_a_state` (`gate/layers.py:244-250`) rejects on
+`trading_allowed` *and*, separately, on `halted_until > now`. Clearing the breaker moves the
+state; it does not move the halt. Until the halt expires, decisions come back
+`rejected_at_layer: A`, `reason: halted` — which reads like the reset failed, and has not.
+Either wait it out or clear the field deliberately; **there is no command for it**, so that is
+a hand-edit of live risk state and its own decision.
+
+**`size_multiplier` is a red herring.** `risk_state.size_multiplier` is read at
+`gate/pipeline.py:175` and then never applied — sizing uses the state machine's multiplier
+(`pipeline.py:408`). Confirmed against live decision records: the sizing breakdown carries
+`state_mult`, `stage_mult`, `provenance_mult` and no risk_state term. A `size_multiplier` of
+`0` sitting in the table does **not** zero your position sizes, and any post-check that waits
+for it to be "restored" is checking a field that gates nothing.
+
+#### 16.5.6 The re-fire hazard — read this before resetting a loss-streak breaker
+
+`fire_breaker` is idempotent **only while a breaker is active** (`is_active` = `reset_at IS
+NULL`, `risk/breakers.py:270-283`). The moment you reset it, it is eligible to fire again.
+
+Breakers re-evaluate on **every closed trade** (`posttrade/processor.py:599`), and
+`consecutive_losses` only clears on a *winning* close (`processor.py:542-546`): a loss
+increments, a profit resets to zero, and a scratch (`realized_pnl == 0`) leaves it alone.
+
+So if you reset `consecutive_losses` while the streak is still at the limit **and a position is
+open**, the next losing close takes the streak past the limit and re-halts the account — before
+a single new signal has been traded. Decide the open positions' fate *before* the reset, not
+after.
+
+#### 16.5.7 Verify — do not assume
+
+```bash
+DB=/opt/scalablebrain/system3/ams/state/db/ams.db
+sudo sqlite3 -header -column $DB \
+  "SELECT id,breaker_name,fired_at,reset_at,reset_by FROM ams_circuit_breaker_log ORDER BY id DESC LIMIT 2;"
+sudo sqlite3 -line $DB "SELECT * FROM risk_state;"
+sudo sqlite3 -line $DB "SELECT state,consecutive_losses,updated_at FROM ams_account_state;"
+sudo sqlite3 -header -column $DB \
+  "SELECT command,issued_via,operator_id,result FROM override_audit ORDER BY rowid DESC LIMIT 3;"
+curl -s localhost:8300/state | python3 -c "import sys,json;d=json.load(sys.stdin);print(d['state'])"
+```
+
+Expected: `reset_at` and `reset_by` populated on the top breaker row; `state` no longer
+`CIRCUIT_BROKEN`; an `override_audit` row whose `result` reads
+`reset breaker '<name>'; state -> RECOVERY`; and **`/state` agreeing with the DB**. The
+preview attempts also appear in `override_audit` as `unconfirmed` — that is normal.
+
+Then watch the first decisions after the halt window closes:
+
+```bash
+sudo sqlite3 -header -column $DB \
+  "SELECT id,decided_at,outcome,rejected_at_layer,json_extract(reasons,'\$.reason')
+     FROM ams_decision_log ORDER BY id DESC LIMIT 5;"
+```
+
+Expected: no `state_not_trading`. `halted` until the window passes is expected, not a fault.
+
+#### 16.5.8 Rollback
+
+Re-halting is cheap; a system trading on a state nobody can read is not.
+
+```bash
+cd /opt/scalablebrain/system3/ams
+sudo -u trader ./.venv/bin/python -m ams.ctl pause     # → PAUSED, no CONFIRM required
+```
+
+Say plainly in the record that a rollback happened and why.
+
+#### 16.5.9 Known defect in the CLI itself
+
+Every `ams.ctl` invocation emits a non-fatal
+`json.decoder.JSONDecodeError: Unterminated string starting at: line 1 column 3990` from
+`config.py:839` → `common/logging.py:128` while logging `"risk_config loaded"`. Something
+truncates a context payload at ~4 KB and that log record is lost. **The command still completes
+correctly** — do not read this traceback as a failed reset. Check the DB, not the stderr.
 
 ### 16.6 Stop the dashboard
 
