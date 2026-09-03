@@ -1,3 +1,16 @@
+<!-- ===========================================================================
+     GENERATED FILE — DO NOT EDIT IN THIS REPO.
+
+     Source of truth: MASTER-RUNBOOK.md at the root of the scalablebrain
+     umbrella repo. Edit it there, then run:
+
+         scripts/sync-runbook-to-hub.sh
+
+     Anything written directly into this file is silently overwritten by the
+     next sync. If you are reading this because a change you made here
+     vanished, that is why.
+     =========================================================================== -->
+
 # ScalableBrain — Master Access & Operations Runbook
 
 **Everything an agent or a human needs to reach, change, deploy, restart and verify every
@@ -36,7 +49,30 @@ not copy the values into any file, commit, log line, report, prompt, or message.
 It is not permission to deploy. §1 is a hard list of things that are never done, and §14
 requires a human gate before any restart that interrupts live execution.
 
-### 0.3 Reading order for a cold start
+### 0.3 Where this file lives — there are two copies and only one is real
+
+**Source of truth: `MASTER-RUNBOOK.md` at the root of the `scalablebrain` umbrella repo.**
+Edit that one.
+
+It is published to the public architecture hub at
+`https://emmanuelebube13.github.io/Scalablebrainfullarchitecture/runbook.html`, which serves
+`data/MASTER-RUNBOOK.md` out of a **different repository**
+(`github.com/emmanuelebube13/Scalablebrainfullarchitecture`, GitHub Pages, `main` from `/`).
+That copy is **generated** and carries a do-not-edit banner in an HTML comment. Anything typed
+into it is overwritten by the next sync.
+
+To publish a change:
+
+```bash
+scripts/sync-runbook-to-hub.sh --dry-run    # see what would change
+scripts/sync-runbook-to-hub.sh              # sync and push; Pages rebuilds in ~20-60s
+```
+
+The two drifted for exactly this reason on 2026-09-03 — §16.5 was rewritten in the hub copy and
+the umbrella copy still carried the old four-line version. Same failure mode as §19's repo-vs-VM
+trap, in documentation instead of code.
+
+### 0.4 Reading order for a cold start
 
 1. §1 invariants — non-negotiable.
 2. §2 system map — where everything actually runs.
