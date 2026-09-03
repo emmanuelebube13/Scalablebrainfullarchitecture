@@ -39,7 +39,7 @@ async function init() {
         tocHeadings.push({ text: plainText, depth, slug });
       }
 
-      const anchor = `<a class="heading-anchor" href="#${slug}" aria-label="Link to this section">¶</a>`;
+      const anchor = `<a class="heading-anchor" href="#${slug}" aria-label="Copy a link to this section" title="Copy link to this section">¶</a>`;
       return `<h${depth} id="${slug}">${text}${anchor}</h${depth}>\n`;
     };
 
@@ -48,17 +48,16 @@ async function init() {
     const html = marked.parse(text);
 
     /* ---------- Build table of contents ---------- */
-    const tocEl = el('div', { id: 'runbook-toc' });
-    if (tocHeadings.length > 0) {
-      const h2s = tocHeadings.filter((h) => h.depth === 2);
-      if (h2s.length > 0) {
-        tocEl.append(el('h3', { text: 'Contents' }));
-        const ol = el('ol');
-        h2s.forEach((h) => {
-          ol.append(el('li', {}, el('a', { href: `#${h.slug}` }, h.text)));
-        });
-        tocEl.append(ol);
-      }
+    /* The ToC is the left column and stays put while the body scrolls. */
+    const tocEl = el('aside', { class: 'runbook-toc-col', id: 'runbook-toc', 'aria-label': 'Runbook contents' });
+    const h2s = tocHeadings.filter((h) => h.depth === 2);
+    if (h2s.length > 0) {
+      tocEl.append(el('h3', { text: 'Contents' }));
+      const ol = el('ol');
+      h2s.forEach((h) => {
+        ol.append(el('li', {}, el('a', { href: `#${h.slug}` }, h.text)));
+      });
+      tocEl.append(ol);
     }
 
     /* ---------- Render ---------- */
@@ -75,11 +74,39 @@ async function init() {
             el('p', {}, 'Operational procedures, maintenance scripts, and troubleshooting. Generated from ',
               el('code', {}, 'data/MASTER-RUNBOOK.md'), ' — ',
               el('strong', {}, 'do not edit that file directly'), '.')),
-          tocEl,
-          bodyEl
+          el('div', { class: 'runbook-layout' },
+            tocEl,
+            el('div', { class: 'runbook-body-col' }, bodyEl))
         )
       )
     );
+
+    /* ---------- Heading anchors copy their own link ----------
+       Clicking the pilcrow puts the absolute URL of that section on the
+       clipboard as well as moving to it, so a procedure can be pasted into a
+       ticket by the person reading it. */
+    bodyEl.addEventListener('click', (ev) => {
+      const anchor = ev.target.closest('a.heading-anchor');
+      if (!anchor) return;
+      ev.preventDefault();
+      const slug = anchor.getAttribute('href').slice(1);
+      const url = `${location.origin}${location.pathname}#${slug}`;
+      history.replaceState(null, '', `#${slug}`);
+      document.getElementById(slug)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      navigator.clipboard?.writeText(url).then(() => flash(anchor, '✓'), () => flash(anchor, '✗'));
+    });
+
+    function flash(anchor, glyph) {
+      const original = anchor.textContent;
+      anchor.textContent = glyph;
+      anchor.classList.add('copied');
+      setTimeout(() => { anchor.textContent = original; anchor.classList.remove('copied'); }, 1100);
+    }
+
+    /* An anchor in the incoming URL only resolves once the body is in the DOM. */
+    if (location.hash.length > 1) {
+      document.getElementById(location.hash.slice(1))?.scrollIntoView({ block: 'start' });
+    }
   } catch (err) {
     fatal(main, err);
     console.error(err);

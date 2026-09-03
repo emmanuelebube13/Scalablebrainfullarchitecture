@@ -6,7 +6,7 @@
   "role": "One line: what this system is for",
   "host": "Computer N",
   "duty_cycle": "When it runs — always on / market hours / intermittent",
-  "accent": "#8b8bf5",
+  "accent": "#9a9075",
   "repository": "path or URL to the source of truth",
   "code_root": "src/…",
 

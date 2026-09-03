@@ -53,11 +53,11 @@ try {
 
     main.append(section('Where it actually stands', 'The unflattering summary',
       'This project treats an honest zero as more valuable than a flattering estimate, because every measurement taken after a lie is worthless.',
-      el('div', { class: 'facts' },
-        fact('Milestone rungs reached', `${reached} of ${goals.milestones.length}`),
-        fact('Open high-severity gaps', String(high.length)),
-        fact('Goals in flight', String(goals.goals.filter((g) => g.status === 'in_progress').length)),
-        fact('Goals blocked', String(goals.goals.filter((g) => g.status === 'blocked').length))),
+      el('div', { class: 'stat-tiles' },
+        tile(String(reached), 'Milestone rungs reached', `of ${goals.milestones.length} on the ladder`),
+        tile(String(high.length), 'Open high-severity gaps', high.length ? 'Each one blocks something real' : 'None recorded'),
+        tile(String(goals.goals.filter((g) => g.status === 'in_progress').length), 'Goals in flight', 'Being worked on now'),
+        tile(String(goals.goals.filter((g) => g.status === 'blocked').length), 'Goals blocked', 'Waiting on a decision or a dependency')),
       el('div', { class: 'grid grid-2', style: { marginTop: '20px' } },
         high.slice(0, 6).map((i) =>
           el('div', { class: `issue sev-${i.severity}` },
@@ -119,8 +119,13 @@ function section(kicker, title, lede, ...children) {
       ...children));
 }
 
-function fact(label, value) {
-  return el('div', { class: 'fact' }, el('dt', { text: label }), el('dd', { text: value }));
+/* A single large-number tile. The value is the point; the label and sub-line
+   are supporting text, so an absent value must still read as absent — never 0. */
+function tile(value, label, sub) {
+  return el('div', { class: 'stat-tile' },
+    el('div', { class: 'stat-tile-value', text: value }),
+    el('div', { class: 'stat-tile-label', text: label }),
+    sub ? el('div', { class: 'stat-tile-sub', text: sub }) : null);
 }
 
 function link(href, title, text) {

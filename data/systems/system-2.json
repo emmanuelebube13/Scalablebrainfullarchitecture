@@ -6,7 +6,7 @@
   "role": "Execution only",
   "host": "GCP VM `trading-1` (europe-west1-b) — not a separate Computer 2",
   "duty_cycle": "Process runs 24/7; broker submission gated to market hours and to SHADOW",
-  "accent": "#4fd1a5",
+  "accent": "#52c97e",
   "repository": "https://github.com/emmanuelebube13/system2Executor (private) — deployed at `/opt/scalablebrain/system2/system-2-execution-engine`",
   "code_root": "system-2-execution-engine/",
   "status": {

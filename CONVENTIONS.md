@@ -314,12 +314,28 @@ styles that predate this convention; they should eventually be moved.
 defined in `:root` and `[data-theme="light"]` respectively — any colour you add must have
 entries in both.
 
+For text sitting **on** an accent-coloured background use `var(--on-accent)`, never a
+literal `#fff`: dark mode's accent is a bright amber that white text fails against, and
+light mode's is a deep ochre that needs light text. The token flips with the theme.
+
+**Typography variables**: `var(--font-display)` (Instrument Serif, used italic for `h1`
+and `h2`), `var(--sans)` (Space Grotesk, body and UI) and `var(--mono)` (data, badges,
+identifiers). The two web fonts are loaded per page — see §7.
+
+**Passing a custom property from JS**: `el()` in `core.js` routes any `style` key starting
+with `--` through `setProperty()`. `Object.assign(node.style, {'--sys': ...})` does *not*
+work — the CSSOM has no setter for custom properties and the declaration is dropped
+silently. Do not "simplify" that branch back into an `Object.assign`.
+
 ---
 
 ## 7. How a new page works
 
 Pages are static HTML files in the repo root. Each:
-1. Links `assets/css/main.css` (and optionally `assets/css/goals.css`)
+1. Links the two Google Fonts (`Instrument+Serif` and `Space+Grotesk`, with the two
+   `preconnect` hints above them) and then `assets/css/main.css` (and optionally
+   `assets/css/goals.css`). Copy the three `<link>` lines verbatim from `index.html` —
+   without them the page falls back to Georgia and a system sans, which is visibly wrong.
 2. Has `<header id="site-header">` and `<footer id="site-footer">` — chrome is injected by JS
 3. Imports `assets/js/<pagename>.js` as `type="module"`
 4. The page JS imports `mountChrome('<activeKey>')` from `core.js` — this renders the header,

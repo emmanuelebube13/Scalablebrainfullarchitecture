@@ -49,19 +49,22 @@ try {
             el('dd', { html: inline(f.value) }))))));
   }
 
+  /* The section nav is one list; CSS turns it into a left rail above 1100px and a
+     tab row below that, so there is only ever one set of buttons to keep in sync. */
   function renderTabs() {
     const tabs = $('#sys-tabs');
     tabs.innerHTML = '';
     sys.sections.forEach((s) => {
-      tabs.append(el('button', {
-        type: 'button', role: 'tab', 'data-section': s.id,
-        onclick: () => { activeSection = s.id; history.replaceState(null, '', `#${s.id}`); render(getMode()); },
-      }, s.title));
+      tabs.append(el('li', {},
+        el('button', {
+          type: 'button', role: 'tab', 'data-section': s.id,
+          onclick: () => { activeSection = s.id; history.replaceState(null, '', `#${s.id}`); render(getMode()); },
+        }, s.title)));
     });
     const openIssues = sys.sections.find((s) => s.id === 'open');
-    if (openIssues) {
+    if (openIssues?.issues?.length) {
       const btn = tabs.querySelector('[data-section="open"]');
-      if (btn) btn.append(el('span', { class: 'pill', style: { marginLeft: '8px' }, text: String(openIssues.issues.length) }));
+      if (btn) btn.append(el('span', { class: 'sys-sidebar-badge', text: String(openIssues.issues.length) }));
     }
   }
 
