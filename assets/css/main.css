@@ -94,6 +94,10 @@ a:hover { text-decoration: underline; }
 
 code, .mono { font-family: var(--mono); font-size: 0.88em; }
 
+/* Replaced media must never set the page width. */
+img, svg, video, canvas { max-width: 100%; }
+img, video { height: auto; }
+
 code {
   background: var(--bg-sunken);
   border: 1px solid var(--border);
@@ -202,6 +206,86 @@ hr { border: 0; border-top: 1px solid var(--border); margin: 2.5rem 0; }
 }
 .icon-btn:hover { color: var(--text); border-color: var(--border-strong); }
 
+/* ---------- Mobile nav disclosure ----------
+   Above 860px the nav is a normal inline row and the toggle does not exist.
+   Below it, .nav becomes a panel anchored under the header bar; #nav-toggle
+   opens it and <html class="nav-open"> is the single source of truth. */
+.nav-toggle { display: none; }
+
+@media (max-width: 860px) {
+  .header-inner { height: 56px; gap: 12px; padding: 0 16px; flex-wrap: nowrap; }
+
+  .nav-toggle {
+    display: grid; place-items: center; margin-left: auto; flex: none;
+    width: 40px; height: 40px; padding: 0; cursor: pointer;
+    background: var(--bg-sunken); color: var(--text-dim);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+  }
+  .nav-toggle:hover { color: var(--text); border-color: var(--border-strong); }
+  /* Three bars drawn from one element: the box is the middle bar, the
+     pseudo-elements are the outer two. They rotate into an X when open. */
+  .nav-toggle-bars,
+  .nav-toggle-bars::before,
+  .nav-toggle-bars::after {
+    content: ""; display: block;
+    width: 18px; height: 2px; border-radius: 2px;
+    background: currentColor;
+    transition: transform 0.18s ease, opacity 0.18s ease;
+  }
+  .nav-toggle-bars { position: relative; }
+  .nav-toggle-bars::before { position: absolute; top: -6px; }
+  .nav-toggle-bars::after  { position: absolute; top: 6px; }
+
+  .nav-open .nav-toggle-bars { background: transparent; }
+  .nav-open .nav-toggle-bars::before { transform: translateY(6px) rotate(45deg); }
+  .nav-open .nav-toggle-bars::after  { transform: translateY(-6px) rotate(-45deg); }
+
+  .nav {
+    position: fixed; left: 0; right: 0; top: 57px;
+    margin: 0; width: auto;
+    flex-direction: column; align-items: stretch; gap: 2px;
+    padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+    max-height: calc(100svh - 57px);
+    overflow-y: auto; overscroll-behavior: contain;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.34);
+    /* Collapsed, but not display:none — the panel keeps its focus order and
+       animates. visibility stops it taking clicks while closed. */
+    visibility: hidden; opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.16s ease, transform 0.16s ease, visibility 0s linear 0.16s;
+  }
+  .nav-open .nav {
+    visibility: visible; opacity: 1; transform: translateY(0);
+    transition: opacity 0.16s ease, transform 0.16s ease, visibility 0s;
+  }
+  /* Page must not scroll behind the open panel. */
+  .nav-open body { overflow: hidden; }
+
+  .nav-group { flex-direction: column; align-items: stretch; gap: 2px; padding-bottom: 6px; }
+  .nav-group + .nav-group { border-top: 1px solid var(--border); padding-top: 10px; margin-top: 4px; }
+  /* The group labels are noise in a crowded desktop bar but useful section
+     headers once the nav is a vertical list, so they come back here. */
+  .nav-group-label {
+    display: block; border-left: 0; padding: 0 0 4px;
+    font-size: 0.62rem; color: var(--text-faint);
+  }
+  .nav a { padding: 11px 12px; font-size: 0.95rem; border-radius: var(--radius-sm); }
+
+  .nav .search-trigger,
+  .nav .mode-switch { width: 100%; margin-top: 10px; }
+  .nav .search-trigger { justify-content: center; padding: 10px; }
+  .nav .mode-switch { justify-content: stretch; }
+  .nav .mode-switch button { flex: 1; padding: 9px 12px; }
+  .nav .icon-btn { width: 100%; height: 40px; margin-top: 8px; }
+}
+
+@media (max-width: 860px) and (prefers-reduced-motion: reduce) {
+  .nav, .nav-toggle-bars,
+  .nav-toggle-bars::before, .nav-toggle-bars::after { transition: none; }
+}
+
 /* ---------- Hero ---------- */
 .hero {
   padding: 80px 0 56px;
@@ -245,9 +329,11 @@ hr { border: 0; border-top: 1px solid var(--border); margin: 2.5rem 0; }
 
 /* ---------- Cards / grid ---------- */
 .grid { display: grid; gap: 18px; }
-.grid-3 { grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); }
-.grid-2 { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
-.grid-4 { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+/* min(Npx, 100%) so a track never demands more than the container has — a bare
+   minmax(340px,…) overflows the viewport on a 360px phone. */
+.grid-3 { grid-template-columns: repeat(auto-fit, minmax(min(290px, 100%), 1fr)); }
+.grid-2 { grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); }
+.grid-4 { grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr)); }
 
 .card {
   background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
@@ -312,7 +398,7 @@ a.card:hover {
 }
 
 /* ---------- Facts / stat rows ---------- */
-.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr));
          background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
 .fact { padding: 14px 16px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 .fact dt { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); margin-bottom: 4px; }
@@ -628,7 +714,7 @@ pre code { background: none; border: 0; padding: 0; white-space: pre; }
 /* ---------- Home stat tiles ---- */
 .stat-tiles {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
   gap: 1px;
   background: var(--border);
   border: 1px solid var(--border);
@@ -828,15 +914,38 @@ pre code { background: none; border: 0; padding: 0; white-space: pre; }
 .mode-plain .only-technical { display: none; }
 
 @media (max-width: 720px) {
-  .header-inner { height: auto; padding: 10px 16px; flex-wrap: wrap; gap: 10px; }
-  .nav { margin-left: 0; width: 100%; }
-  .nav-group-label { display: none; }
+  /* Header rules live in the 860px block above — the nav is a panel by now. */
   .hero { padding: 44px 0 32px; }
   .hero h1 { font-size: 2.4rem; }
   .stage { grid-template-columns: 1fr; gap: 6px; }
   .ladder li { grid-template-columns: 1fr; gap: 6px; }
-  .map-viewport { height: calc(100svh - 58px - 88px); min-height: 380px; }
+  .map-viewport { height: calc(100svh - 57px - 88px); min-height: 380px; }
   .stat-tiles { grid-template-columns: 1fr 1fr; }
+  .tabs { margin-bottom: 18px; }
+  .section-head { margin-bottom: 18px; }
+  .card { padding: 18px; }
+  /* Inline code is nowrap by default, which is right on desktop and wrong here:
+     a single long path (gs://…, /opt/scalablebrain/…) would set the page width.
+     Block code keeps white-space: pre and scrolls inside its own <pre>. */
+  :not(pre) > code { white-space: normal; overflow-wrap: anywhere; }
+}
+
+/* ---------- Small phones ----------
+   360px wide minus 2×24px gutters leaves 312px of content, which is where the
+   remaining fixed paddings and two-up tiles stop fitting. */
+@media (max-width: 480px) {
+  .wrap, .wrap-wide { padding: 0 16px; }
+  .hero { padding: 34px 0 26px; }
+  .hero h1 { font-size: 1.95rem; letter-spacing: -0.02em; }
+  .hero .lede { font-size: 1rem; }
+  .stat-tiles { grid-template-columns: 1fr; }
+  .card { padding: 16px; }
+  .fact { padding: 12px 14px; }
+  .grid { gap: 14px; }
+  table { font-size: 0.84rem; }
+  thead th, tbody td { padding: 8px 10px; }
+  .site-footer { padding: 26px 0; }
+  .site-footer .footer-inner { flex-direction: column; gap: 14px; }
 }
 
 @media print {

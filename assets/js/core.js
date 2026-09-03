@@ -140,6 +140,15 @@ function applyMode(mode) {
     b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
 }
 
+/* ---------- Mobile nav disclosure ----------
+   The open flag lives on <html> so CSS can react without a wrapper class, and so
+   body scroll can be locked while the panel covers the page. */
+function setNavOpen(open) {
+  document.documentElement.classList.toggle('nav-open', open);
+  const btn = $('#nav-toggle');
+  if (btn) btn.setAttribute('aria-expanded', String(open));
+}
+
 export function getTheme() {
   const stored = localStorage.getItem(THEME_KEY);
   if (stored) return stored;
@@ -196,7 +205,15 @@ export function mountChrome(activeKey) {
         el('a', { class: 'brand', href: 'index.html' },
           el('span', { class: 'brand-mark', text: 'SB' }),
           el('span', { text: 'Scalable Brain' })),
-        el('nav', { class: 'nav', 'aria-label': 'Primary' },
+        /* Mobile disclosure. Hidden above the nav breakpoint by CSS; below it the
+           whole .nav collapses into a panel this button opens. */
+        el('button', {
+          id: 'nav-toggle', class: 'nav-toggle', type: 'button',
+          'aria-label': 'Menu', 'aria-expanded': 'false', 'aria-controls': 'primary-nav',
+          onclick: () => setNavOpen(!document.documentElement.classList.contains('nav-open')),
+        },
+          el('span', { class: 'nav-toggle-bars', 'aria-hidden': 'true' })),
+        el('nav', { id: 'primary-nav', class: 'nav', 'aria-label': 'Primary' },
           NAV_GROUPS.map((group) =>
             el('div', { class: 'nav-group' },
               el('span', { class: 'nav-group-label', text: group.label }),
@@ -249,6 +266,17 @@ export function mountChrome(activeKey) {
 
   applyTheme(getTheme());
   applyMode(getMode());
+
+  /* Escape closes the mobile nav; widening past the breakpoint resets it so the
+     panel state can never leak into the desktop layout. */
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.documentElement.classList.contains('nav-open')) {
+      setNavOpen(false);
+      $('#nav-toggle')?.focus();
+    }
+  });
+  const navBreakpoint = window.matchMedia('(min-width: 861px)');
+  navBreakpoint.addEventListener('change', (e) => { if (e.matches) setNavOpen(false); });
 
   /* Initialise search (builds index in background, registers / shortcut) */
   initSearch();
