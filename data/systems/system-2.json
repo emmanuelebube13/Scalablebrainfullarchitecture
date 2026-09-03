@@ -295,6 +295,16 @@
       ]
     },
     {
+      "id": "operations",
+      "title": "Operations",
+      "kind": "operations"
+    },
+    {
+      "id": "state",
+      "title": "Account State & Config",
+      "kind": "state"
+    },
+    {
       "id": "open",
       "title": "Known Gaps",
       "kind": "issues",

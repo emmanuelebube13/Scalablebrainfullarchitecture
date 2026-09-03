@@ -74,6 +74,17 @@ try {
     body.innerHTML = '';
     body.style.setProperty('--sys', sys.accent);
 
+    /* If the section is undocumented (no content of any kind), render a placeholder */
+    const hasContent = section.body || section.stages || section.tables?.length ||
+      section.callouts?.length || section.issues;
+
+    if (!hasContent) {
+      body.append(el('div', { class: 'section-undocumented' },
+        `${section.title} — not yet documented. This section exists in the data schema but has no content recorded. ` +
+        'See CONVENTIONS.md for how to fill it.'));
+      return;
+    }
+
     if (section.body) {
       const paras = section.body[mode === 'plain' ? 'plain' : 'technical'] ?? section.body.technical ?? [];
       body.append(el('div', { class: `prose ${mode}` }, paras.map((p) => el('p', { html: inline(p) }))));

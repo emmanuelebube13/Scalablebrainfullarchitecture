@@ -105,6 +105,20 @@ if (goals) validate(goals, schemas.goals, 'goals', 'data/goals.json');
 if (decisions) validate(decisions, schemas.decisions, 'decisions', 'data/decisions.json');
 
 /* ---- systems ---- */
+
+/*
+ * REQUIRED_SECTIONS: every system file must have all six of these sections,
+ * in any order. Missing sections are warnings (content gaps), not errors,
+ * so a structurally-new system can be registered before it is fully documented.
+ */
+const REQUIRED_SECTIONS = ['ingestion', 'core-logic', 'interfaces', 'operations', 'state', 'open'];
+
+/*
+ * KIND_VOCABULARY: the closed set of values allowed for section.kind.
+ * Anything else is warned on so contributors know to use an existing kind.
+ */
+const KIND_VOCABULARY = new Set(['ingestion', 'pipeline', 'interfaces', 'operations', 'state', 'issues', 'evidence']);
+
 const systems = [];
 for (const entry of registry?.systems ?? []) {
   const sys = await readJSON(entry.file);
@@ -116,10 +130,18 @@ for (const entry of registry?.systems ?? []) {
   if (sys.status && !(sys.status.state in vocab)) {
     err(entry.file, `status.state "${sys.status.state}" is not in registry.status_vocabulary`);
   }
-  const ids = new Set();
+  const sectionIds = new Set();
   for (const s of sys.sections ?? []) {
-    if (ids.has(s.id)) err(entry.file, `duplicate section id "${s.id}"`);
-    ids.add(s.id);
+    if (sectionIds.has(s.id)) err(entry.file, `duplicate section id "${s.id}"`);
+    sectionIds.add(s.id);
+    if (s.kind && !KIND_VOCABULARY.has(s.kind)) {
+      warn(entry.file, `section "${s.id}" uses kind "${s.kind}" which is not in the vocabulary: ${[...KIND_VOCABULARY].join(', ')}`);
+    }
+  }
+  for (const reqId of REQUIRED_SECTIONS) {
+    if (!sectionIds.has(reqId)) {
+      warn(entry.file, `missing required section "${reqId}" — add an empty section (see templates/system.template.json)`);
+    }
   }
   systems.push(sys);
 }

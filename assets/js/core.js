@@ -5,6 +5,8 @@
    (technical / plain English).
    ============================================================ */
 
+import { initSearch } from './search.js';
+
 export const MODE_KEY = 'sb.mode';
 export const THEME_KEY = 'sb.theme';
 
@@ -141,14 +143,34 @@ function applyTheme(theme) {
 
 /* ---------- chrome ---------- */
 
-const NAV = [
-  ['index.html', 'Overview'],
-  ['architecture.html', 'Unified map'],
-  ['system.html?id=system-1', 'Systems'],
-  ['goals.html', 'Goals & tasks'],
-  ['contribute.html', 'Editing the data'],
-  ['operations.html', 'Operations'],
-  ['runbook.html', 'Runbook'],
+/*
+ * NAV_GROUPS defines the grouped navigation.
+ * Each group has a label and a list of [href, label, matchKey] entries.
+ * matchKey is compared against the activeKey passed to mountChrome().
+ */
+const NAV_GROUPS = [
+  {
+    label: 'Reference',
+    items: [
+      ['index.html',                'Overview',    'overview'],
+      ['architecture.html',         'Unified map', 'unified'],
+      ['system.html?id=system-1',   'Systems',     'systems'],
+    ],
+  },
+  {
+    label: 'State',
+    items: [
+      ['goals.html',      'Goals & tasks', 'goals'],
+      ['operations.html', 'Operations',    'operations'],
+      ['runbook.html',    'Runbook',       'runbook'],
+    ],
+  },
+  {
+    label: 'Meta',
+    items: [
+      ['contribute.html', 'Contributing', 'contributing'],
+    ],
+  },
 ];
 
 export function mountChrome(activeKey) {
@@ -161,11 +183,25 @@ export function mountChrome(activeKey) {
           el('span', { class: 'brand-mark', text: 'SB' }),
           el('span', { text: 'Scalable Brain' })),
         el('nav', { class: 'nav', 'aria-label': 'Primary' },
-          NAV.map(([href, label]) =>
-            el('a', {
-              href,
-              class: label.toLowerCase().startsWith(activeKey) ? 'active' : '',
-            }, label)),
+          NAV_GROUPS.map((group) =>
+            el('div', { class: 'nav-group' },
+              el('span', { class: 'nav-group-label', text: group.label }),
+              group.items.map(([href, label, key]) =>
+                el('a', {
+                  href,
+                  class: key === activeKey ? 'active' : '',
+                }, label))
+            )
+          ),
+          /* Search trigger — opens the search overlay */
+          el('button', {
+            id: 'search-trigger', class: 'search-trigger', type: 'button',
+            'aria-label': 'Search (press /)',
+            onclick: () => window.dispatchEvent(new CustomEvent('sb:search-open')),
+          },
+            el('span', { class: 'search-icon', 'aria-hidden': 'true' }, '🔍'),
+            el('span', { class: 'search-hint' }, '/'),
+          ),
           el('div', { class: 'mode-switch', role: 'group', 'aria-label': 'Explanation depth' },
             el('button', { type: 'button', 'data-mode': 'technical', onclick: () => setMode('technical') }, 'Technical'),
             el('button', { type: 'button', 'data-mode': 'plain', onclick: () => setMode('plain') }, 'Plain English')),
@@ -191,13 +227,17 @@ export function mountChrome(activeKey) {
           el('div', { html: inline('Every page on this site renders from the JSON files in `data/`. Edit those, not the HTML.') })),
         el('div', {},
           el('div', {}, el('a', { href: 'https://github.com/emmanuelebube13/Scalablebrainfullarchitecture', rel: 'noopener' }, 'Site repository')),
-          el('div', {}, el('a', { href: 'contribute.html' }, 'How agents edit this content')))
+          el('div', {}, el('a', { href: 'contribute.html' }, 'How to contribute')),
+          el('div', {}, el('a', { href: 'CONVENTIONS.md' }, 'Site conventions')))
       )
     );
   }
 
   applyTheme(getTheme());
   applyMode(getMode());
+
+  /* Initialise search (builds index in background, registers / shortcut) */
+  initSearch();
 }
 
 /** Re-renders `fn` whenever the technical/plain toggle flips. */
