@@ -1,6 +1,6 @@
 import { $, el, mountChrome, renderTable } from './core.js';
 
-mountChrome('editing');
+mountChrome('contributing');
 
 const box = $('#schema-tables');
 

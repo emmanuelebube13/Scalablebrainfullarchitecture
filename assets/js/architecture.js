@@ -1,5 +1,5 @@
 import {
-  $, el, inline, voice, getMode, onModeChange, loadJSON, loadAll,
+  $, $$, el, inline, voice, getMode, onModeChange, loadJSON, loadAll,
   mountChrome, fatal, renderTable,
 } from './core.js';
 import { renderMap } from './map.js';
@@ -21,7 +21,57 @@ try {
   $('#btn-zoom-in').addEventListener('click', () => controls.zoom(1));
   $('#btn-zoom-out').addEventListener('click', () => controls.zoom(-1));
   $('#btn-fit').addEventListener('click', () => controls.fit());
-  $('#btn-reset').addEventListener('click', () => { select.value = ''; controls.reset(); syncUrl(); });
+  $('#btn-reset').addEventListener('click', () => {
+    select.value = '';
+    // Reset column filter buttons
+    $$('.map-column-filter button').forEach((b) => b.classList.remove('active'));
+    controls.reset();
+    syncUrl();
+  });
+
+  /* ---- column filter bar ---- */
+  const filterBar = $('#map-column-filter');
+  if (filterBar && arch.columns.length > 0) {
+    filterBar.hidden = false;
+    // "All" button
+    const allBtn = el('button', {
+      type: 'button', class: 'active',
+      onclick: () => {
+        $$('.map-column-filter button').forEach((b) => b.classList.remove('active'));
+        allBtn.classList.add('active');
+        controls.filterColumns(null);
+      },
+    }, 'All');
+    filterBar.append(allBtn);
+
+    for (const col of arch.columns) {
+      const colBtn = el('button', {
+        type: 'button',
+        style: col.system ? { color: `var(--${col.system.replace('system-', 's')})` } : null,
+        onclick: () => {
+          // Toggle this column; clear all-button
+          if (colBtn.classList.contains('active')) {
+            colBtn.classList.remove('active');
+          } else {
+            colBtn.classList.add('active');
+          }
+          allBtn.classList.remove('active');
+          const selected = Array.from(filterBar.querySelectorAll('button.active'))
+            .map((b) => b.dataset.colId)
+            .filter(Boolean);
+          if (!selected.length) {
+            // Nothing selected — show all
+            allBtn.classList.add('active');
+            controls.filterColumns(null);
+          } else {
+            controls.filterColumns(selected);
+          }
+        },
+      }, col.title);
+      colBtn.dataset.colId = col.id;
+      filterBar.append(colBtn);
+    }
+  }
 
   // A traced flow or an opened component is a shareable link: ?flow=signal, ?node=s3-gate
   const params = new URLSearchParams(location.search);

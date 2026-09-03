@@ -247,9 +247,11 @@ export function renderMap(arch, container, sideContainer) {
     apply();
   }, { passive: false });
 
+  /* Pointer-based drag (mouse and single-touch via Pointer Events API) */
   let dragging = false, lastX = 0, lastY = 0;
   viewportEl.addEventListener('pointerdown', (ev) => {
     if (ev.target.closest('.node')) return;
+    if (ev.pointerType === 'touch' && ev.isPrimary === false) return; // skip secondary touches
     dragging = true; lastX = ev.clientX; lastY = ev.clientY;
     viewportEl.classList.add('dragging');
     viewportEl.setPointerCapture(ev.pointerId);
@@ -263,6 +265,61 @@ export function renderMap(arch, container, sideContainer) {
   const endDrag = () => { dragging = false; viewportEl.classList.remove('dragging'); };
   viewportEl.addEventListener('pointerup', endDrag);
   viewportEl.addEventListener('pointercancel', endDrag);
+
+  /* Pinch-to-zoom via Touch Events (two-finger gesture on mobile) */
+  let lastPinchDist = null;
+  viewportEl.addEventListener('touchstart', (ev) => {
+    if (ev.touches.length === 2) {
+      ev.preventDefault();
+      const t = ev.touches;
+      lastPinchDist = Math.hypot(t[1].clientX - t[0].clientX, t[1].clientY - t[0].clientY);
+    }
+  }, { passive: false });
+
+  viewportEl.addEventListener('touchmove', (ev) => {
+    if (ev.touches.length === 2 && lastPinchDist !== null) {
+      ev.preventDefault();
+      const t = ev.touches;
+      const dist = Math.hypot(t[1].clientX - t[0].clientX, t[1].clientY - t[0].clientY);
+      const rect = viewportEl.getBoundingClientRect();
+      const mx = (t[0].clientX + t[1].clientX) / 2 - rect.left;
+      const my = (t[0].clientY + t[1].clientY) / 2 - rect.top;
+      const next = Math.min(2.5, Math.max(0.25, k * (dist / lastPinchDist)));
+      tx = mx - (mx - tx) * (next / k);
+      ty = my - (my - ty) * (next / k);
+      k = next;
+      lastPinchDist = dist;
+      apply();
+    }
+  }, { passive: false });
+
+  viewportEl.addEventListener('touchend', () => { lastPinchDist = null; });
+
+  /* Keyboard pan and zoom when the map viewport is focused */
+  viewportEl.addEventListener('keydown', (ev) => {
+    const PAN = 40;
+    switch (ev.key) {
+      case 'ArrowLeft':  ev.preventDefault(); tx += PAN; apply(); break;
+      case 'ArrowRight': ev.preventDefault(); tx -= PAN; apply(); break;
+      case 'ArrowUp':    ev.preventDefault(); ty += PAN; apply(); break;
+      case 'ArrowDown':  ev.preventDefault(); ty -= PAN; apply(); break;
+      case '+': case '=': {
+        ev.preventDefault();
+        const rect = viewportEl.getBoundingClientRect();
+        const mx = rect.width / 2, my = rect.height / 2;
+        const next = Math.min(2.5, k * 1.2);
+        tx = mx - (mx - tx) * (next / k); ty = my - (my - ty) * (next / k); k = next; apply(); break;
+      }
+      case '-': {
+        ev.preventDefault();
+        const rect = viewportEl.getBoundingClientRect();
+        const mx = rect.width / 2, my = rect.height / 2;
+        const next = Math.max(0.25, k / 1.2);
+        tx = mx - (mx - tx) * (next / k); ty = my - (my - ty) * (next / k); k = next; apply(); break;
+      }
+      case 'f': case 'F': ev.preventDefault(); fit(); break;
+    }
+  });
 
   requestAnimationFrame(fit);
   window.addEventListener('resize', () => requestAnimationFrame(fit));
@@ -281,9 +338,35 @@ export function renderMap(arch, container, sideContainer) {
     );
   }
 
+  /* ---- column filtering ---- */
+  let visibleColumns = null; // null = show all
+
+  function applyColumnFilter() {
+    if (!visibleColumns) {
+      // Show everything
+      nodeEls.forEach((g) => g.removeAttribute('hidden'));
+      edgeEls.forEach(({ g }) => g.removeAttribute('hidden'));
+      Array.from(gBands.querySelectorAll('.col-band, .col-label, .col-sub')).forEach((el) => el.removeAttribute('hidden'));
+    } else {
+      nodeEls.forEach((g, id) => {
+        const n = nodeById[id];
+        if (!visibleColumns.has(n.column)) g.setAttribute('hidden', '');
+        else g.removeAttribute('hidden');
+      });
+      edgeEls.forEach(({ g, spec }) => {
+        const fromNode = nodeById[spec.from], toNode = nodeById[spec.to];
+        const show = fromNode && toNode &&
+          visibleColumns.has(fromNode.column) && visibleColumns.has(toNode.column);
+        if (!show) g.setAttribute('hidden', '');
+        else g.removeAttribute('hidden');
+      });
+    }
+  }
+
   return {
     fit,
     selectNode,
+    get columns() { return arch.columns; },
     zoom(dir) {
       const rect = viewportEl.getBoundingClientRect();
       const mx = rect.width / 2, my = rect.height / 2;
@@ -299,10 +382,16 @@ export function renderMap(arch, container, sideContainer) {
       else clearHighlight();
       renderFlowNote(activeFlow);
     },
+    filterColumns(colIds) {
+      // colIds: null to show all, or a Set/Array of column ids to show
+      visibleColumns = colIds ? new Set(colIds) : null;
+      applyColumnFilter();
+    },
     reset() {
-      activeFlow = null; selectedId = null;
+      activeFlow = null; selectedId = null; visibleColumns = null;
       allNodes().forEach((g) => g.classList.remove('selected'));
-      clearHighlight(); renderSide(null); renderFlowNote(null); fit();
+      clearHighlight(); renderSide(null); renderFlowNote(null);
+      applyColumnFilter(); fit();
     },
   };
 }

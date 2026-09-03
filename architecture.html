@@ -29,14 +29,18 @@
             <div class="map-toolbar">
               <label for="flow-select" class="mono" style="font-size:.78rem;color:var(--text-faint)">Trace flow</label>
               <select id="flow-select"><option value="">— none —</option></select>
-              <button type="button" id="btn-zoom-in" title="Zoom in">+</button>
-              <button type="button" id="btn-zoom-out" title="Zoom out">−</button>
-              <button type="button" id="btn-fit">Fit</button>
-              <button type="button" id="btn-reset">Reset</button>
+              <button type="button" id="btn-zoom-in" title="Zoom in (scroll wheel or pinch also works)" aria-label="Zoom in">Zoom in</button>
+              <button type="button" id="btn-zoom-out" title="Zoom out" aria-label="Zoom out">Zoom out</button>
+              <button type="button" id="btn-fit" title="Fit whole map to view" aria-label="Fit to view">Fit</button>
+              <button type="button" id="btn-reset" title="Clear selection and fit" aria-label="Reset map">Reset</button>
               <span class="spacer"></span>
               <span class="mono" style="font-size:.72rem;color:var(--text-faint)" id="map-asof"></span>
             </div>
-            <div class="map-viewport" id="map-viewport"></div>
+            <!-- Column/system filter — populated by architecture.js -->
+            <div class="map-column-filter" id="map-column-filter" hidden>
+              <span class="map-column-filter-label">Show</span>
+            </div>
+            <div class="map-viewport" id="map-viewport" tabindex="0" aria-label="Architecture map — use arrow keys to pan, +/− to zoom, click a box for detail"></div>
           </div>
           <div class="flow-note" id="flow-note" hidden></div>
           <div id="map-legend" style="margin-top:18px"></div>
