@@ -6,7 +6,7 @@
   "role": "Offline model building",
   "host": "Computer 1",
   "duty_cycle": "Intermittent training, plus an hourly signal batch during market hours (cron fires :15 past every hour) that ADR-001 proposes moving off this machine",
-  "accent": "#6aa9ff",
+  "accent": "#e8a830",
   "repository": "https://github.com/emmanuelebube13/scalable-brain",
   "code_root": "src/",
   "status": {

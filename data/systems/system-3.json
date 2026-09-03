@@ -6,7 +6,7 @@
   "role": "Risk governance",
   "host": "GCP VM `trading-1` (europe-west1-b) — there is no Computer 3",
   "duty_cycle": "Always on — `s3-ams.service` up 173,153 s at time of writing",
-  "accent": "#f0a44a",
+  "accent": "#a078f0",
   "repository": "https://github.com/emmanuelebube13/scalablebrain-ams (private) — deployed at `/opt/scalablebrain/system3/ams`",
   "code_root": "ams/",
   "status": {

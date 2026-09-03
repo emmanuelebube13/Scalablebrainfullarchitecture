@@ -39,6 +39,11 @@ export function renderMap(arch, container, sideContainer) {
     cy: L.padding + HEADER_H + n.row * L.row_height + L.node_height / 2,
   });
 
+  /* Pan/zoom state lives up here because the inspector pans the canvas when a
+     selected node would otherwise open underneath the panel. */
+  const viewportEl = container;
+  let k = 1, tx = 0, ty = 0;
+
   /* ---- svg scaffold ---- */
   const svg = svgEl('svg', { id: 'map-svg', role: 'img', 'aria-label': 'Unified system architecture map' });
   svg.append(defs());
@@ -48,6 +53,7 @@ export function renderMap(arch, container, sideContainer) {
   const gNodes = svgEl('g', { class: 'nodes' });
   viewport.append(gBands, gEdges, gNodes);
   svg.append(viewport);
+  const apply = () => viewport.setAttribute('transform', `translate(${tx} ${ty}) scale(${k})`);
 
   /* ---- column bands + headings ---- */
   arch.columns.forEach((col, i) => {
@@ -193,12 +199,72 @@ export function renderMap(arch, container, sideContainer) {
     renderSide(id);
   }
 
-  /* ---- side panel ---- */
+  /* ---- inspector panel ----
+     The panel is a fixed overlay pinned to the right edge, so on a wide screen it
+     can sit on top of the column a node lives in. Rather than resizing the canvas
+     (which would force a refit and discard the reader's zoom), a selected node
+     that would open underneath the panel is panned clear of it. */
+  const inspector = sideContainer.closest('.map-inspector');
+  const inspectorTitle = inspector?.querySelector('.map-inspector-header h3');
+  const INSPECTOR_W = 340;
+  const wideScreen = () => window.matchMedia('(min-width: 721px)').matches;
+
+  function setInspectorOpen(open) {
+    if (!inspector) return;
+    inspector.classList.toggle('open', open);
+    inspector.setAttribute('aria-hidden', String(!open));
+    document.body.classList.toggle('inspector-open', open);
+  }
+
+  /** Pans just enough that `id` is not hidden behind the open panel. */
+  function panClearOfInspector(id) {
+    if (!inspector || !wideScreen()) return;
+    const n = nodeById[id];
+    if (!n) return;
+    const rect = viewportEl.getBoundingClientRect();
+    if (!rect.width) return;
+    const halfW = L.node_width / 2;
+    const rightEdge = tx + (pos(n).cx + halfW) * k;
+    const limit = rect.width - INSPECTOR_W - 24;
+    if (rightEdge > limit) { tx -= rightEdge - limit; apply(); }
+  }
+
+  if (inspector) {
+    inspector.querySelector('.map-inspector-close')
+      ?.addEventListener('click', () => deselect());
+
+    // Esc closes the panel — unless the search overlay owns the key right now.
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key !== 'Escape') return;
+      if (document.body.classList.contains('search-open')) return;
+      if (!inspector.classList.contains('open')) return;
+      ev.preventDefault();
+      deselect();
+    });
+
+    // A click anywhere outside the map and the panel closes it. Clicks inside the
+    // map shell are left alone so panning and zooming do not dismiss the detail.
+    document.addEventListener('pointerdown', (ev) => {
+      if (!inspector.classList.contains('open')) return;
+      if (ev.target.closest('.map-inspector, .map-shell')) return;
+      deselect();
+    });
+  }
+
+  function deselect() {
+    selectedId = null;
+    allNodes().forEach((g) => g.classList.remove('selected'));
+    if (activeFlow) highlightFlow(activeFlow); else clearHighlight();
+    renderSide(null);
+  }
+
   function renderSide(id) {
     const n = nodeById[id];
     const mode = getMode();
     sideContainer.innerHTML = '';
     if (!n) {
+      setInspectorOpen(false);
+      if (inspectorTitle) inspectorTitle.textContent = 'Component';
       sideContainer.append(el('p', { class: 'side-empty', html: inline('Select any box in the map to see what it does, in whichever voice you have selected in the header.') }));
       return;
     }
@@ -206,8 +272,14 @@ export function renderMap(arch, container, sideContainer) {
     const outbound = arch.edges.filter((e) => e.from === id);
     const col = colById[n.column];
 
-    sideContainer.append(
-      el('h3', { text: n.label }),
+    if (inspectorTitle) inspectorTitle.textContent = n.label;
+    setInspectorOpen(true);
+    panClearOfInspector(id);
+
+    // Node.append() would stringify a null into the literal text "null", so the
+    // optional rows are filtered out before they reach the DOM.
+    sideContainer.append(...[
+      inspectorTitle ? null : el('h3', { text: n.label }),
       el('div', { class: 'side-meta', text: `${col.title} · ${n.kind} · ${n.status}` }),
       el('p', { html: inline(voice(n.detail, mode)) }),
       inbound.length ? el('h4', { text: 'Receives' }) : null,
@@ -216,18 +288,14 @@ export function renderMap(arch, container, sideContainer) {
       outbound.length ? el('h4', { text: 'Sends' }) : null,
       outbound.length ? el('ul', {}, outbound.map((e) =>
         el('li', { html: inline(`${e.label || 'data'} — to **${nodeById[e.to]?.label ?? e.to}**${e.status !== 'live' ? ` *(${e.status})*` : ''}`) }))) : null,
-      col.system ? el('p', {}, el('a', { href: `system.html?id=${col.system}` }, `Open the ${col.title} page →`)) : null
-    );
+      col.system ? el('p', {}, el('a', { href: `system.html?id=${col.system}` }, `Open the ${col.title} page →`)) : null,
+    ].filter(Boolean));
   }
 
   renderSide(null);
   onModeChange(() => { renderSide(selectedId); if (activeFlow) renderFlowNote(activeFlow); });
 
   /* ---- pan & zoom ---- */
-  const viewportEl = container;
-  let k = 1, tx = 0, ty = 0;
-  const apply = () => viewport.setAttribute('transform', `translate(${tx} ${ty}) scale(${k})`);
-
   function fit() {
     const rect = viewportEl.getBoundingClientRect();
     k = Math.min(rect.width / W, rect.height / H, 1);

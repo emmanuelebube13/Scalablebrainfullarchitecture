@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Subsystem — Scalable Brain</title>
 <meta name="description" content="Per-subsystem architecture documentation: data ingestion and mapping, core logic and execution, contracts and known gaps.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="assets/css/main.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
 </head>
@@ -17,10 +20,19 @@
     <div class="wrap"><p class="loading">Loading subsystem…</p></div>
   </section>
   <section class="section">
-    <div class="wrap" style="position: relative;">
-      <a href="operations.html" style="position: absolute; right: 20px; top: 0; font-weight: bold; text-decoration: underline;">View Operations & Ingestion Guide</a>
-      <div class="tabs" id="sys-tabs" role="tablist"></div>
-      <div id="sys-body"></div>
+    <div class="wrap">
+      <div class="sys-layout">
+        <!-- Section nav: a left rail on wide screens, a tab row on narrow ones. -->
+        <aside class="sys-sidebar">
+          <ul class="sys-sidebar-nav" id="sys-tabs" role="tablist"></ul>
+          <p class="sys-sidebar-aside">
+            <a href="operations.html">Operations &amp; ingestion guide &rarr;</a>
+          </p>
+        </aside>
+        <div class="sys-content">
+          <div id="sys-body"></div>
+        </div>
+      </div>
     </div>
   </section>
 </main>

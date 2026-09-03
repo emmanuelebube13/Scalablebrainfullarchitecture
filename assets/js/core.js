@@ -23,7 +23,7 @@ export function el(tag, attrs = {}, ...children) {
     else if (k === 'html') node.innerHTML = v;
     else if (k === 'text') node.textContent = v;
     else if (k.startsWith('on') && typeof v === 'function') node.addEventListener(k.slice(2), v);
-    else if (k === 'style' && typeof v === 'object') Object.assign(node.style, v);
+    else if (k === 'style' && typeof v === 'object') setStyle(node, v);
     else node.setAttribute(k, v);
   }
   // flat(Infinity): callers nest arrays (e.g. a .map() that returns [separator, node]).
@@ -32,6 +32,20 @@ export function el(tag, attrs = {}, ...children) {
     node.append(child.nodeType ? child : document.createTextNode(String(child)));
   }
   return node;
+}
+
+/*
+ * Object.assign() onto a CSSStyleDeclaration silently drops custom properties:
+ * `style['--sys'] = '#e8a830'` is not a CSSOM setter, so the declaration never
+ * appears. Every per-system and per-tone colour on this site is passed that way,
+ * so they have to go through setProperty().
+ */
+function setStyle(node, styles) {
+  for (const [prop, value] of Object.entries(styles)) {
+    if (value === null || value === undefined) continue;
+    if (prop.startsWith('--')) node.style.setProperty(prop, value);
+    else node.style[prop] = value;
+  }
 }
 
 export const escapeHtml = (s) =>
