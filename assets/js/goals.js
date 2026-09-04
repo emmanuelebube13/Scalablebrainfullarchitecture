@@ -34,6 +34,9 @@ try {
     calWeek: null,    // '2026-W36' or null
   };
 
+  /* stable reference to the goal-grid container — initialized in initGoalsPanel() */
+  let goalsGridContainer = null;
+
   /* pre-index tasks by goal id for fast lookup */
   const tasksByGoal = new Map();
   for (const t of G.tasks) {
@@ -347,8 +350,6 @@ try {
   }
 
   /* Lazily mount the calendar once; only the grid re-renders on filter changes */
-  let goalsGridContainer = null;
-
   function initGoalsPanel() {
     const box = $('#goals');
     box.innerHTML = '';
