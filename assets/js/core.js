@@ -186,6 +186,7 @@ const NAV_GROUPS = [
       ['goals.html',      'Goals & tasks', 'goals'],
       ['operations.html', 'Operations',    'operations'],
       ['runbook.html',    'Runbook',       'runbook'],
+      ['telegram.html',   'Telegram',      'telegram'],
     ],
   },
   {
