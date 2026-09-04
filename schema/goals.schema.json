@@ -35,7 +35,7 @@
         "properties": {
           "id": { "type": "string" },
           "title": { "type": "string" },
-          "kind": { "type": "string", "enum": ["macro", "system"] },
+          "kind": { "type": "string", "enum": ["macro", "system", "personal"] },
           "horizon": { "type": "string", "enum": ["week", "month", "quarter"] },
           "period": { "type": "string" },
           "status": { "type": "string" },
