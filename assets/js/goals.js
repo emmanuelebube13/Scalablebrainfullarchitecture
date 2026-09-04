@@ -389,7 +389,9 @@ try {
         ? Math.max(0, Math.min(100, (g.metric.current / (g.metric.target || 1)) * 100))
         : null;
 
-      const goalTasks = (tasksByGoal.get(g.id) ?? []).filter((t) => {
+      /* all tasks for this goal, filtered to the active period */
+      const allGoalTasks = tasksByGoal.get(g.id) ?? [];
+      const periodTasks = allGoalTasks.filter((t) => {
         if (!state.calWeek && !state.calMonth) return true;
         const activeRange = state.calWeek
           ? periodRange(state.calWeek)
@@ -397,30 +399,25 @@ try {
         const tr = periodRange(t.period);
         return tr && overlaps(tr, activeRange);
       });
-
-      const taskSection = buildGoalTaskSection(g, goalTasks, mode);
+      const taskCount = periodTasks.length;
 
       const card = el('div', {
         class: 'gcard',
         style: { '--tone': `var(--${vocab.tone})` },
+        role: 'button',
+        tabindex: '0',
+        title: 'Click to view tasks',
+        onclick: () => openTaskModal(g, periodTasks, mode),
+        onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTaskModal(g, periodTasks, mode); } },
       },
-        /* header — clicking toggles the task drawer */
-        el('div', {
-          class: 'gcard-head',
-          role: 'button',
-          tabindex: '0',
-          'aria-expanded': 'false',
-          title: 'Click to see tasks',
-          onclick: (e) => toggleTaskDrawer(e.currentTarget.closest('.gcard')),
-          onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleTaskDrawer(e.currentTarget.closest('.gcard')); } },
-        },
+        /* header */
+        el('div', { class: 'gcard-head' },
           el('span', { class: 'goal-id', text: g.id }),
           el('h3', { text: g.title }),
           el('span', { class: `badge tone-${vocab.tone}` }, vocab.label),
-          el('span', { class: 'gcard-toggle-icon', 'aria-hidden': 'true' }, '›'),
-          goalTasks.length
-            ? el('span', { class: 'gcard-task-count', text: `${goalTasks.length} task${goalTasks.length !== 1 ? 's' : ''}` })
-            : null
+          taskCount
+            ? el('span', { class: 'gcard-task-count' }, `${taskCount} task${taskCount !== 1 ? 's' : ''}`)
+            : el('span', { class: 'gcard-task-count gcard-task-count--none' }, 'No tasks')
         ),
         /* thin progress bar */
         pct !== null
@@ -461,9 +458,7 @@ try {
         /* blocked */
         g.blocked_by
           ? el('div', { class: 'gcard-blocked', html: inline(`⛔ Blocked by: ${g.blocked_by}`) })
-          : null,
-        /* task drawer — hidden by default */
-        taskSection
+          : null
       );
 
       grid.append(card);
@@ -472,59 +467,194 @@ try {
     goalsGridContainer.append(grid);
   }
 
-  /* Build the collapsible task drawer for a goal card */
-  function buildGoalTaskSection(g, tasks, _mode) {
-    const drawer = el('div', { class: 'gcard-tasks', 'aria-hidden': 'true' });
+  /* ── Task modal ────────────────────────────────────────────── */
 
-    if (!tasks.length) {
-      drawer.append(el('p', { class: 'gcard-tasks-empty', text: 'No tasks in the selected period.' }));
-      return drawer;
-    }
+  function openTaskModal(g, tasks, mode) {
+    /* remove any existing modal */
+    document.getElementById('gtask-modal')?.remove();
 
+    const vocab = G.status_vocabulary[g.status] ?? { label: g.status, tone: 'muted' };
     const prank = { high: 0, medium: 1, low: 2 };
     const srank = { blocked: 0, in_progress: 1, not_started: 2, deferred: 3, done: 4 };
     const sorted = [...tasks].sort((a, b) =>
       (prank[a.priority] ?? 9) - (prank[b.priority] ?? 9) ||
       (srank[a.status]   ?? 9) - (srank[b.status]   ?? 9));
 
-    sorted.forEach((t) => {
-      const s = systems.find((x) => x.id === t.system);
-      const v = G.status_vocabulary[t.status] ?? { label: t.status, tone: 'muted' };
-      const p = (G.priority_vocabulary ?? {})[t.priority];
-      const u = (G.urgency_vocabulary ?? {})[t.urgency];
+    /* ── task rows ── */
+    const taskRows = sorted.length
+      ? sorted.map((t) => {
+          const s = systems.find((x) => x.id === t.system);
+          const v = G.status_vocabulary[t.status] ?? { label: t.status, tone: 'muted' };
+          const p = (G.priority_vocabulary ?? {})[t.priority];
+          const u = (G.urgency_vocabulary ?? {})[t.urgency];
+          return el('div', {
+            class: 'gmodal-task',
+            'data-priority': t.priority ?? '',
+            'data-status': t.status,
+          },
+            el('div', { class: 'gmodal-task-head' },
+              el('code', { class: 'gtask-id', text: t.id }),
+              p ? el('span', { class: `badge tone-${p.tone}`, title: p.note, text: p.label }) : null,
+              u ? el('span', { class: `pill tone-${u.tone}`, title: u.note, text: u.label }) : null,
+              s ? el('span', { class: 'gtask-sys', style: { color: s.accent }, text: `S${s.ordinal}` }) : null,
+              el('span', { class: `badge tone-${v.tone}`, text: v.label }),
+              el('span', { class: 'pill gmodal-period', text: t.period })
+            ),
+            el('div', { class: 'gmodal-task-body' },
+              el('strong', { text: t.title }),
+              t.detail   ? el('p', { class: 'gmodal-task-detail', html: inline(t.detail) }) : null,
+              t.evidence ? el('p', { class: 'gmodal-task-detail', html: inline(`**Evidence:** \`${t.evidence}\``) }) : null
+            )
+          );
+        })
+      : [el('p', { class: 'gmodal-empty', text: 'No tasks in the selected period.' })];
 
-      drawer.append(el('div', {
-        class: 'gtask-row',
-        'data-priority': t.priority ?? '',
-        'data-status': t.status,
-      },
-        el('div', { class: 'gtask-row-head' },
-          el('code', { class: 'gtask-id', text: t.id }),
-          p ? el('span', { class: `badge tone-${p.tone}`, title: p.note, text: p.label }) : null,
-          u ? el('span', { class: `pill tone-${u.tone}`, title: u.note, text: u.label }) : null,
-          s ? el('span', { class: 'gtask-sys', style: { color: s.accent }, text: `S${s.ordinal}` }) : null,
-          el('span', { class: `badge tone-${v.tone}`, text: v.label }),
-          el('span', { class: 'gtask-period pill', text: t.period })
+    /* ── sheet ── */
+    const sheet = el('div', { class: 'gmodal-sheet', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'gmodal-title' },
+      /* sticky header */
+      el('div', { class: 'gmodal-header' },
+        el('div', { class: 'gmodal-title-row' },
+          el('span', { class: 'goal-id', text: g.id }),
+          el('h2', { id: 'gmodal-title', text: g.title }),
+          el('span', { class: `badge tone-${vocab.tone}` }, vocab.label)
         ),
-        el('div', { class: 'gtask-row-body' },
-          el('strong', { text: t.title }),
-          t.detail   ? el('span', { class: 'gtask-detail', html: inline(t.detail) }) : null,
-          t.evidence ? el('span', { class: 'gtask-detail', html: inline(`*evidence:* \`${t.evidence}\``) }) : null
+        el('div', { class: 'gmodal-header-pills' },
+          el('span', { class: 'pill', text: { macro: 'Macro', personal: 'Personal' }[g.kind] ?? 'Subsystem' }),
+          el('span', { class: 'pill', text: `${g.horizon} · ${g.period}` }),
+          el('span', { class: 'pill', text: `${sorted.length} task${sorted.length !== 1 ? 's' : ''}` })
+        ),
+        el('div', { class: 'gmodal-header-actions' },
+          el('button', {
+            class: 'gmodal-dl',
+            type: 'button',
+            title: 'Download as Markdown',
+            onclick: () => downloadGoalMd(g, sorted),
+          }, '↓ Download .md'),
+          el('button', {
+            class: 'gmodal-close',
+            type: 'button',
+            'aria-label': 'Close',
+            onclick: closeModal,
+          }, '✕')
         )
-      ));
-    });
+      ),
+      /* scrollable body */
+      el('div', { class: 'gmodal-body' },
+        /* goal summary */
+        el('section', { class: 'gmodal-goal-summary' },
+          el('p', { class: 'gmodal-why', html: inline(voice({ technical: g.why, plain: g.plain }, mode)) }),
+          el('div', { class: 'gcard-dod' },
+            el('strong', { text: 'Done when' }),
+            el('span', { html: inline(g.definition_of_done) })
+          ),
+          g.metric
+            ? el('div', { class: 'gcard-metric-label' },
+                `${g.metric.name}: ${g.metric.current} / ${g.metric.target} ${g.metric.unit}`,
+                g.metric.note ? el('span', { style: { color: 'var(--warn)', marginLeft: '8px' }, text: g.metric.note }) : null
+              )
+            : null,
+          g.blocked_by
+            ? el('div', { class: 'gcard-blocked', html: inline(`⛔ Blocked by: ${g.blocked_by}`) })
+            : null
+        ),
+        /* tasks heading */
+        el('h3', { class: 'gmodal-tasks-heading', text: 'Tasks' }),
+        /* task list */
+        el('div', { class: 'gmodal-task-list' }, ...taskRows)
+      )
+    );
 
-    return drawer;
+    const overlay = el('div', {
+      id: 'gtask-modal',
+      class: 'gmodal-overlay',
+      onclick: (e) => { if (e.target === overlay) closeModal(); },
+    }, sheet);
+
+    document.body.append(overlay);
+
+    /* trap focus in modal — close on Escape */
+    const onKey = (e) => { if (e.key === 'Escape') closeModal(); };
+    document.addEventListener('keydown', onKey, { once: true });
+
+    /* prevent body scroll */
+    document.body.style.overflow = 'hidden';
+
+    /* animate in */
+    requestAnimationFrame(() => overlay.classList.add('gmodal-visible'));
+
+    function closeModal() {
+      document.removeEventListener('keydown', onKey);
+      overlay.classList.remove('gmodal-visible');
+      overlay.addEventListener('transitionend', () => {
+        overlay.remove();
+        document.body.style.overflow = '';
+      }, { once: true });
+    }
   }
 
-  function toggleTaskDrawer(card) {
-    const head = card.querySelector('.gcard-head');
-    const drawer = card.querySelector('.gcard-tasks');
-    const icon = card.querySelector('.gcard-toggle-icon');
-    const open = card.classList.toggle('tasks-open');
-    if (head) head.setAttribute('aria-expanded', String(open));
-    if (drawer) drawer.setAttribute('aria-hidden', String(!open));
-    if (icon) icon.textContent = open ? '⌄' : '›';
+  /* ── Download goal + tasks as Markdown ─────────────────────── */
+
+  function downloadGoalMd(g, tasks) {
+    const vocab = G.status_vocabulary[g.status] ?? { label: g.status, tone: 'muted' };
+    const lines = [
+      `# ${g.id} — ${g.title}`,
+      '',
+      `**Status:** ${vocab.label}  `,
+      `**Kind:** ${{ macro: 'Macro', personal: 'Personal', system: 'Subsystem' }[g.kind] ?? g.kind}  `,
+      `**Period:** ${g.period}  `,
+      `**Horizon:** ${g.horizon}`,
+      '',
+      '## Why',
+      '',
+      g.why ?? g.plain ?? '',
+      '',
+      '## Done when',
+      '',
+      g.definition_of_done ?? '',
+      '',
+    ];
+
+    if (g.metric) {
+      lines.push('## Metric', '', `${g.metric.name}: ${g.metric.current} / ${g.metric.target} ${g.metric.unit}`, '');
+      if (g.metric.note) lines.push(`> ${g.metric.note}`, '');
+    }
+
+    if (g.blocked_by) lines.push('## Blocked by', '', g.blocked_by, '');
+
+    lines.push('## Tasks', '');
+
+    if (!tasks.length) {
+      lines.push('_No tasks in the selected period._', '');
+    } else {
+      for (const t of tasks) {
+        const v = G.status_vocabulary[t.status] ?? { label: t.status };
+        const p = (G.priority_vocabulary ?? {})[t.priority];
+        const u = (G.urgency_vocabulary ?? {})[t.urgency];
+        const s = systems.find((x) => x.id === t.system);
+        lines.push(
+          `### ${t.id} — ${t.title}`,
+          '',
+          `| Field | Value |`,
+          `|---|---|`,
+          `| Status | ${v.label} |`,
+          `| Priority | ${p?.label ?? t.priority ?? '—'} |`,
+          `| Urgency | ${u?.label ?? t.urgency ?? '—'} |`,
+          `| System | ${s ? `S${s.ordinal} ${s.name}` : t.system} |`,
+          `| Period | ${t.period} |`,
+          '',
+        );
+        if (t.detail) lines.push(t.detail, '');
+        if (t.evidence) lines.push(`**Evidence:** \`${t.evidence}\``, '');
+        lines.push('---', '');
+      }
+    }
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${g.id.toLowerCase()}-tasks.md`;
+    a.click();
+    URL.revokeObjectURL(a.href);
   }
 
   /* ── Dependency matrix ─────────────────────────────────────── */
