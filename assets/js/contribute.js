@@ -50,7 +50,7 @@ const SCHEMAS = [
     columns: ['Key', 'Shape', 'Notes'],
     rows: [
       ['`milestones[]`', '`{id, name, state, date, summary, plain, falsifier}`', 'The ladder. `falsifier` is what would prove the rung is *not* reached'],
-      ['`goals[]`', '`{id, title, kind, horizon, period, status, metric, why, plain, definition_of_done, dependencies[], blocked_by}`', '`kind` ∈ macro / system'],
+      ['`goals[]`', '`{id, title, kind, horizon, period, status, metric, why, plain, definition_of_done, dependencies[], blocked_by}`', '`kind` ∈ macro / system / personal'],
       ['`goals[].metric`', '`{name, current, target, unit, note}`', 'Drives the progress meter'],
       ['`goals[].dependencies[]`', '`{system, role, need}`', '`role` ∈ owner / required / consumer / none. Generates the dependency matrix'],
       ['`tasks[]`', '`{id, system, goal, period, status, title, detail, evidence}`', 'The tracker. `goal` and `system` must resolve'],

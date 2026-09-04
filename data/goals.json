@@ -389,7 +389,8 @@
         "name": "Live-path components running off Computer 1",
         "current": 0,
         "target": 4,
-        "unit": "components"
+        "unit": "components",
+        "note": "The 2026-09-01 06:06 unattended `apt-daily-upgrade` that restarted all six live services on `trading-1` is the same class of failure this goal removes"
       },
       "why": "The hourly producer, its cron, its PostgreSQL and its service-account key all live on one desktop with unreliable networking. The events of 2026-08-24 make the point in the other direction too: Systems 2 and 3 both stopped at 17:07Z and neither restarted, unnoticed for three days. Any host that has to be manually awake is a host that will eventually be asleep. Nothing has been containerised yet — there is no Dockerfile in the repository.",
       "plain": "Everything currently depends on desktops being awake and staying awake. Two of the three stopped last Monday and nobody noticed until Thursday. Managed infrastructure removes that class of failure.",
@@ -424,7 +425,8 @@
         "name": "External sources in the feature store",
         "current": 0,
         "target": 3,
-        "unit": "sources"
+        "unit": "sources",
+        "note": "`src/nlp/finbert.py` and `src/nlp/macro_scraper.py` already exist and are wired into nothing"
       },
       "why": "Every strategy in the fleet trades transforms of the same five OHLC series. That is the most likely explanation for the standing finding that regimes do not discriminate — `n_discriminating: 0 of 10`, with a maximum win-rate spread of 0.0567 against a 0.10 bar. Another indicator on the same candles is unlikely to change that; information the price series does not contain might. `src/nlp/finbert.py` and `src/nlp/macro_scraper.py` already exist and are wired into nothing.",
       "plain": "Every strategy is looking at the same five price charts, so they all see the same thing — which is probably why sorting them by market condition adds nothing. New advantage has to come from information the charts do not contain.",
@@ -596,13 +598,13 @@
       "kind": "macro",
       "horizon": "month",
       "period": "2026-09",
-      "status": "not_started",
+      "status": "in_progress",
       "metric": {
         "name": "First-class telemetry sources streaming",
-        "current": 1,
+        "current": 0,
         "target": 4,
         "unit": "sources",
-        "note": "Target: OANDA, System 1, System 2, System 3"
+        "note": "Target: OANDA, System 1, System 2, System 3. Reset from 1 to 0 on 2026-09-03 - nothing streams; every source is still polled. `/state` and `/health` serve process memory frozen at roughly 2026-09-01 15:15 (`RECOVERY`, 84,140.63) while `ams_account_state` says `CIRCUIT_BROKEN`, 83,670.94, and `telemetry-pub` republishes the stale values as `payloads.s3state`. In flight: `payloads.decisions` and `payloads.reconciliation` are in the snapshot and the broker positions panel renders real values."
       },
       "why": "Right now telemetry is a derived view assembled by polling: the dashboard polls four HTTP surfaces every three seconds and the publisher writes GCS snapshots, so what you see is a reconstruction, not the event. Broker state only reaches telemetry through System 2's `/status`, which is why OANDA reporting `pendingOrderCount: 6` while `ams_open_positions` holds `sl = None, tp = None` for all three open trades was invisible until someone read both by hand. Every decision, fill and account change should land in one store as it happens, stamped with its source, so that divergence between broker-truth and system-truth is a visible alert rather than an archaeology exercise.",
       "plain": "At the moment the dashboard keeps asking \"anything new?\" and stitches an answer together. It should instead be told the moment something happens, by each system directly — the broker included — and every number should carry a label saying who said it and when. Then when two sources disagree, the screen shows the disagreement instead of hiding it.",
@@ -653,7 +655,14 @@
           "need": "Owns the override pipeline, the audit trail and the mode gate"
         }
       ],
-      "blocked_by": null
+      "blocked_by": null,
+      "metric": {
+        "name": "Control actions live",
+        "current": 0,
+        "target": 4,
+        "unit": "actions",
+        "note": "Force-stop, per-pair or per-strategy opt-out, refresh, read-only debug view. Screen 4 already draws the two-step confirm; confirming still prints a CLI command to go and type."
+      }
     },
     {
       "id": "G-017",
@@ -776,7 +785,14 @@
           "need": "Must define the output contract for queue, DLQ and reconciliation inspections"
         }
       ],
-      "blocked_by": null
+      "blocked_by": null,
+      "metric": {
+        "name": "Recurring jobs checked in as a fixed procedure",
+        "current": 1,
+        "target": 6,
+        "unit": "jobs",
+        "note": "The six named in this goal: pipeline trace, weekly readiness reply, queue and DLQ inspection, deploy verification, telemetry panel audit, cleanup pass. One exists - `audit/prompts/TELEMETRY-TRUTH-AUDIT-recurring.md`, with a fixed output contract and one run on record. There is still no `.claude/skills` directory."
+      }
     },
     {
       "id": "G-021",
@@ -854,7 +870,7 @@
         "current": 0,
         "target": 1,
         "unit": "map (all nodes)",
-        "note": "Measured against `data/architecture.json` — any node or edge not `live` fails the sign-off"
+        "note": "Measured against `data/architecture.json` — any node or edge not `live` fails the sign-off. Two criticals from the 08-30 to 09-02 audit stand between here and a sign-off: the reporting surface reports RECOVERY while the system is CIRCUIT_BROKEN, and the reconciler silently shuts the risk gate when two positions share a pair"
       },
       "why": "The build phase should end next month. The evidence that it can is already on the record: on 2026-08-24 a signal travelled System 1 to Pub/Sub to the relay to System 3 to System 2 to OANDA and produced three real fills, `2617 / 2621 / 2625`, still open today with `correlation_id = signal_id` intact at every hop. What remains is not new architecture — it is closing the last mile, the transport hardening, the alerting and the telemetry gaps, then freezing the contract surface so the cloud migration moves a finished system rather than a moving one.",
       "plain": "The design work should be finished next month. It has already been shown to work once, end to end, with real trades at the broker. What is left is tidying the known gaps and then declaring the shape final — because moving a half-finished system into the cloud means debugging two problems at once.",
@@ -876,7 +892,7 @@
           "need": "Contracts, sizing, transport and alerting must be closed and frozen"
         }
       ],
-      "blocked_by": null
+      "blocked_by": "G-014, G-017, G-021 and G-022 - the sign-off cannot be truthful while telemetry, alerting, the last mile and the transport are open."
     },
     {
       "id": "P-001",
@@ -1974,7 +1990,7 @@
       "detail": "`drill-003` (no `schema_version`) and a diagnostic `{\"diag\": true, \"id\": \"DIRECT-b61a5fab\"}` published 08-27 11:47 fail validation, are never acked, and redeliver every six seconds indefinitely — lifetime `forwarded: 48, rejected: 23,566`. No subscription carries a `deadLetterPolicy`, all five sit at `ackDeadlineSeconds: 10`, and the `scored_signal_dlq` topic exists wired to nothing. Fix the structural cause and the symptom together, before the cutover moves this loop into a billed environment.",
       "priority": "high",
       "urgency": "immediate",
-      "evidence": "relay journal; `gcloud pubsub subscriptions list`; S2-STATUS-2026-08-28 findings #1, #2"
+      "evidence": "relay journal; `gcloud pubsub subscriptions list`; S2-STATUS-2026-08-28 findings #1, #2; audit/WEEK-AUDIT-2026-08-30.md finding 3 - one message unacked for 565,337 s produced 35,615 ERROR lines this week"
     },
     {
       "id": "T-315",
@@ -2501,6 +2517,126 @@
       "title": "Audit every override to override_audit",
       "detail": "The control plane's whole value is that an operator action is reconstructable afterwards. A breaker reset taken outside an audited path is the case in point — it is the single highest-consequence manual action in the system and currently leaves the thinnest trail.",
       "evidence": "G-016 definition of done; `GATE-resume-trading.md`",
+      "priority": "medium",
+      "urgency": "this_month"
+    },
+    {
+      "id": "T-334",
+      "system": "system-3",
+      "goal": "G-015",
+      "period": "2026-09",
+      "status": "not_started",
+      "title": "Serve `/state` and `/health` from the database, not process memory",
+      "detail": "`GET localhost:8300/state` returns `state: RECOVERY`, balance 84140.6286, equity 83748.6938, drawdown 5.148 - frozen at roughly 2026-09-01 15:15. `ams_account_state`, written at 2026-09-03T00:52:44Z, says `CIRCUIT_BROKEN`, 83670.9426, 83462.2145, 5.473. The gate itself reads the database and is correct; only the reporting surface is wrong - and `telemetry-pub` republishes it as `payloads.s3state`, so the dashboard says everything is fine while trading is halted.",
+      "evidence": "audit/WEEK-AUDIT-2026-08-30.md finding 1 - `curl localhost:8300/state` against `ams_account_state`",
+      "priority": "high",
+      "urgency": "immediate"
+    },
+    {
+      "id": "T-335",
+      "system": "system-3",
+      "goal": "G-021",
+      "period": "2026-09",
+      "status": "not_started",
+      "title": "Stop the reconciler freezing position freshness",
+      "detail": "`posttrade/reconcile.py:275-287` skips the whole UPDATE when a PnL cannot be attributed, so `last_snapshot_at` stops advancing. `gate/pipeline.py:295` feeds that age to `layers.py:236`, which rejects above `max_age_min` 5.0. Two positions in one pair therefore shut the gate five minutes later: trades 20 and 21, both USD_CAD, held it closed for roughly 21 hours and killed decisions 4201 and 4202. The fix is narrow - write `last_snapshot_at` whenever the broker snapshot contains the position, and withhold only `unrealized_pnl`. Distinct from T-330: that one decides the exposure policy, this one is the freshness bug underneath it.",
+      "evidence": "audit/WEEK-AUDIT-2026-08-30.md finding 2 - `ams_decision_log` 4201/4202, reason `open_book_stale`",
+      "priority": "high",
+      "urgency": "immediate"
+    },
+    {
+      "id": "T-336",
+      "system": "system-3",
+      "goal": "G-017",
+      "period": "2026-09",
+      "status": "not_started",
+      "title": "Make the email channel deliver, or stop declaring it",
+      "detail": "All 427 rows in `notify_outbox` declare `[\"telegram\",\"email\"]`; `delivered_channels` has never once contained email. The `circuit_breaker_fired` page (id 22345, `requires_ack`) cannot reach `sent` while one of its two channels is permanently dead, so it resends until acknowledged - and it never was. The retry behaviour itself is correct: `notify/outbox.py:291` deliberately exempts acknowledgement-required alerts from the attempt cap. Distinct from T-312 and T-313: here the event was emitted and routed, and one of its two declared channels has simply never worked.",
+      "evidence": "audit/WEEK-AUDIT-2026-08-30.md finding 4 - `notify_outbox`",
+      "priority": "high",
+      "urgency": "immediate"
+    },
+    {
+      "id": "T-337",
+      "system": "system-3",
+      "goal": "G-017",
+      "period": "2026-09",
+      "status": "not_started",
+      "title": "Stop `reconciliation_divergence` paging hourly on unmodelled financing",
+      "detail": "303 fires since 2026-07-12 at urgency `high`, every one of them `balance mismatch: ours=83679.5582 broker=83670.9426` - 8.62 CAD. 27 of this week's 33 alerts are that single message, and the critical breaker page landed in that stream.",
+      "evidence": "audit/WEEK-AUDIT-2026-08-30.md finding 5 - `notify_outbox` since 2026-07-12",
+      "priority": "medium",
+      "urgency": "this_month"
+    },
+    {
+      "id": "T-338",
+      "system": "system-3",
+      "goal": "G-015",
+      "period": "2026-09",
+      "status": "not_started",
+      "title": "Make `daily_pnl` and `weekly_pnl` differ, and reconcile them to the journal",
+      "detail": "`ams_account_state` reports both as -1194.9299. The trade journal says -94.3251 today and -459.1938 this week, and `daily_summary` independently agrees at -459.20. No row in `equity_curve` supports a -1,194.93 reference. Two fields that must differ across a four-day week are byte-identical, and neither matches the two stores that do reconcile with each other.",
+      "evidence": "audit/WEEK-AUDIT-2026-08-30.md finding 6",
+      "priority": "medium",
+      "urgency": "this_month"
+    },
+    {
+      "id": "T-339",
+      "system": "system-3",
+      "goal": "G-023",
+      "period": "2026-09",
+      "status": "not_started",
+      "title": "Record the broker's own trade id and mirror its stops",
+      "detail": "`ams_open_positions.broker_trade_id` holds an internal UUID (`2863fca9-02d5-5a5c-932b-956c96e2c83f`) while OANDA's id is `2618`. That is why reconciliation joins on `pair`, and joining on `pair` is what breaks when two positions share one - the root of T-335. `sl` and `tp` are also still null for positions that are protected at the broker, so `payloads.reconciliation` reports `underinformed` every 60 s.",
+      "evidence": "audit/WEEK-AUDIT-2026-08-30.md finding 7 - flagged 2026-08-29, still open",
+      "priority": "medium",
+      "urgency": "this_month"
+    },
+    {
+      "id": "T-340",
+      "system": "system-3",
+      "goal": "G-015",
+      "period": "2026-09",
+      "status": "not_started",
+      "title": "Stamp `risk_state.updated_at` when the row is written",
+      "detail": "It reads 2026-07-27 06:02:02 while `halted_until` on the same row carries 2026-09-03T14:50:42.369320Z from today's breaker. The row was written; the timestamp column was not.",
+      "evidence": "audit/WEEK-AUDIT-2026-08-30.md finding 10",
+      "priority": "low",
+      "urgency": "this_month"
+    },
+    {
+      "id": "T-239",
+      "system": "system-2",
+      "goal": "G-009",
+      "period": "2026-09",
+      "status": "not_started",
+      "title": "Stop unattended apt upgrades restarting the live stack mid-week",
+      "detail": "2026-09-01 06:06:32 `apt-daily-upgrade.service` started, and between 06:07:03 and 06:08:58 all six services - `system2`, `s3-ams`, `s2s3-bridge`, `telemetry-pub`, `s3-signal-relay`, `s2-downloader` - stopped and restarted. Not a reboot: uptime is 46 days. Unscheduled, mid-week, uncoordinated with market hours.",
+      "evidence": "audit/WEEK-AUDIT-2026-08-30.md finding 8 - journald",
+      "priority": "medium",
+      "urgency": "this_month"
+    },
+    {
+      "id": "T-240",
+      "system": "system-2",
+      "goal": "G-014",
+      "period": "2026-09",
+      "status": "not_started",
+      "title": "Revive the signal ledger - `signal_evaluations` has been empty since 2026-08-14",
+      "detail": "Last row 2026-08-14T21:00:25 and zero rows this week, so the gatekeeper evaluate, approve and publish telemetry is blind for the whole window; the only visibility into the funnel is `ams_decision_log`, which starts after the relay. This is System 2's ledger, not System 1's scorer - System 1 measured scoring working 15/15 on 2026-08-30 - so it waits on the runtime gatekeeper removed on 2026-08-15, the same dependency that makes T-215 unimplementable as written.",
+      "evidence": "audit/WEEK-AUDIT-2026-08-30.md finding 9 - `signal_evaluations`",
+      "priority": "high",
+      "urgency": "when_unblocked"
+    },
+    {
+      "id": "T-241",
+      "system": "system-2",
+      "goal": "G-020",
+      "period": "2026-09",
+      "status": "not_started",
+      "title": "Run the recurring telemetry truth audit on its stated cadence",
+      "detail": "The procedure is checked in at `audit/prompts/TELEMETRY-TRUTH-AUDIT-recurring.md` with a fixed output contract, and run #1 on 2026-08-29 produced `audit/telemetry-truth/STATE.md`: 73 panels - 42 LIVE, 9 WRONG, 10 CONSTANT, 2 STALE, 10 BLANK-HONEST. Two consecutive runs on unchanged inputs must agree before it counts as a skill under this goal.",
+      "evidence": "audit/telemetry-truth/STATE.md - run #1, 2026-08-29T21:26:00Z",
       "priority": "medium",
       "urgency": "this_month"
     }

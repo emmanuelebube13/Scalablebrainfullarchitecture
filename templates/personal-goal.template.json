@@ -1,0 +1,37 @@
+{
+  "_README": [
+    "Copy the object below into the `goals[]` array in data/goals.json and edit it.",
+    "Do not leave this file's placeholder text in the site — replace every field.",
+    "Use a P- prefix for the id so personal goals sort apart from the G- system goals.",
+    "Keep the three `role: none` dependency entries: they render as '—' in the dependency",
+    "matrix and keep `node tools/validate.mjs` at zero warnings.",
+    "Personal goals take no tasks — a task's `system` must resolve to a registered system,",
+    "so put the steps in `definition_of_done` instead.",
+    "Delete `metric` entirely if the goal has nothing countable; the progress bar disappears",
+    "and that is correct. Never invent a number to fill it."
+  ],
+  "goal": {
+    "id": "P-001",
+    "title": "One line, in the imperative — what will be true when this is done",
+    "kind": "personal",
+    "horizon": "month",
+    "period": "2026-09",
+    "status": "not_started",
+    "metric": {
+      "name": "What is being counted",
+      "current": 0,
+      "target": 1,
+      "unit": "things",
+      "note": "Optional. Where the number came from, or why it is what it is."
+    },
+    "why": "Why this matters, in your own words. Supports `code`, **bold**, *italic* and [links](https://example.com).",
+    "plain": "The same thing said to someone who does not work on this. Shown when the header toggle is set to plain voice.",
+    "definition_of_done": "The test that settles it. Written so someone else could check it without asking you.",
+    "dependencies": [
+      { "system": "system-1", "role": "none", "need": "" },
+      { "system": "system-2", "role": "none", "need": "" },
+      { "system": "system-3", "role": "none", "need": "" }
+    ],
+    "blocked_by": null
+  }
+}
