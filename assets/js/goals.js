@@ -2,6 +2,10 @@ import {
   $, el, inline, voice, getMode, onModeChange, loadAll, loadJSON,
   mountChrome, fatal,
 } from './core.js';
+import {
+  periodRange, overlaps, monthsSpanned, monthWeeks,
+  monthLabel, weekLabel, WEEKDAY_SHORT,
+} from './period.js';
 
 /* ── Constants ───────────────────────────────────────────────── */
 
@@ -25,9 +29,29 @@ try {
 
   /* reactive filter state */
   const state = {
-    goalSystem: '', goalStatus: '',
-    taskSystem: '', taskStatus: '', taskPeriod: '', taskPriority: '', taskUrgency: '',
+    goalSystem: '', goalStatus: '', goalKind: '',
+    calMonth: null,   // '2026-09' or null
+    calWeek: null,    // '2026-W36' or null
   };
+
+  /* pre-index tasks by goal id for fast lookup */
+  const tasksByGoal = new Map();
+  for (const t of G.tasks) {
+    if (!tasksByGoal.has(t.goal)) tasksByGoal.set(t.goal, []);
+    tasksByGoal.get(t.goal).push(t);
+  }
+
+  /* every month that appears in any task or goal period — for calendar */
+  function allMonths() {
+    const months = new Set();
+    for (const t of G.tasks) {
+      for (const m of monthsSpanned(t.period)) months.add(m);
+    }
+    for (const g of G.goals) {
+      for (const m of monthsSpanned(g.period)) months.add(m);
+    }
+    return [...months].sort();
+  }
 
   /* initial render */
   buildLadderStrip();
@@ -40,22 +64,18 @@ try {
   function buildTabBar() {
     document.querySelectorAll('.gtab').forEach((btn) => {
       btn.addEventListener('click', () => {
-        // deactivate all
         document.querySelectorAll('.gtab').forEach((b) => {
           b.classList.remove('active');
           b.setAttribute('aria-selected', 'false');
         });
         document.querySelectorAll('.goals-panel').forEach((p) => p.classList.remove('active'));
-        // activate chosen
         btn.classList.add('active');
         btn.setAttribute('aria-selected', 'true');
         const panel = document.getElementById(btn.dataset.panel);
         if (panel) panel.classList.add('active');
-        // swap filter row
         buildFiltersForTab(btn.dataset.panel);
       });
     });
-    // initial filter row for first tab
     buildFiltersForTab('panel-goals');
   }
 
@@ -65,7 +85,6 @@ try {
     renderMilestones(mode);
     renderGoals(mode);
     renderMatrix(mode);
-    renderTasks();
   }
 
   /* ── Ladder strip (hero pills) ─────────────────────────────── */
@@ -75,7 +94,6 @@ try {
     strip.innerHTML = '';
     G.milestones.forEach((m) => {
       const tone = MILESTONE_TONE[m.state] ?? 'muted';
-      const label = MILESTONE_LABEL[m.state] ?? m.state;
       const pill = el('button', {
         class: `lstrip-rung tone-${tone}`,
         type: 'button',
@@ -90,7 +108,6 @@ try {
   }
 
   function jumpToLadder(id) {
-    // switch to ladder tab
     document.querySelectorAll('.gtab').forEach((b) => {
       const on = b.dataset.panel === 'panel-ladder';
       b.classList.toggle('active', on);
@@ -99,7 +116,6 @@ try {
     document.querySelectorAll('.goals-panel').forEach((p) =>
       p.classList.toggle('active', p.id === 'panel-ladder'));
     buildFiltersForTab('panel-ladder');
-    // scroll to the milestone
     requestAnimationFrame(() => {
       const target = document.getElementById(`milestone-${id}`);
       if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -138,18 +154,229 @@ try {
     box.append(list);
   }
 
-  /* ── Goals ─────────────────────────────────────────────────── */
+  /* ── Calendar widget ───────────────────────────────────────── */
 
-  function renderGoals(mode) {
+  /**
+   * Build a one-month mini-calendar. Clicking a month header toggles the whole
+   * month; clicking a week row toggles that ISO week. The active selection is
+   * shown with a highlight and written into `state.calMonth / state.calWeek`.
+   *
+   * `onSelect(month, week)` is called with the new values whenever the user clicks.
+   * Both may be null (cleared), month alone (whole month), or both (specific week).
+   */
+  function buildCalendar(months, activeMonth, activeWeek, onSelect) {
+    if (!months.length) return el('div', {});
+
+    /* determine displayed month — default to the current_period or first available */
+    let displayMonth = activeMonth;
+    if (!displayMonth) {
+      displayMonth = months.includes(G.current_period)
+        ? G.current_period
+        : months[0];
+    }
+
+    /* navigation */
+    const idx = months.indexOf(displayMonth);
+
+    const cal = el('div', { class: 'gcal' });
+
+    /* month nav row */
+    const prevBtn = el('button', {
+      class: 'gcal-nav',
+      type: 'button',
+      disabled: idx <= 0 ? '' : null,
+      'aria-label': 'Previous month',
+      onclick: () => {
+        const newMonth = months[idx - 1];
+        if (newMonth) {
+          const container = cal.closest('.gcal-wrap') ?? cal.parentElement;
+          container.replaceChildren(buildCalendar(months, newMonth, null, onSelect));
+        }
+      },
+    }, '‹');
+
+    const monthBtn = el('button', {
+      class: activeMonth === displayMonth && !activeWeek ? 'gcal-month-label active' : 'gcal-month-label',
+      type: 'button',
+      title: 'Click to filter by this whole month',
+      onclick: () => {
+        if (activeMonth === displayMonth && !activeWeek) {
+          onSelect(null, null);
+        } else {
+          onSelect(displayMonth, null);
+        }
+      },
+    }, monthLabel(displayMonth));
+
+    const nextBtn = el('button', {
+      class: 'gcal-nav',
+      type: 'button',
+      disabled: idx >= months.length - 1 ? '' : null,
+      'aria-label': 'Next month',
+      onclick: () => {
+        const newMonth = months[idx + 1];
+        if (newMonth) {
+          const container = cal.closest('.gcal-wrap') ?? cal.parentElement;
+          container.replaceChildren(buildCalendar(months, newMonth, null, onSelect));
+        }
+      },
+    }, '›');
+
+    const nav = el('div', { class: 'gcal-nav-row' }, prevBtn, monthBtn, nextBtn);
+    cal.append(nav);
+
+    /* day-of-week headers */
+    const header = el('div', { class: 'gcal-grid gcal-header' });
+    /* first cell = week label space */
+    header.append(el('div', { class: 'gcal-wk-label', text: 'Wk' }));
+    WEEKDAY_SHORT.forEach((d) => header.append(el('div', { class: 'gcal-dow', text: d })));
+    cal.append(header);
+
+    /* count tasks/goals per week for dot density */
+    const weeksInMonth = monthWeeks(displayMonth);
+    const weekCounts = new Map();
+    for (const row of weeksInMonth) {
+      const wrange = [row.start, row.end];
+      let count = 0;
+      for (const t of G.tasks) {
+        const tr = periodRange(t.period);
+        if (tr && overlaps(tr, wrange)) count++;
+      }
+      for (const g of G.goals) {
+        const gr = periodRange(g.period);
+        if (gr && overlaps(gr, wrange)) count++;
+      }
+      weekCounts.set(row.week, count);
+    }
+
+    /* week rows */
+    weeksInMonth.forEach((row) => {
+      const isActiveWeek = activeWeek === row.week;
+      const isActiveMonth = activeMonth === displayMonth && !activeWeek;
+      const count = weekCounts.get(row.week) ?? 0;
+
+      const weekRow = el('div', {
+        class: `gcal-grid gcal-week${isActiveWeek ? ' active-week' : ''}${isActiveMonth ? ' active-month' : ''}`,
+        'data-week': row.week,
+        role: 'button',
+        tabindex: '0',
+        title: `Filter by ${row.week} — ${count} item${count !== 1 ? 's' : ''}`,
+        onclick: () => {
+          if (isActiveWeek) {
+            onSelect(null, null);
+          } else {
+            onSelect(displayMonth, row.week);
+          }
+        },
+        onkeydown: (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            weekRow.click();
+          }
+        },
+      });
+
+      /* week number cell */
+      const wkLabel = el('div', { class: 'gcal-wk-label' });
+      wkLabel.append(el('span', { class: 'gcal-wk-num', text: weekLabel(row.week) }));
+      if (count > 0) {
+        const dots = Math.min(count, 5);
+        const dotRow = el('span', { class: 'gcal-dots' });
+        for (let i = 0; i < dots; i++) dotRow.append(el('i'));
+        wkLabel.append(dotRow);
+      }
+      weekRow.append(wkLabel);
+
+      /* day cells */
+      row.days.forEach((d) => {
+        const today = new Date();
+        const isToday = d.ms === Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+        weekRow.append(el('div', {
+          class: `gcal-day${d.inMonth ? '' : ' out-month'}${isToday ? ' today' : ''}`,
+          text: String(d.day),
+        }));
+      });
+
+      cal.append(weekRow);
+    });
+
+    return cal;
+  }
+
+  function mountCalendar(container, onSelect) {
+    const months = allMonths();
+    const wrap = el('div', { class: 'gcal-wrap' });
+
+    function pick(month, week) {
+      state.calMonth = month;
+      state.calWeek = week;
+      onSelect();
+      wrap.replaceChildren(buildCalendar(months, state.calMonth, state.calWeek, pick));
+    }
+
+    wrap.append(buildCalendar(months, state.calMonth, state.calWeek, pick));
+    container.append(wrap);
+  }
+
+  /* ── Goals (with nested tasks) ─────────────────────────────── */
+
+  /**
+   * Returns true if a goal should be shown given the current calendar selection.
+   * A goal is included if:
+   *  - No calendar filter is active, OR
+   *  - The goal itself spans the selected period, OR
+   *  - Any of the goal's tasks span the selected period.
+   */
+  function goalMatchesPeriod(g) {
+    const activeRange = state.calWeek
+      ? periodRange(state.calWeek)
+      : state.calMonth
+        ? periodRange(state.calMonth)
+        : null;
+
+    if (!activeRange) return true;
+
+    const goalRange = periodRange(g.period);
+    if (goalRange && overlaps(goalRange, activeRange)) return true;
+
+    const tasks = tasksByGoal.get(g.id) ?? [];
+    return tasks.some((t) => {
+      const tr = periodRange(t.period);
+      return tr && overlaps(tr, activeRange);
+    });
+  }
+
+  /* Lazily mount the calendar once; only the grid re-renders on filter changes */
+  let goalsGridContainer = null;
+
+  function initGoalsPanel() {
     const box = $('#goals');
     box.innerHTML = '';
 
+    const calPanel = el('div', { class: 'goals-cal-panel' });
+    mountCalendar(calPanel, () => renderGoalsGrid(getMode()));
+    box.append(calPanel);
+
+    goalsGridContainer = el('div', { class: 'goals-grid-container' });
+    box.append(goalsGridContainer);
+  }
+
+  function renderGoals(mode) {
+    if (!goalsGridContainer) initGoalsPanel();
+    renderGoalsGrid(mode);
+  }
+
+  function renderGoalsGrid(mode) {
+    goalsGridContainer.innerHTML = '';
+
     const list = G.goals.filter((g) =>
       (!state.goalSystem || g.dependencies.some((d) => d.system === state.goalSystem && d.role !== 'none')) &&
-      (!state.goalStatus || g.status === state.goalStatus));
+      (!state.goalStatus || g.status === state.goalStatus) &&
+      (!state.goalKind || g.kind === state.goalKind) &&
+      goalMatchesPeriod(g));
 
     if (!list.length) {
-      box.append(el('p', { class: 'side-empty', text: 'No goals match these filters.' }));
+      goalsGridContainer.append(el('p', { class: 'side-empty', text: 'No goals match these filters.' }));
       return;
     }
 
@@ -161,15 +388,38 @@ try {
         ? Math.max(0, Math.min(100, (g.metric.current / (g.metric.target || 1)) * 100))
         : null;
 
+      const goalTasks = (tasksByGoal.get(g.id) ?? []).filter((t) => {
+        if (!state.calWeek && !state.calMonth) return true;
+        const activeRange = state.calWeek
+          ? periodRange(state.calWeek)
+          : periodRange(state.calMonth);
+        const tr = periodRange(t.period);
+        return tr && overlaps(tr, activeRange);
+      });
+
+      const taskSection = buildGoalTaskSection(g, goalTasks, mode);
+
       const card = el('div', {
         class: 'gcard',
         style: { '--tone': `var(--${vocab.tone})` },
       },
-        /* header */
-        el('div', { class: 'gcard-head' },
+        /* header — clicking toggles the task drawer */
+        el('div', {
+          class: 'gcard-head',
+          role: 'button',
+          tabindex: '0',
+          'aria-expanded': 'false',
+          title: 'Click to see tasks',
+          onclick: (e) => toggleTaskDrawer(e.currentTarget.closest('.gcard')),
+          onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleTaskDrawer(e.currentTarget.closest('.gcard')); } },
+        },
           el('span', { class: 'goal-id', text: g.id }),
           el('h3', { text: g.title }),
-          el('span', { class: `badge tone-${vocab.tone}` }, vocab.label)
+          el('span', { class: `badge tone-${vocab.tone}` }, vocab.label),
+          el('span', { class: 'gcard-toggle-icon', 'aria-hidden': 'true' }, '›'),
+          goalTasks.length
+            ? el('span', { class: 'gcard-task-count', text: `${goalTasks.length} task${goalTasks.length !== 1 ? 's' : ''}` })
+            : null
         ),
         /* thin progress bar */
         pct !== null
@@ -210,13 +460,70 @@ try {
         /* blocked */
         g.blocked_by
           ? el('div', { class: 'gcard-blocked', html: inline(`⛔ Blocked by: ${g.blocked_by}`) })
-          : null
+          : null,
+        /* task drawer — hidden by default */
+        taskSection
       );
 
       grid.append(card);
     });
 
-    box.append(grid);
+    goalsGridContainer.append(grid);
+  }
+
+  /* Build the collapsible task drawer for a goal card */
+  function buildGoalTaskSection(g, tasks, _mode) {
+    const drawer = el('div', { class: 'gcard-tasks', 'aria-hidden': 'true' });
+
+    if (!tasks.length) {
+      drawer.append(el('p', { class: 'gcard-tasks-empty', text: 'No tasks in the selected period.' }));
+      return drawer;
+    }
+
+    const prank = { high: 0, medium: 1, low: 2 };
+    const srank = { blocked: 0, in_progress: 1, not_started: 2, deferred: 3, done: 4 };
+    const sorted = [...tasks].sort((a, b) =>
+      (prank[a.priority] ?? 9) - (prank[b.priority] ?? 9) ||
+      (srank[a.status]   ?? 9) - (srank[b.status]   ?? 9));
+
+    sorted.forEach((t) => {
+      const s = systems.find((x) => x.id === t.system);
+      const v = G.status_vocabulary[t.status] ?? { label: t.status, tone: 'muted' };
+      const p = (G.priority_vocabulary ?? {})[t.priority];
+      const u = (G.urgency_vocabulary ?? {})[t.urgency];
+
+      drawer.append(el('div', {
+        class: 'gtask-row',
+        'data-priority': t.priority ?? '',
+        'data-status': t.status,
+      },
+        el('div', { class: 'gtask-row-head' },
+          el('code', { class: 'gtask-id', text: t.id }),
+          p ? el('span', { class: `badge tone-${p.tone}`, title: p.note, text: p.label }) : null,
+          u ? el('span', { class: `pill tone-${u.tone}`, title: u.note, text: u.label }) : null,
+          s ? el('span', { class: 'gtask-sys', style: { color: s.accent }, text: `S${s.ordinal}` }) : null,
+          el('span', { class: `badge tone-${v.tone}`, text: v.label }),
+          el('span', { class: 'gtask-period pill', text: t.period })
+        ),
+        el('div', { class: 'gtask-row-body' },
+          el('strong', { text: t.title }),
+          t.detail   ? el('span', { class: 'gtask-detail', html: inline(t.detail) }) : null,
+          t.evidence ? el('span', { class: 'gtask-detail', html: inline(`*evidence:* \`${t.evidence}\``) }) : null
+        )
+      ));
+    });
+
+    return drawer;
+  }
+
+  function toggleTaskDrawer(card) {
+    const head = card.querySelector('.gcard-head');
+    const drawer = card.querySelector('.gcard-tasks');
+    const icon = card.querySelector('.gcard-toggle-icon');
+    const open = card.classList.toggle('tasks-open');
+    if (head) head.setAttribute('aria-expanded', String(open));
+    if (drawer) drawer.setAttribute('aria-hidden', String(!open));
+    if (icon) icon.textContent = open ? '⌄' : '›';
   }
 
   /* ── Dependency matrix ─────────────────────────────────────── */
@@ -260,65 +567,6 @@ try {
     ));
   }
 
-  /* ── Tasks ─────────────────────────────────────────────────── */
-
-  function renderTasks() {
-    const box = $('#tasks');
-    box.innerHTML = '';
-
-    const list = G.tasks.filter((t) =>
-      (!state.taskSystem   || t.system   === state.taskSystem)   &&
-      (!state.taskStatus   || t.status   === state.taskStatus)   &&
-      (!state.taskPeriod   || t.period   === state.taskPeriod)   &&
-      (!state.taskPriority || t.priority === state.taskPriority) &&
-      (!state.taskUrgency  || t.urgency  === state.taskUrgency));
-
-    if (!list.length) {
-      box.append(el('p', { class: 'side-empty', text: 'No tasks match these filters.' }));
-      return;
-    }
-
-    const prank = { high: 0, medium: 1, low: 2 };
-    const srank = { blocked: 0, in_progress: 1, not_started: 2, deferred: 3, done: 4 };
-    list.sort((a, b) =>
-      (prank[a.priority] ?? 9) - (prank[b.priority] ?? 9) ||
-      (srank[a.status]   ?? 9) - (srank[b.status]   ?? 9) ||
-      a.id.localeCompare(b.id));
-
-    const table = el('table', { class: 'gtask-table' },
-      el('thead', {}, el('tr', {},
-        ['ID', 'Sys', 'Pri', 'Urg', 'Task', 'Goal', 'Period', 'Status']
-          .map((c) => el('th', { text: c }))
-      )),
-      el('tbody', {}, list.map((t) => {
-        const s = systems.find((x) => x.id === t.system);
-        const v = G.status_vocabulary[t.status] ?? { label: t.status, tone: 'muted' };
-        const p = (G.priority_vocabulary ?? {})[t.priority];
-        const u = (G.urgency_vocabulary ?? {})[t.urgency];
-        return el('tr', { 'data-priority': t.priority ?? '', 'data-status': t.status },
-          el('td', {}, el('code', { text: t.id })),
-          el('td', { style: { color: s?.accent }, text: `S${s?.ordinal ?? '?'}` }),
-          el('td', {}, p ? el('span', { class: `badge tone-${p.tone}`, title: p.note, text: p.label }) : '–'),
-          el('td', {}, u ? el('span', { class: `pill tone-${u.tone}`,  title: u.note, text: u.label }) : '–'),
-          el('td', {},
-            el('strong', { text: t.title }),
-            t.detail   ? el('span', { class: 'gtask-detail', html: inline(t.detail) }) : null,
-            t.evidence ? el('span', { class: 'gtask-detail', html: inline(`*evidence:* \`${t.evidence}\``) }) : null
-          ),
-          el('td', {}, el('code', { text: t.goal })),
-          el('td', { text: t.period }),
-          el('td', {}, el('span', { class: `badge tone-${v.tone}`, text: v.label }))
-        );
-      }))
-    );
-
-    box.append(el('div', { class: 'gtask-table-wrap' }, table));
-    box.append(el('p', {
-      class: 'gtask-note',
-      html: inline(`Showing **${list.length}** of ${G.tasks.length} tasks.`),
-    }));
-  }
-
   /* ── Contextual filter rows ────────────────────────────────── */
 
   function buildFiltersForTab(panelId) {
@@ -332,24 +580,16 @@ try {
         }),
         sel('Status', Object.entries(G.status_vocabulary).map(([k, v]) => [k, v.label]), 'Any status', (v) => {
           state.goalStatus = v; renderGoals(getMode());
-        })
-      );
-    }
-
-    if (panelId === 'panel-tasks') {
-      const periods = [...new Set(G.tasks.map((t) => t.period))].sort();
-      row.append(
-        sel('System',   systems.map((s) => [s.id, `S${s.ordinal} – ${s.name}`]), 'All systems', (v) => { state.taskSystem = v;   renderTasks(); }),
-        sel('Priority', Object.entries(G.priority_vocabulary ?? {}).map(([k, v]) => [k, v.label]), 'Any priority', (v) => { state.taskPriority = v; renderTasks(); }),
-        sel('Urgency',  Object.entries(G.urgency_vocabulary  ?? {}).map(([k, v]) => [k, v.label]), 'Any urgency',  (v) => { state.taskUrgency  = v; renderTasks(); }),
-        sel('Status',   Object.entries(G.status_vocabulary).map(([k, v]) => [k, v.label]), 'Any status',   (v) => { state.taskStatus  = v; renderTasks(); }),
-        sel('Period',   periods.map((p) => [p, p]), 'Any period', (v) => { state.taskPeriod  = v; renderTasks(); }),
+        }),
+        sel('Kind',
+          [['macro', 'Macro'], ['system', 'Subsystem'], ['personal', 'Personal']],
+          'Any kind', (v) => { state.goalKind = v; renderGoals(getMode()); }),
         el('button', {
           class: 'pill', type: 'button', text: 'Reset',
           onclick: () => {
-            Object.assign(state, { taskSystem: '', taskStatus: '', taskPeriod: '', taskPriority: '', taskUrgency: '' });
+            Object.assign(state, { goalSystem: '', goalStatus: '', goalKind: '', calMonth: null, calWeek: null });
             row.querySelectorAll('select').forEach((s) => { s.value = ''; });
-            renderTasks();
+            renderGoals(getMode());
           },
         })
       );

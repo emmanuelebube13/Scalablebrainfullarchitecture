@@ -203,6 +203,193 @@
   margin: 0 auto;
 }
 
+/* ── Goals panel layout — calendar + grid stacked vertically ─── */
+
+.goals-grid-container {
+  /* nothing extra — grid's own margin handles spacing */
+}
+
+.goals-cal-panel {
+  margin-bottom: 20px;
+}
+
+/* ── Calendar widget ─────────────────────────────────────────── */
+
+.gcal-wrap {
+  display: inline-block;
+}
+
+.gcal {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  width: 260px;
+  font-size: 0.82rem;
+  user-select: none;
+}
+
+/* month navigation row */
+.gcal-nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-sunken);
+}
+
+.gcal-nav {
+  font: inherit;
+  font-size: 1.1rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 120ms, color 120ms;
+}
+
+.gcal-nav:hover:not([disabled]) { background: var(--bg-raised); color: var(--text); }
+.gcal-nav[disabled] { opacity: 0.3; cursor: default; }
+
+.gcal-month-label {
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  cursor: pointer;
+  padding: 3px 8px;
+  transition: background 120ms, border-color 120ms;
+  white-space: nowrap;
+}
+
+.gcal-month-label:hover { background: var(--bg-raised); }
+.gcal-month-label.active {
+  background: color-mix(in srgb, var(--accent) 18%, var(--bg));
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* grid rows — header + week rows */
+.gcal-grid {
+  display: grid;
+  grid-template-columns: 52px repeat(7, 1fr);
+  gap: 0;
+}
+
+.gcal-header {
+  background: var(--bg-sunken);
+  border-bottom: 1px solid var(--border);
+}
+
+.gcal-dow {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-faint);
+  padding: 5px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* week row — the clickable row */
+.gcal-week {
+  cursor: pointer;
+  transition: background 100ms;
+  border-bottom: 1px solid var(--border);
+}
+
+.gcal-week:last-child { border-bottom: 0; }
+.gcal-week:hover { background: var(--bg-raised); }
+
+.gcal-week.active-week {
+  background: color-mix(in srgb, var(--accent) 14%, var(--bg));
+}
+
+.gcal-week.active-week .gcal-wk-num { color: var(--accent); font-weight: 700; }
+
+.gcal-week.active-month {
+  background: color-mix(in srgb, var(--accent) 7%, var(--bg));
+}
+
+/* week-number / dot column */
+.gcal-wk-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 4px;
+  gap: 2px;
+  border-right: 1px solid var(--border);
+  background: var(--bg-sunken);
+}
+
+.gcal-header .gcal-wk-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.gcal-wk-num {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--text-faint);
+  line-height: 1;
+}
+
+.gcal-dots {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.gcal-dots i {
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.55;
+}
+
+/* individual day cells */
+.gcal-day {
+  text-align: center;
+  padding: 5px 0;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  line-height: 1;
+}
+
+.gcal-day.out-month { color: var(--text-faint); opacity: 0.45; }
+
+.gcal-day.today {
+  font-weight: 700;
+  color: var(--accent);
+  position: relative;
+}
+
+.gcal-day.today::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  border: 1px solid var(--accent);
+  opacity: 0.6;
+}
+
 /* ── Goal cards — tighter, bolder ───────────────────────────── */
 
 .goals-grid {
@@ -220,7 +407,6 @@
   display: flex;
   flex-direction: column;
   transition: border-color 140ms, box-shadow 140ms;
-  cursor: default;
 }
 
 .gcard:hover {
@@ -228,13 +414,24 @@
   box-shadow: 0 4px 18px rgba(0,0,0,0.22);
 }
 
-/* Header bar — always visible */
+/* Header bar — clickable to open task drawer */
 .gcard-head {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 12px 14px 8px;
   flex-wrap: wrap;
+  cursor: pointer;
+  border-radius: calc(var(--radius) - 2px) calc(var(--radius) - 2px) 0 0;
+  transition: background 120ms;
+}
+
+.gcard-head:hover {
+  background: color-mix(in srgb, var(--tone, var(--accent)) 6%, var(--bg));
+}
+
+.gcard.tasks-open .gcard-head {
+  background: color-mix(in srgb, var(--tone, var(--accent)) 10%, var(--bg));
 }
 
 .gcard-head .goal-id { flex: none; }
@@ -245,6 +442,31 @@
   margin: 0;
   min-width: 160px;
   line-height: 1.3;
+}
+
+/* toggle chevron */
+.gcard-toggle-icon {
+  font-size: 1rem;
+  color: var(--text-faint);
+  transition: transform 160ms;
+  flex: none;
+  line-height: 1;
+}
+
+.gcard.tasks-open .gcard-toggle-icon {
+  transform: rotate(90deg);
+}
+
+/* task count pill */
+.gcard-task-count {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--text-faint);
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 1px 7px;
+  white-space: nowrap;
 }
 
 /* Progress meter strip — subtle, directly under the header */
@@ -497,53 +719,92 @@
   font-family: var(--mono);
 }
 
-/* ── Task table — compact, scannable ────────────────────────── */
+/* ── Task drawer — collapsible inside goal cards ─────────────── */
 
-.gtask-table-wrap {
-  overflow-x: auto;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-.gtask-table {
-  border-collapse: collapse;
-  width: 100%;
-  font-size: 0.86rem;
-}
-
-.gtask-table thead th {
+.gcard-tasks {
+  border-top: 1px solid var(--border);
+  display: none;                    /* hidden until .tasks-open */
+  flex-direction: column;
+  gap: 0;
   background: var(--bg-sunken);
-  text-align: left;
+  border-radius: 0 0 calc(var(--radius) - 2px) calc(var(--radius) - 2px);
+  overflow: hidden;
+  animation: drawer-in 160ms ease;
+}
+
+.gcard.tasks-open .gcard-tasks {
+  display: flex;
+}
+
+@keyframes drawer-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.gcard-tasks-empty {
+  font-size: 0.82rem;
+  color: var(--text-faint);
+  padding: 12px 14px;
+  margin: 0;
+}
+
+/* individual task row inside the drawer */
+.gtask-row {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: background 100ms;
+}
+
+.gtask-row:last-child { border-bottom: 0; }
+.gtask-row:hover { background: var(--bg-raised); }
+.gtask-row[data-status="done"] { opacity: 0.5; }
+
+/* priority left-bar */
+.gtask-row[data-priority="high"]   { border-left: 3px solid var(--bad);  padding-left: 11px; }
+.gtask-row[data-priority="medium"] { border-left: 3px solid var(--warn); padding-left: 11px; }
+
+.gtask-row-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.gtask-id {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--text-faint);
+}
+
+.gtask-sys {
+  font-family: var(--mono);
+  font-size: 0.72rem;
   font-weight: 600;
-  color: var(--text-dim);
-  padding: 9px 12px;
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  position: sticky;
-  top: 0;
-  z-index: 2;
 }
 
-.gtask-table tbody td {
-  padding: 9px 12px;
-  border-bottom: 1px solid var(--border);
-  vertical-align: top;
+.gtask-period {
+  margin-left: auto;
+  font-size: 0.72rem;
 }
 
-.gtask-table tbody tr:last-child td { border-bottom: 0; }
-.gtask-table tbody tr:hover { background: var(--bg-raised); }
-.gtask-table tbody tr[data-status="done"] { opacity: 0.52; }
-.gtask-table tbody tr[data-priority="high"]   td:first-child { box-shadow: inset 3px 0 0 var(--bad); }
-.gtask-table tbody tr[data-priority="medium"] td:first-child { box-shadow: inset 3px 0 0 var(--warn); }
+.gtask-row-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gtask-row-body strong {
+  font-size: 0.86rem;
+  font-weight: 500;
+}
 
 .gtask-detail {
   display: block;
-  margin-top: 3px;
-  max-width: 44ch;
-  font-size: 0.8rem;
+  margin-top: 2px;
+  font-size: 0.79rem;
   color: var(--text-faint);
 }
 
@@ -562,11 +823,19 @@
   .goals-grid { grid-template-columns: 1fr; }
   .goals-ladder-strip { display: none; }
   .goals-main {
-    /* on small screens let the page scroll naturally */
     height: auto;
     overflow: visible;
   }
   .goals-panels { position: static; }
   .goals-panel { position: static; }
   .goals-panel-scroll { height: auto; overflow: visible; }
+
+  /* calendar stretches to full width on mobile */
+  .gcal-wrap { display: block; }
+  .gcal { width: 100%; }
+  .gcal-grid { grid-template-columns: 44px repeat(7, 1fr); }
+
+  /* task rows compress comfortably */
+  .gtask-row { padding: 9px 12px; }
+  .gtask-period { margin-left: 0; }
 }

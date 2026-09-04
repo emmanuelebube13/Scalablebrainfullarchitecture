@@ -32,7 +32,8 @@ data/
 
 schema/                      JSON Schema for each file in data/ — update alongside the data
 templates/
-└── system.template.json     Canonical template for a new system (same as data/systems/_TEMPLATE.json)
+├── system.template.json     Canonical template for a new system (same as data/systems/_TEMPLATE.json)
+└── personal-goal.template.json  Copy-paste shell for a personal goal in data/goals.json
 tools/validate.mjs           Zero-dependency validator: node tools/validate.mjs
 assets/
 ├── css/main.css             Single stylesheet for all pages
@@ -122,6 +123,23 @@ than `live` is drawn dashed — the map cannot flatter a broken link.
 
 A task whose `goal` or `system` does not resolve is a validation **error**, not a rendering
 quirk — `node tools/validate.mjs` catches it.
+
+**`kind` on a goal is a closed set: `macro`, `system`, `personal`.** It only sets the label on
+the first pill of the goal card — Macro, Subsystem, Personal.
+
+#### Personal goals
+
+A personal goal is an ordinary entry in `goals[]` with `"kind": "personal"` and a `P-` id, so it
+sits alongside the system goals, is searchable, and counts in the home-page tiles. Copy
+`templates/personal-goal.template.json` and edit it. Two rules the validator enforces:
+
+- **Keep the three `role: "none"` dependency entries.** A goal that omits a system produces a
+  warning; `none` renders as `—` in the dependency matrix, which is the honest answer.
+- **A personal goal takes no tasks.** `tasks[].system` must resolve to a registered system, so
+  `"system": "personal"` is an error. Put the steps in `definition_of_done` instead.
+
+`metric` is optional. If nothing is countable, delete the whole object — the progress bar
+disappears, which is the correct rendering. Never invent a number to fill the bar (§3.3).
 
 ### 2.5 `data/decisions.json`
 
