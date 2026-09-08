@@ -5,7 +5,7 @@
     "name": "Scalable Brain",
     "subtitle": "Multi-System Algorithmic Trading Architecture",
     "thesis": "The code is not the asset. A verified out-of-sample track record is the asset.",
-    "as_of": "2026-08-22",
+    "as_of": "2026-09-08",
     "source_repository": "https://github.com/emmanuelebube13/scalable-brain",
     "site_repository": "https://github.com/emmanuelebube13/Scalablebrainfullarchitecture",
     "principles": [
@@ -52,6 +52,10 @@
     "operational": {
       "label": "Operational",
       "tone": "good"
+    },
+    "not_trading": {
+      "label": "Not trading (deliberate)",
+      "tone": "warn"
     },
     "engineering-complete": {
       "label": "Engineering complete",

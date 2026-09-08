@@ -19,9 +19,34 @@
         <p>Commands and templates for running manual data updates, querying the Postgres database, and deploying code to <code>trading-1</code>.</p>
       </div>
 
-      <h3>1. Manual Python Commands for Ingestion</h3>
-      <p>The ingestion pipeline can be run manually to backfill data or troubleshoot gaps. Run these from the <code>scalable-brain</code> project root directory.</p>
-      
+      <div class="callout t-warn">
+        <p><strong>Current status, 2026-09-08: the system is deliberately not trading.</strong>
+        The live regime-strategy map expired 2026-08-24, and a freshness contract added
+        2026-09-05 (<code>vetting/map_contract.py</code>) now refuses to route signals on a map
+        older than 7 days rather than let it run stale — last signal emission
+        2026-09-04T21:15Z. This is a safety control working as designed, not an outage. A fix to
+        the underlying market-regime detector is in progress (it was comparing overnight
+        volatility to an all-day average, mislabelling roughly a fifth to a third of hourly
+        bars) and a fresh map will republish once it clears an owner sign-off. See the
+        <a href="goals.html">Goals &amp; Tasks</a> page, goal <code>G-024</code>, for the live
+        detail.</p>
+        <p>Separately, the retrain cron — held since early August at Computer&nbsp;2's request —
+        was <strong>re-enabled 2026-09-03</strong>. It cannot currently promote a new
+        ML&nbsp;gatekeeper model at all: a degeneracy guard correctly refuses, because the
+        currently live model turns out to be 95.5% degenerate on (strategy&nbsp;×&nbsp;regime)
+        cells — discriminating on which strategy fired rather than on market conditions. That
+        does not block trading on its own, since a fresh System&nbsp;1 bundle can still ship
+        paired with the existing gatekeeper pointer.</p>
+      </div>
+
+      <h3>1. Manual Python Commands</h3>
+      <p>Run these from the <code>scalable-brain</code> project root, with the venv at
+      <code>/home/emmanuel/Documents/Scalable_Brain/.venv</code> activated. The module map moved
+      off <code>src/layer0/ingest_data/</code> during the August restructure; the commands below
+      are the current canonical entry points (see <code>CLAUDE.md</code> → COMMANDS for the full
+      list). The legacy Saturday batch script still calls the older ingest module directly —
+      noted where that's the case.</p>
+
       <div class="table-wrap">
         <table>
           <thead>
@@ -32,24 +57,48 @@
           </thead>
           <tbody>
             <tr>
+              <td><code>python -m src.ingestion.multi_timeframe_ingest</code></td>
+              <td>Current ingest module — OANDA MBA candles across H1/H4/D1/W1, with data-quality gates. Used by the Saturday full-batch cron.</td>
+            </tr>
+            <tr>
               <td><code>python src/layer0/ingest_data/ingest_oanda_prices.py</code></td>
-              <td>Full ingestion (All supported timeframes and assets).</td>
+              <td>Legacy ingest module — still what the daily weekday cron actually calls (<code>cron_daily_ingest_and_signals.sh</code>). Kept in the runbook because it is still load-bearing, not because it is current design.</td>
             </tr>
             <tr>
-              <td><code>python src/layer0/ingest_data/ingest_oanda_prices.py --granularity M30</code></td>
-              <td>Specific Timeframe (e.g., M30 only).</td>
+              <td><code>python -m src.regime.build_structural --incremental --all</code></td>
+              <td>Rebuild the structural regime label (the one live signals actually route on — see the status note above) across all active granularities. Runs inside both the daily and hourly cron scripts before signals.</td>
             </tr>
             <tr>
-              <td><code>python src/layer0/ingest_data/ingest_oanda_prices.py --symbol EUR_USD</code></td>
-              <td>Specific Asset (e.g., EUR_USD only).</td>
+              <td><code>python -m src.signals.run --once</code></td>
+              <td>One real signal pass in the foreground — a genuine emit, not a dry run. Add <code>--dry-run</code> to only print what it would send.</td>
+            </tr>
+            <tr>
+              <td><code>python -m src.monitoring.heartbeat --json</code></td>
+              <td>Overall system health in one shot — prices, regimes, outcomes, champion bundle, telemetry, retrain state, cron liveness, holds.</td>
+            </tr>
+            <tr>
+              <td><code>python -m src.outcomes.persist_all</code></td>
+              <td>Rebuild <code>fact_trade_outcomes</code>. Idempotent upsert, not destructive — see <code>CLAUDE.md</code> if this is unfamiliar; an earlier version of this runbook described it as destructive and that was wrong.</td>
+            </tr>
+            <tr>
+              <td><code>python -m src.vetting.vet --live</code></td>
+              <td>Re-run vetting and publish a live regime→strategy map. Omit <code>--live</code> to write <code>results/reports/proposed_*</code> instead. Use the <code>run-vetting</code> skill for the correct ordering (outcomes → attribution → vet).</td>
             </tr>
             <tr>
               <td><code>./shell/cron_daily_ingest_and_signals.sh</code></td>
-              <td>Daily Cron execution (Prices + Signals).</td>
+              <td>Daily cron execution — ingest, structural labels, signals. Weekdays 22:30.</td>
+            </tr>
+            <tr>
+              <td><code>./shell/cron_hourly_signals.sh</code></td>
+              <td>Hourly cron — the primary live-signal cadence, fires <code>:15</code> past every hour.</td>
             </tr>
             <tr>
               <td><code>./shell/cron_oanda_ingest_saturday.sh</code></td>
               <td>Saturday full multi-timeframe batch ingestion.</td>
+            </tr>
+            <tr>
+              <td><code>crontab -l</code></td>
+              <td>Confirm which jobs are actually installed — do not rely on this table's memory of it.</td>
             </tr>
           </tbody>
         </table>

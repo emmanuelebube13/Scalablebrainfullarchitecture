@@ -179,7 +179,7 @@ try {
         /* body */
         el('div', { class: 'gcard-body' },
           el('div', { class: 'gcard-pills' },
-            el('span', { class: 'pill', text: g.kind === 'macro' ? 'Macro' : 'Subsystem' }),
+            el('span', { class: 'pill', text: { macro: 'Macro', personal: 'Personal' }[g.kind] ?? 'Subsystem' }),
             el('span', { class: 'pill', text: `${g.horizon} · ${g.period}` }),
             ...g.dependencies
               .filter((d) => d.role !== 'none')
