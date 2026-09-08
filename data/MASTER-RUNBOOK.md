@@ -817,13 +817,45 @@ root.
 
 ### 9.3 The live blocker — why nothing is trading
 
-**System 1 has emitted no signal since 2026-08-26T21:15Z.** It runs hourly and reports
-`last_run_outcome: "no_signals_generated"`, because its gatekeeper map has **1 tradeable cell
-of 15**, and that cell requires the `High-Vol` regime, which vanished from the market on
-08-26.
+**Superseded — the 08-26 blocker below is history, not current state.** Update
+2026-09-08, from System 1's own repo records (not a fresh `[LIVE]` VM check — nobody has
+re-verified `trading-1` against this since 08-31):
 
-This is upstream of everything on the VM. System 2's `messages_seen: 0` is the *symptom*.
-Nothing on `trading-1` will fix it, and nothing on `trading-1` should try.
+The pipe itself was proven end to end on 2026-09-03: 9 signals published, all 9 acked and
+decided at System 3, 3 became real OANDA orders. **All three were stopped out** (combined
+-164.52 CAD), which tipped `consecutive_losses` to 5 and fired System 3's circuit breaker at
+2026-09-02T14:50:47Z — as of this writing it is **still open**, `reset_at` null, an owner
+decision not yet taken.
+
+Separately, and the reason nothing has traded since: the live regime-strategy map
+(`generated_at_utc 2026-08-24`) **expired**. A freshness contract added 2026-09-05
+(`vetting/map_contract.py`, `MAP_MAX_AGE_DAYS`) now refuses to route signals on a map older
+than 7 days, fail-closed — last signal emission **2026-09-04T21:15Z**. This is a new safety
+control doing its job, not the old "no High-Vol cell" starvation described below.
+
+A fix to the underlying market-regime detector is in progress (`task/2026-September-week2/`,
+Work Orders 01-05): the intraday volatility measure was comparing overnight bars to an
+all-day average, mislabelling roughly a fifth to a third of hourly bars as the wrong regime.
+A fresh map republishes once that is fixed and re-measured, and an owner signs off — see the
+Goals & Tasks page, goal `G-024`, for the live detail. Separately, the ML gatekeeper cannot
+currently be retrained at all — a degeneracy guard correctly refuses a model that turns out to
+be 95.5% degenerate on (strategy × regime) cells (true of the *current* live model too, not
+just new ones). That does not block trading on its own, since a fresh System 1 bundle can ship
+paired with the existing gatekeeper pointer, and the gate has run in shadow mode (verdict
+recorded, never enforced) since 2026-08-30.
+
+This is upstream of everything on the VM. Nothing on `trading-1` will fix it, and nothing on
+`trading-1` should try.
+
+---
+
+**Original 2026-08-31 text, preserved for the record:** System 1 had emitted no signal since
+2026-08-26T21:15Z. It ran hourly and reported `last_run_outcome: "no_signals_generated"`,
+because its gatekeeper map had **1 tradeable cell of 15**, and that cell required the
+`High-Vol` regime, which had vanished from the market on 08-26. That specific starvation
+condition is stale — the map was regenerated 08-24/since and the blocker is now the expiry
+above, not a missing regime — but the general shape (a map producing too few or the wrong
+tradeable cells) recurs, so the mechanism is worth keeping as a reference.
 
 ### 9.4 The deleted signal producer — read before touching this area
 

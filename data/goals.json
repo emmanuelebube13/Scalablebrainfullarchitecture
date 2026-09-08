@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "as_of": "2026-09-03",
+  "as_of": "2026-09-08",
   "current_period": "2026-09",
   "status_vocabulary": {
     "done": {
@@ -77,10 +77,10 @@
     {
       "id": "M3",
       "name": "Forward test",
-      "state": "in_progress",
-      "date": null,
-      "summary": "A signal travels the full three-system path on the practice account and its realised results track expectation. The drill design is specified: System 1 publishes one correctly-formed signal carrying `\"drill\": true`, System 3 processes it through the full risk path with the flag intact, System 2 runs it to the broker call and stops, logging the order it would have sent. Evidence since recorded: on 2026-08-24 a signal traversed System 1 -> Pub/Sub -> relay -> System 3 -> System 2 -> OANDA and produced three real fills (2617 / 2621 / 2625), with `correlation_id = signal_id` intact at each hop. The transport half of this rung is therefore demonstrated; what remains is a clean drill with the flag preserved, and realised results that track expectation.",
-      "plain": "Prove the pipe before trusting it with anything. One clearly-marked test order is sent down the whole chain; the last machine stops just short of actually placing it and writes down exactly what it would have done.",
+      "state": "done",
+      "date": "2026-09-03",
+      "summary": "A signal travels the full three-system path on the practice account and its realised results track expectation. Evidence: on 2026-08-24 a signal traversed System 1 -> Pub/Sub -> relay -> System 3 -> System 2 -> OANDA and produced three real fills (2617 / 2621 / 2625), `correlation_id = signal_id` intact at each hop. System 3's 2026-09-03 reply confirms the pipe held up under real running, not just the one drill: 9 signals published, 9 acked, 9 decided, 3 became real OANDA orders — all three stopped out for a combined -164.52 CAD, tipping `consecutive_losses` to 5 and tripping System 3's circuit breaker (2026-09-02T14:50:47Z, `reset_at` still null as of this writing). **This rung is closed — but do not read it as 'currently trading'.** As of 2026-09-08 the system is deliberately not trading: the live regime map expired (`generated_at_utc 2026-08-24`, past the 7-day limit `map_contract.py` now enforces) while the regime-engineering work tracked under G-024 is in progress. The pipe works; there is currently no admissible map for it to carry.",
+      "plain": "Prove the pipe before trusting it with anything. One clearly-marked test order is sent down the whole chain; real trades then travelled the same path and filled. That part is proven. Separately, and more recently, the system paused itself on purpose while a data-quality fix to the market-regime detector is finished — the road works, but nothing is being driven down it at the moment.",
       "falsifier": "If the same `signal_id` is not visible at all three systems, the pipe is not proven, however healthy each machine looks on its own."
     },
     {
@@ -106,7 +106,7 @@
         "current": 9,
         "target": 9,
         "unit": "signals",
-        "note": "S2/S3 reply 2026-09-03: 9 published, 9 acked, 9 decided, 3 became real OANDA orders"
+        "note": "S2/S3 reply 2026-09-03: 9 published, 9 acked, 9 decided, 3 became real OANDA orders — all three lost, tripping System 3's circuit breaker (still open)"
       },
       "why": "Signals route `S1 → Scored_Signal_Queue → S3 → AMS_Outbound_Queue → S2`. System 1 publishes to link 1 and that is verified. Links 2 and 3 are unverified and System 1 is blind to them — its service account is publisher-only and cannot list topics or subscriptions. Nothing else about model quality can matter until a message is observed arriving.",
       "plain": "Three machines, two pipes between them. We can prove letters are going into the first pipe. Nobody has yet confirmed in writing that anyone is collecting them, or where the reply goes.",
@@ -172,17 +172,17 @@
       "kind": "macro",
       "horizon": "month",
       "period": "2026-09",
-      "status": "in_progress",
+      "status": "done",
       "metric": {
         "name": "Approvals received",
         "current": 2,
         "target": 2,
         "unit": "approvals",
-        "note": "Both approvals in as of 2026-08-22, each with conditions. System 3's envelope change must land BEFORE System 2 starts publishing, not after."
+        "note": "Both approvals in as of 2026-08-22, each with conditions. Decision itself is settled; the ADR document's own header still misreads PROPOSED (corrected in decisions.json). Build has NOT started — see the caveat below."
       },
       "why": "Two incompatible architectures are on record. The code makes trading depend on Computer 1 — a host with unreliable networking — so if that machine is offline, nothing trades anywhere. That coupling is in no design document and is the direct cause of the incident in which the producer had never emitted a message and nobody could see why.",
-      "plain": "The whole operation currently depends on the least reliable computer in the building being awake. The proposal is to move the live work onto the machine that is already awake during market hours, and let the research machine go back to sleep.",
-      "definition_of_done": "System 2 and System 3 each reply APPROVE or REJECT with reasons, against their actual implementations rather than against the document. No implementation starts before both approve.",
+      "plain": "The whole operation currently depends on the least reliable computer in the building being awake. The proposal is to move the live work onto the machine that is already awake during market hours, and let the research machine go back to sleep. Both other machines have now said yes, with conditions — the decision is made, the building work has not started.",
+      "definition_of_done": "System 2 and System 3 each reply APPROVE or REJECT with reasons, against their actual implementations rather than against the document. No implementation starts before both approve. **Met 2026-08-22.** A new, separate blocker surfaced after approval and is not part of this goal's original scope: the System 1 and System 3 signal schemas are mutually incompatible (`instrument`/`pair`, `entry`/`proposed_entry`, both `additionalProperties: false`), so every signal System 1 would produce under the ADR's design is rejected today. Schema v2 reconciliation must ship before any producer change — tracked as a precondition of the (not-yet-started) build phase, not of this decision.",
       "dependencies": [
         {
           "system": "system-1",
@@ -501,7 +501,7 @@
       },
       "why": "**The original premise of this goal was wrong and is retracted.** It said every live signal is emitted UNSCORED with `MISSING_FEATURE`. Measured 2026-08-30: scoring works — 15/15 (pair x granularity), all live-map strategies known to the model, `signals_unscored_total: 0`. That claim came from a stale code comment and was corrected in `TO-SYSTEM2-3-2026-08-30-erratum-the-gatekeeper-does-score-live.md`. What is actually broken is narrower and worse: the gatekeeper applies **no threshold at inference**. `Scorer.score()` never loads the manifest and `run.py` stamps a hardcoded 0.5 onto the wire as `threshold_applied`, below every calibrated cutoff (0.60-0.80). No below-threshold refusal exists, so the live approval rate is undefined, not zero. Separately (O-17) the scorer loads `models/` directly rather than a pointer, so it is running `champion_model.pkl` `23b6d4ca` — an artifact that was never published, while the wire claims `gk-d614163c`.",
       "plain": "The quality filter does look at every trade and does produce a score. What it never does is act on it — the cutoff it compares against is a placeholder low enough that nothing is ever refused. And the model doing the scoring is not the one the message says it is.",
-      "definition_of_done": "Two things, and the second is a decision not a code change. (1) O-17 closed: the scorer loads the published pointer, so `gatekeeper_model_sha256` on the wire matches the artifact that actually scored. (2) The shadow review is written up after 7 days of live data (from the 2026-08-30 open) and an activate / stay-shadow decision is recorded. Switching the gate on today refuses ~14 of 15 live map cells; that is the calibration working (`shipped_approval_rate` 0.079), so it is a trading-activity decision. Owner decided 2026-08-30: shadow. **Do not activate it as a bug fix.**",
+      "definition_of_done": "Two things, and the second is a decision not a code change. (1) O-17 closed: the scorer loads the published pointer, so `gatekeeper_model_sha256` on the wire matches the artifact that actually scored. (2) The shadow review is written up after 7 days of live data (from the 2026-08-30 open) and an activate / stay-shadow decision is recorded. Switching the gate on today refuses ~14 of 15 live map cells; that is the calibration working (`shipped_approval_rate` 0.079), so it is a trading-activity decision. Owner decided 2026-08-30: shadow. **Do not activate it as a bug fix.** **Deepened 2026-09-08 (Work Order 04, Phase 1 diagnosis):** the model isn't merely uncalibrated — it does not gate on regime at all. `check_cell_degeneracy` measured the currently live champion at 84 of 88 (strategy x regime) cells degenerate (approval ≤0.05 or ≥0.95) = 95.5%, with `strategy_id` carrying 96.78% of the model's gain importance and the regime feature 0.21%. It has been discriminating on which strategy fired, not on market state, since before this month's regime work began — that work only exposed it by re-running training with the guard enforced. Staying in shadow is therefore doubly correct: activating it would gate on strategy identity dressed up as a regime opinion. WO-04 Phase 2 (blocked on WO-03 settling the regime label) is the actual fix path.",
       "dependencies": [
         {
           "system": "system-1",
@@ -534,9 +534,9 @@
         "target": 1,
         "unit": "days"
       },
-      "why": "`fact_trade_outcomes` was last written 2026-08-16 and its newest trade bar is 2026-08-14. Attribution ran on 2026-08-24 against that stale table, and vetting produced the live map from it — so the strategies trading today were selected on evidence two weeks old. The retrain orchestrator that would refresh the chain is on a declared hold in `results/state/cron_holds.json` until 2026-09-15 at System 2's request, so the staleness grows until someone decides otherwise.",
-      "plain": "The list of which strategies are allowed to trade was drawn up from data that stops two weeks ago, and the job that would refresh it is deliberately switched off.",
-      "definition_of_done": "outcomes -> attribution -> vetting run on a schedule; the heartbeat `outcomes` check green; and the retrain hold either lifted with System 2's agreement or renewed with a fresh written reason and expiry.",
+      "why": "`fact_trade_outcomes` was last written 2026-08-16 and its newest trade bar is 2026-08-14. Attribution ran on 2026-08-24 against that stale table, and vetting produced the live map from it — so the strategies trading today were selected on evidence two weeks old. The retrain orchestrator that would refresh the chain is on a declared hold in `results/state/cron_holds.json` until 2026-09-15 at System 2's request, so the staleness grows until someone decides otherwise. **Update 2026-09-03/09-08:** the hold was lifted by owner decision (T-143, done) — `cron_system1_retrain.sh` is reinstalled hourly and `cron_persist_outcomes.sh` rebuilds `fact_trade_outcomes` daily at 02:00, so the root cause (nothing scheduled) is fixed. Two data-quality defects it inherited remain open and owner-gated: O-3 (12 of 67 strategies fail to instantiate) and O-4 (17,583 orphaned rows for retired strategies). Separately, `map_contract.py` (R1) now enforces a 7-day map expiry and fails closed — the live map expired 2026-08-24 and **the system is not trading as of 2026-09-08** while the regime fix in G-024 finishes; this is the freshness contract working as designed, not a new failure.",
+      "plain": "The list of which strategies are allowed to trade was drawn up from data that stopped refreshing itself. That job is fixed and running again. What is currently keeping the system flat is a second, deliberate safety check: the map is only allowed to be so old before the system refuses to trade on it, and it has aged out while a data-quality fix is finished.",
+      "definition_of_done": "outcomes -> attribution -> vetting run on a schedule (met); the heartbeat `outcomes` check green; O-3 and O-4 closed so a rebuild isn't quietly wrong; and a fresh map published inside the 7-day expiry window.",
       "dependencies": [
         {
           "system": "system-1",
@@ -893,6 +893,95 @@
         }
       ],
       "blocked_by": "G-014, G-017, G-021 and G-022 - the sign-off cannot be truthful while telemetry, alerting, the last mile and the transport are open."
+    },
+    {
+      "id": "P-001",
+      "title": "Decide whether this is still a build project or a trading project",
+      "kind": "personal",
+      "horizon": "month",
+      "period": "2026-09",
+      "status": "not_started",
+      "why": "The engineering has outrun the evidence. Twenty-three goals are open, the map is four-fifths owner override, and the only strategy that qualified on merit did so on leaked numbers. Adding capability is currently cheaper than finding out whether any of it works, and that asymmetry is what keeps the question open.",
+      "plain": "At some point this month, answer honestly: am I building because it moves the thing forward, or because building is more comfortable than measuring?",
+      "definition_of_done": "The September re-vet has returned a number, and there is a written answer to 'is there an edge here, yes or no' — including if the answer is no.",
+      "dependencies": [
+        {
+          "system": "system-1",
+          "role": "required",
+          "need": "The O-2 re-vet result"
+        },
+        {
+          "system": "system-2",
+          "role": "none"
+        },
+        {
+          "system": "system-3",
+          "role": "none"
+        }
+      ],
+      "blocked_by": null
+    },
+    {
+      "id": "P-002",
+      "title": "Placeholder — replace with your own",
+      "kind": "personal",
+      "horizon": "month",
+      "period": "2026-09",
+      "status": "not_started",
+      "why": "Kept as a template so the shape is obvious. Every field except `metric` is required: id, title, kind, status, why, definition_of_done, dependencies.",
+      "plain": "Edit or delete this one.",
+      "definition_of_done": "Replaced with a real goal, or removed from the file.",
+      "dependencies": [
+        {
+          "system": "system-1",
+          "role": "none"
+        },
+        {
+          "system": "system-2",
+          "role": "none"
+        },
+        {
+          "system": "system-3",
+          "role": "none"
+        }
+      ],
+      "blocked_by": null
+    },
+    {
+      "id": "G-024",
+      "title": "Make the structural regime the system's single, trustworthy regime label — and resume trading on it",
+      "kind": "macro",
+      "horizon": "month",
+      "period": "2026-09",
+      "status": "in_progress",
+      "metric": {
+        "name": "Work orders complete",
+        "current": 2,
+        "target": 5,
+        "unit": "work orders",
+        "note": "WO-01 (structural writer) and WO-02 (multi-timeframe structural, conclusion corrected) complete. WO-03 (de-seasonalise + resume trading) active. WO-04 Phase 1 (gatekeeper diagnosis) active in parallel; Phase 2 blocked on WO-03. WO-05 (holdout period) queued, runs last."
+      },
+      "why": "Two defects compounded. First, `regime_causal` (the HMM label the champion and map were selected on) is NULL on the newest rows, so nothing live can route on it — the system was already quietly running on the structural label (ADX + rolling ATR% z-score) without that being the acknowledged design. Second, when that structural label was measured properly across H1/H4/D1 (Work Order 02), the resulting map nearly emptied and the gatekeeper refused to retrain on it — which an initial read wrongly concluded meant the structural label has no value. A same-day review (`audit/reports/work_order_02_review.md`) found three of that summary's four load-bearing claims false or overstated: the gatekeeper refusal fires identically on the *currently live* champion (worse, in fact — 95.5% vs 95.1% degenerate cells), so it is a pre-existing gatekeeper defect, not evidence against the label; the map comparison was confounded by changing the evaluation engine and the label in the same step; and 'purely diurnal seasonality' overstated what is really a real but partial defect — H1/H4 volatility is compared against an all-hours baseline, so quiet 3am bars are structurally mislabelled Ranging and active-session bars High-Vol, for about 20-30% of bars. Owner decision 2026-09-08: keep the structural regime, fix the diurnal contamination (Work Order 03), and treat the gatekeeper degeneracy as its own separate, pre-existing work item (Work Order 04) rather than a reason to abandon the regime work.",
+      "plain": "The system's sense of 'what kind of market is this' was quietly running on a different, less-tested method than the one it was designed around, because the designed one goes blank on the newest data. When that quieter method was measured properly across every timeframe, almost nothing qualified to trade and the safety-check on the ML model refused to retrain — which looked at first like proof the whole approach was worthless. A same-day double-check found that conclusion doesn't hold up: the safety-check refuses on the *current* live model too, for a reason that has nothing to do with this change, and the real, fixable problem is narrower — the volatility measure doesn't yet account for the fact that markets are naturally quieter at 3am than at 4pm, so it mislabels roughly a fifth to a third of hourly bars for reasons that are about the clock, not the market. The decision was to fix that specific problem rather than throw the whole thing out, and the system is intentionally not trading while that happens.",
+      "definition_of_done": "The volatility baseline is computed per time-of-day slot (93% of the diurnal spread removed in validation), all labels are re-derived under `LABELLER_VERSION structural-v2.1.0`, attribution is re-run holding the evaluation engine constant so the label's effect can actually be isolated, the resulting map gets explicit owner sign-off before going live, and a fresh model set publishes inside the map's 7-day expiry window so trading resumes. The gatekeeper degeneracy (Work Order 04) and the multiple-comparisons holdout (Work Order 05) are tracked as their own rungs and do not block this one from closing.",
+      "dependencies": [
+        {
+          "system": "system-1",
+          "role": "owner",
+          "need": "Owns every stage: the labeller fix, the held-engine measurement, the map rebuild, and (separately) the gatekeeper and holdout work orders"
+        },
+        {
+          "system": "system-2",
+          "role": "consumer",
+          "need": "Resumes receiving signals once a fresh map publishes; no action required"
+        },
+        {
+          "system": "system-3",
+          "role": "consumer",
+          "need": "Continues gating whatever arrives; no action required. The gate stays in shadow mode throughout — see G-012"
+        }
+      ],
+      "blocked_by": null
     },
     {
       "id": "P-001",
@@ -2199,12 +2288,12 @@
     {
       "id": "T-146",
       "system": "system-1",
-      "goal": "G-013",
+      "goal": "G-024",
       "period": "2026-09",
-      "status": "not_started",
+      "status": "in_progress",
       "title": "Re-vet on post-fix evidence and report the qualified count unsoftened",
-      "detail": "O-2. The live map was vetted on trades stopping 2026-08-14, and strategy 30's look-ahead was not fixed until 2026-09-03 — so its `qualified` status rests on leaked metrics. Owner has pre-accepted in advance that the map may go to **zero qualified cells**: strategy 30 is the only qualified emitter and System 3 independently rejected it as `no_positive_edge` (Kelly -0.660). If its qualification came from leaked targets that is an artefact being removed, not capability lost. Report the number; do not soften it. Use the `run-vetting` skill for the ordering.",
-      "evidence": "`task/2026-September-week1/signal-emission-defects/STATE.md` S7; owner decision Q2",
+      "detail": "O-2. The live map was vetted on trades stopping 2026-08-14, and strategy 30's look-ahead was not fixed until 2026-09-03 — so its `qualified` status rests on leaked metrics. Owner had pre-accepted that the map may go to zero qualified cells. **Superseded in scope by Work Order 02/03:** a log-only re-vet has since run against the (currently unshippable) structural label and reports 4 qualifying cells including `holy_grail_pullback@D1@Trending-Down` on 10 trades — the unsoftened number is not yet the final one, because Work Order 03's de-seasonalised labels have not been re-measured. The re-vet that counts is the one at the end of Work Order 03, held with the engine constant so the label's own effect is isolable.",
+      "evidence": "`task/2026-September-week1/signal-emission-defects/STATE.md` S7; owner decision Q2; `audit/reports/work_order_02_review.md`",
       "priority": "high",
       "urgency": "immediate"
     },
@@ -2297,10 +2386,10 @@
       "system": "system-1",
       "goal": "G-012",
       "period": "2026-09",
-      "status": "not_started",
+      "status": "in_progress",
       "title": "Write up the gatekeeper shadow review",
-      "detail": "Seven days of live data from the 2026-08-30 21:00Z open, so due about 09-06. Read it **together with O-17** — the thresholds come from a manifest describing a model Systems 2/3 have never seen, so the shadow rate has to be read against that first. Current tally: 1 would-pass, 8 would-refuse. Record an activate / stay-shadow decision either way.",
-      "evidence": "`results/state/signal_emitter_state.json` shadow_* fields; FIX-S1-018",
+      "detail": "Seven days of live data from the 2026-08-30 21:00Z open, so due about 09-06. Read it **together with O-17** — the thresholds come from a manifest describing a model Systems 2/3 have never seen, so the shadow rate has to be read against that first. **Overtaken by a bigger finding (Work Order 04 Phase 1, 2026-09-08):** the calibration question is now secondary to a structural one — the live champion is 95.5% degenerate on (strategy x regime) cells, discriminating on which strategy fired rather than on market state. The activate/stay-shadow answer is now unambiguous (stay shadow) but the write-up isn't closed until Phase 2 states what actually fixes the degeneracy, which is blocked on Work Order 03 settling the regime label.",
+      "evidence": "`results/state/signal_emitter_state.json` shadow_* fields; FIX-S1-018; `task/2026-September-week2/gatekeeper-degeneracy/WORK-ORDER-04.md`",
       "priority": "high",
       "urgency": "this_month"
     },
@@ -2533,6 +2622,18 @@
       "urgency": "immediate"
     },
     {
+      "id": "T-161",
+      "system": "system-1",
+      "goal": "G-024",
+      "period": "2026-09",
+      "status": "done",
+      "title": "R1 — freeze the map, give it provenance and an expiry, fail closed",
+      "detail": "`vetting/map_contract.py`: a published map now states the `source_label` it was selected under, carries `expires_at_utc` (`MAP_MAX_AGE_DAYS`), and is inadmissible if the label it states disagrees with the label the live path is actually routing on. Every defect means no signals, never a permissive fallback. Built because a map selected on the HMM's `regime_causal` was previously published and executed against the *structural* label with agreement 19-36% and kappa ~0 — every cell was a statement about conditions that never fired it.",
+      "evidence": "commit `2abb727`; `src/vetting/map_contract.py`",
+      "priority": "high",
+      "urgency": "immediate"
+    },
+    {
       "id": "T-335",
       "system": "system-3",
       "goal": "G-021",
@@ -2545,6 +2646,18 @@
       "urgency": "immediate"
     },
     {
+      "id": "T-162",
+      "system": "system-1",
+      "goal": "G-024",
+      "period": "2026-09",
+      "status": "done",
+      "title": "R2 — one canonical structural label, computed once",
+      "detail": "`regime/build_structural.py` is now the single place structural labels are computed, writing the full history from a fixed `ANCHOR_DATE` into `fact_regime_structural`; `regime/live.py` reads the newest row rather than recomputing. Built because the labeller is not lookback-invariant (`ewm(adjust=False)` seeds off the first row it sees), so three different callers with three different windows had been producing three different answers for the same bar.",
+      "evidence": "commit `5f48b76`; `src/regime/build_structural.py`",
+      "priority": "high",
+      "urgency": "immediate"
+    },
+    {
       "id": "T-336",
       "system": "system-3",
       "goal": "G-017",
@@ -2553,6 +2666,18 @@
       "title": "Make the email channel deliver, or stop declaring it",
       "detail": "All 427 rows in `notify_outbox` declare `[\"telegram\",\"email\"]`; `delivered_channels` has never once contained email. The `circuit_breaker_fired` page (id 22345, `requires_ack`) cannot reach `sent` while one of its two channels is permanently dead, so it resends until acknowledged - and it never was. The retry behaviour itself is correct: `notify/outbox.py:291` deliberately exempts acknowledgement-required alerts from the attempt cap. Distinct from T-312 and T-313: here the event was emitted and routed, and one of its two declared channels has simply never worked.",
       "evidence": "audit/WEEK-AUDIT-2026-08-30.md finding 4 - `notify_outbox`",
+      "priority": "high",
+      "urgency": "immediate"
+    },
+    {
+      "id": "T-163",
+      "system": "system-1",
+      "goal": "G-024",
+      "period": "2026-09",
+      "status": "done",
+      "title": "R4 — stale inputs stop trading, and a job's absence becomes detectable",
+      "detail": "`monitoring/risk_off.py` now refuses to trade on regime/price data past its freshness contract instead of the heartbeat merely warning about it, and `monitoring/job_runs.py` gives every cron job a written success record so 'ran and correctly wrote nothing' is distinguishable from 'never ran at all' — closing the gap that let the 2026-08-24 stall go undetected for 10 days because nothing consumed the heartbeat's own alert flag.",
+      "evidence": "commit `b9f6ddc`; `src/monitoring/risk_off.py`; `src/monitoring/job_runs.py`",
       "priority": "high",
       "urgency": "immediate"
     },
@@ -2639,6 +2764,66 @@
       "evidence": "audit/telemetry-truth/STATE.md - run #1, 2026-08-29T21:26:00Z",
       "priority": "medium",
       "urgency": "this_month"
+    },
+    {
+      "id": "T-164",
+      "system": "system-1",
+      "goal": "G-024",
+      "period": "2026-09",
+      "status": "done",
+      "title": "Work Order 01 — restore the structural writer's schedule; cost of a map rebuild",
+      "detail": "The writer itself was not behind — every instrument had a structural row for every price bar. What was missing was a schedule: nothing had ever run it unattended, so the labelling step now runs inside the hourly and daily cron scripts, between ingest and the signal producer, gated by their existing `set -euo pipefail`. Also found and left unresolved (an owner decision, not a mechanism call): the 54-hour freshness contract cannot be satisfied every Sunday 21:00Z-Monday 21:00Z by arithmetic alone — a D1 bar genuinely cannot exist for a session that has not closed yet, so this is a weekly, guaranteed ~24h refusal window unless `_reference_time` is extended through the first trading day.",
+      "evidence": "`audit/reports/work_order_01.md`, run 2026-09-07",
+      "priority": "high",
+      "urgency": "immediate"
+    },
+    {
+      "id": "T-165",
+      "system": "system-1",
+      "goal": "G-024",
+      "period": "2026-09",
+      "status": "in_progress",
+      "title": "Work Order 02 — structural regime at every granularity; flip selection onto it",
+      "detail": "Parameterised the structural labeller for H1/H4/D1 (252/1,512/6,048-bar volatility windows), joined attribution and the live gatekeeper on granularity, and flipped `SELECTION_SOURCE_LABEL` to `regime_structural` and `AUTHORITATIVE_ENGINE_FOR_VETTING` to `position_engine_v2`. The build's own summary concluded this should not ship, because the gatekeeper refused to retrain on the resulting map. **That conclusion was reviewed the same day and found wrong on three of its four points** — the gatekeeper refusal fires identically on the current live champion (worse, in fact), the map comparison was confounded by changing the engine and the label at once, and 'purely diurnal seasonality' overstated a real but partial defect. Status here reflects the corrected reading: the engineering is sound and kept; the shippability verdict now lives in Work Order 03.",
+      "evidence": "`task/2026-September-week2/regime-multi-timeframe/SUMMARY.md`; `audit/reports/work_order_02_review.md`",
+      "priority": "high",
+      "urgency": "immediate"
+    },
+    {
+      "id": "T-166",
+      "system": "system-1",
+      "goal": "G-024",
+      "period": "2026-09",
+      "status": "in_progress",
+      "title": "Work Order 03 — de-seasonalise the intraday volatility baseline, then measure honestly and resume trading",
+      "detail": "Fixes the real defect Work Order 02 surfaced: the H1/H4 volatility z-score compares a bar against an all-hours-of-the-day mean, so quiet overnight bars are structurally mislabelled `Ranging` and active-session bars `High-Vol` — measured as a 47.2pp diurnal spread in the 'above-baseline volatility' share by hour. The fix, already validated, compares each bar only against its own time-of-day slot's trailing history (252 observations per slot at every granularity, falling out of the existing window sizes with no new constants). Removes 93% of the spread in testing. Also carries two owner-directed additions: the gatekeeper must read `fact_regime_structural` rather than recomputing labels itself, and attribution must be re-run holding the evaluation engine constant so the label's own effect is finally isolable from the engine-filter effect that confounded Work Order 02. Ends with an owner sign-off gate before `vet --live` and publish — the freeze is not the builder's to lift.",
+      "evidence": "`task/2026-September-week2/regime-multi-timeframe/WORK-ORDER-03.md`",
+      "priority": "high",
+      "urgency": "immediate"
+    },
+    {
+      "id": "T-167",
+      "system": "system-1",
+      "goal": "G-012",
+      "period": "2026-09",
+      "status": "in_progress",
+      "title": "Work Order 04 Phase 1 — diagnose why the gatekeeper is a strategy lookup table",
+      "detail": "Read-only, runs in parallel with Work Order 03 (safe only because WO-03 stops the gatekeeper recomputing its own labels — until then Phase 1 must not train anything to disk). Confirmed the live champion is 95.5% degenerate on (strategy x regime) cells — `strategy_id` carries 96.78% of gain importance, the regime feature 0.21% — and that this predates and is unrelated to this month's regime-label work. Explicitly excluded from the fix: relaxing `MAX_DEGENERATE_CELL_SHARE` or the turnover band. Phase 2 (the actual fix) is blocked on Work Order 03 settling which label the model should be trained against.",
+      "evidence": "`task/2026-September-week2/gatekeeper-degeneracy/WORK-ORDER-04.md`; `audit/reports/work_order_02_review.md` Claim 1",
+      "priority": "high",
+      "urgency": "this_month"
+    },
+    {
+      "id": "T-168",
+      "system": "system-1",
+      "goal": "G-024",
+      "period": "2026-09",
+      "status": "not_started",
+      "title": "Work Order 05 — a never-touched holdout period",
+      "detail": "Today 'out-of-sample' means everything after 36 months from series start — roughly 2009 to now, evaluated on every vetting run and every gate change for months, an uncounted multiple-comparisons problem and the likely explanation for cells that qualified on 5-20 trades. Adds a second, one-time-look stage: selection stays on walk-forward OOS ending 2022-12-31 exactly as today; a cell that passes is then checked once against 2023-01-01-to-present data it has never touched, logged to an append-only `holdout_register.jsonl` so the number of looks is knowable rather than guessed. Queued last, deliberately — it changes how the system decides and must not ride inside another change; runs after Work Order 03 (trading resumed) and Work Order 04 Phase 1.",
+      "evidence": "`task/2026-September-week2/holdout/WORK-ORDER-05.md`; `docs/design/HOLDOUT_PROPOSAL.md`",
+      "priority": "medium",
+      "urgency": "next_month"
     }
   ],
   "priority_vocabulary": {
