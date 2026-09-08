@@ -1,11 +1,11 @@
 {
   "schema_version": "1.0.0",
-  "as_of": "2026-08-22",
+  "as_of": "2026-09-08",
   "decisions": [
     {
       "id": "ADR-001",
       "title": "Where live inference runs",
-      "status": "proposed",
+      "status": "accepted",
       "date": "2026-08-22",
       "systems": [
         "system-1",
@@ -63,6 +63,10 @@
         {
           "step": "Cutover",
           "text": "The System 1 producer is decommissioned in the same change that enables System 2 inference. They must never both publish. A hard requirement, not a sequencing preference."
+        },
+        {
+          "step": "Status as of 2026-09-08 — accepted, not built",
+          "text": "Both systems replied approve-with-conditions on 2026-08-22, so the decision itself is settled; status here reads `accepted` rather than `proposed` even though the ADR's own document header still (incorrectly) says PROPOSED. Nothing on the Build step has started. A blocker outside this ADR's original scope surfaced afterward and gates it: the System 1 and System 3 signal schemas are mutually incompatible today (`instrument`/`pair`, `entry`/`proposed_entry`, both `additionalProperties: false`), so every signal System 1 would produce under this design is currently rejected. Schema v2 reconciliation, with System 1 adopting System 3's field names, ships before Build resumes. Meanwhile System 1's producer keeps running as the explicit bridge — see the 'Now — bridge' step above, unchanged in intent."
         }
       ],
       "open_questions": [
@@ -137,6 +141,58 @@
         }
       ],
       "open_questions": []
+    },
+    {
+      "id": "DEC-2026-09-08",
+      "title": "Keep the structural regime label; fix its diurnal-seasonality defect rather than abandon it",
+      "status": "accepted",
+      "date": "2026-09-08",
+      "systems": [
+        "system-1"
+      ],
+      "requires_approval_from": [],
+      "source": "task/2026-September-week2/regime-multi-timeframe/WORK-ORDER-03.md; audit/reports/work_order_02_review.md",
+      "problem": {
+        "technical": "The HMM regime label the system was designed around (`regime_causal`) is NULL on the newest rows, so nothing live can route on it — the system had already drifted onto a structural label (ADX + rolling ATR% z-score, `regime_structural`) without that being an acknowledged design decision. When that label was measured properly across every timeframe the system trades (H1/H4/D1), the resulting map nearly emptied and the ML gatekeeper refused to retrain on it, which the initial build summary read as proof the structural label has no predictive value and should not ship.",
+        "plain": "The market-condition detector the system was meant to use goes blank on recent data, so it had quietly switched to a backup method without anyone deciding that on purpose. When that backup method was finally tested properly across every timeframe, almost nothing qualified to trade and a safety check on the machine-learning model refused to retrain — which looked, at first glance, like the backup method was worthless."
+      },
+      "argument": {
+        "technical": "A same-day adversarial review found three of the four load-bearing claims behind that reading false or overstated. (1) The gatekeeper refusal fires identically, slightly worse, on the *currently live* champion (95.5% degenerate cells vs. 95.1% for the new candidate) — it is a pre-existing gatekeeper defect, not evidence against the structural label. (2) The map comparison changed two variables at once — the label and the evaluation engine — and the 60% drop in trade population came from the engine filter, not the label; no conclusion about the label survives that confound. (3) 'Purely diurnal seasonality' overstates a real but partial defect: H1/H4 volatility is scored against an all-hours-of-the-day baseline, so quiet overnight bars are structurally mislabelled Ranging and active-session bars High-Vol — measured at a 47.2 percentage-point spread by hour, affecting the High-Vol/Ranging split only (roughly 20-30% of bars), not the trending labels.",
+        "plain": "A second, more careful look the same day found the pessimistic conclusion didn't hold up. The safety-check refuses on the model already in use today, too, for a reason that predates and has nothing to do with this change. The before-and-after comparison changed two things at once, so it couldn't actually isolate what the label change did. And the seasonality problem, while real, only affects the volatility measurement, not the trend measurement, and for a clearly identifiable, fixable reason: it compares 3am to a full-day average instead of to other 3ams."
+      },
+      "decision": {
+        "technical": "Keep the structural regime label. Fix the diurnal-seasonality defect by computing the volatility z-score within time-of-day slot rather than pooled across the day — already validated to remove 93% of the spread, using the same 252-observations-per-slot window the design already had, with no new constants. Re-run attribution holding the evaluation engine constant so the label's own effect is finally isolable. The gatekeeper's degeneracy is explicitly carved out as a separate, pre-existing problem (Work Order 04) and is not a reason to abandon this work — nor is it grounds to relax the guard that caught it.",
+        "plain": "Fix the specific, identified problem rather than discard the whole approach. Measure the fix properly this time, changing one thing at a time. Treat the machine-learning model's refusal to retrain as its own separate problem to solve, not as a verdict on the market-condition detector."
+      },
+      "consequences": {
+        "good": [
+          "The engineering already done in Work Order 02 (per-granularity parameterisation, the joins, single-sourcing `LABELLER_VERSION`, a real pip-scaling fix) is kept rather than thrown away.",
+          "The system stays deliberately not-trading rather than trading on a label known to be partially contaminated — the freeze is respected until owner sign-off.",
+          "Separates two genuinely different problems (a seasonality defect and a pre-existing ML degeneracy) that had been collapsed into one wrong conclusion."
+        ],
+        "bad": [
+          "Trading stays paused for the duration of Work Order 03 — an unquantified number of days.",
+          "The gatekeeper degeneracy (Work Order 04) is real, affects the live champion today, and is not fixed by any of this — the gate remains meaningfully uninformative even in shadow mode until Phase 2 lands.",
+          "The only currently-qualifying cell under the new label rests on 10 trades — thin, and explicitly not to be judged until re-measured after the seasonality fix."
+        ]
+      },
+      "transition": [
+        {
+          "step": "Now",
+          "text": "Work Order 03 implements the per-slot volatility baseline, re-derives all labels under `structural-v2.1.0`, and re-runs the held-engine comparison."
+        },
+        {
+          "step": "Gate",
+          "text": "Owner sign-off required before `vet --live` and publish — the freeze is not the builder's to lift."
+        },
+        {
+          "step": "Parallel, not blocking",
+          "text": "Work Order 04 Phase 1 (gatekeeper diagnosis, read-only) runs alongside. Phase 2 (the fix) waits for this decision's labels to settle."
+        }
+      ],
+      "open_questions": [
+        "Does the re-measured map, held to the same engine, actually qualify more than the single 10-trade cell — and does it survive Work Order 05's holdout check once that runs?"
+      ]
     }
   ]
 }
