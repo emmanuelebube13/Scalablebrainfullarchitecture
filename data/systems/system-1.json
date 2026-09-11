@@ -10,24 +10,59 @@
   "repository": "https://github.com/emmanuelebube13/scalable-brain",
   "code_root": "src/",
   "status": {
-    "state": "not_trading",
-    "as_of": "2026-09-08",
-    "note": "**Deliberately not trading.** The live regime-strategy map expired 2026-08-24 and its 7-day contract (`vetting/map_contract.py`, landed 2026-09-05) now fails closed rather than let a stale map keep routing signals — last emission 2026-09-04T21:15Z. This is a new safety control doing its job, not a regression. The retrain cron, held since early August at Computer 2's request, was re-enabled 2026-09-03 by owner decision; it cannot currently retrain the ML gatekeeper at all, because a per-cell degeneracy guard correctly refuses — the model was found to be 95.5% degenerate on (strategy x regime) cells, discriminating on which strategy fired rather than on market conditions (Work Order 04). In parallel, a real defect was found and is being fixed in the market-regime detector itself: its intraday volatility measure was comparing 3am to an all-day average, mislabelling roughly a fifth to a third of hourly bars (Work Order 03, active). The pipe to System 3 and System 2 is proven end to end — 9 signals published, acked, decided, 3 became real OANDA orders (2026-09-03), though all three lost and tripped System 3's circuit breaker, still open — so what's missing right now is a fresh, admissible map to send down it, not a broken transport."
+    "state": "operational",
+    "as_of": "2026-09-11",
+    "note": "**No signal has been emitted since 2026-09-04T21:15Z — and for six days the reason was misdiagnosed four times over.** The producer ran every hour, reported healthy, and published nothing. A Pub/Sub hang, a stalled bar-watcher, the ML gatekeeper and the holdout were each investigated and each ruled out. The actual cause was `DISABLE_LEGACY_SIGNALS` — a deliberate halt set 2026-09-05, whose own written precondition (\"a vetting run that clears the rebuilt gate\") had been satisfied on 2026-09-09. It stayed on two extra days because two independent reviews reported the live map as *empty*; it was not, it held six cells. The signal ledger settles it: seven real signals on 2026-09-10 were built, scored, and written with `wire_action=suppressed`. The system was working the whole time; a switch was discarding its output. Emission was re-enabled 2026-09-11.\n\n**Three latent defects were cleared on the way.** The bar-watcher never advanced its cursor on a quiet run, so the backlog grew without bound and each run re-derived a larger history until it outran any timeout. An uncommitted change to that same watcher would have treated ~10,000 historical bars as newly closed — caught and reverted before the flag was flipped. And the HMM retrain was silently producing zero walk-forward folds: a hardcoded 2021 feature start, combined with the 2023 holdout clamp, left 15.1 months against a 36-month minimum, so it fell back to fitting on everything and scoring itself — a perfect 1.000 accuracy at every granularity. The giveaway was runtime: 80 seconds where an honest fit takes 35 minutes. Folds restored 0 → 28.\n\n**One live cell was withdrawn for losing money.** A designated strategy cell re-measured at profit factor 0.86 and Sharpe −0.38 once its own pip-scaling bug was fixed — these were its first honest numbers. A designation overrides the performance *gates*; it was never a licence to trade negative expectancy.\n\n**What limits trading now is the map, not the pipeline.** Eight cells cover three of four regimes, and four of five instruments currently sit in `Trending-Down`, where no strategy qualified — every vetting run logs `STARVATION`. That is an honest empty cell rather than a fault, but emission stays sparse until the regime turns or the gates are revisited."
   },
   "summary": {
     "technical": "System 1 is the offline intelligence factory. It ingests OANDA multi-timeframe candles, builds a versioned trailing-only feature store, fits causal regime labels, attributes historical trade outcomes to the regime in force at entry, vets each (strategy x regime x granularity) cell against fixed gates, trains an XGBoost gatekeeper on walk-forward folds, and publishes a checksummed artifact bundle. It never emits an order and holds no credential capable of placing one. It also currently runs a live signal producer — a contradiction that ADR-001 exists to resolve.",
     "plain": "System 1 is the research lab. It reads years of price history, works out what kind of market each moment was, checks which trading rules actually made money in which kind of market, and packages the winners into a sealed box with a serial number on it. It never touches the money. Its job is to hand the box downstream and then be allowed to switch off."
   },
   "facts": [
-    { "label": "Language", "value": "Python 3.12" },
-    { "label": "Database", "value": "PostgreSQL 16 + TimescaleDB 2.26.3" },
-    { "label": "Models", "value": "XGBoost gatekeeper · Gaussian HMM regimes" },
-    { "label": "Artifact store", "value": "GCS `scalable-brain-artifacts`" },
-    { "label": "Live model set", "value": "`2026-08-24T10-08-20Z-cb697b59_gk-d614163c`, published 2026-08-24T10:51:09Z" },
-    { "label": "Signal cadence", "value": "Hourly cron, fires :15 past every hour" },
-    { "label": "Queue transport", "value": "Pub/Sub — publisher-only service account (can push, cannot list or pull)" },
-    { "label": "Gate-1 state", "value": "**Shadow** — scored and recorded, never enforced (FIX-S1-018)" },
-    { "label": "Signal ledger", "value": "`results/signals/<date>.ndjson` -> `telemetry/signals/` in GCS, hourly" }
+    {
+      "label": "Language",
+      "value": "Python 3.12"
+    },
+    {
+      "label": "Database",
+      "value": "PostgreSQL 16 + TimescaleDB 2.26.3"
+    },
+    {
+      "label": "Models",
+      "value": "XGBoost gatekeeper · Gaussian HMM regimes"
+    },
+    {
+      "label": "Artifact store",
+      "value": "GCS `scalable-brain-artifacts`"
+    },
+    {
+      "label": "Live model set",
+      "value": "`2026-09-09T04-06-47Z-74fb9f9c_gk-d614163c`, published 2026-09-09T04:09Z · map `structural-v2.1.0`, 8 cells pending publish"
+    },
+    {
+      "label": "Signal cadence",
+      "value": "Hourly cron, fires :15 past every hour"
+    },
+    {
+      "label": "Queue transport",
+      "value": "Pub/Sub — publisher-only service account (can push, cannot list or pull)"
+    },
+    {
+      "label": "Gate-1 state",
+      "value": "**Shadow** — scored and recorded, never enforced. 95.2% of scored candidates would have been refused"
+    },
+    {
+      "label": "Signal ledger",
+      "value": "`results/signals/<date>.ndjson` -> `telemetry/signals/` in GCS, hourly"
+    },
+    {
+      "label": "Regime label",
+      "value": "`regime_structural` — selection and routing on the same label since 2026-09-09"
+    },
+    {
+      "label": "Emission",
+      "value": "Re-enabled 2026-09-11 after a 6-day deliberate halt"
+    }
   ],
   "sections": [
     {
@@ -35,28 +70,77 @@
       "title": "Data Ingestion & Mapping",
       "kind": "ingestion",
       "body": {
-        "technical": ["Ingestion is a single governed writer: `src/system1/ingestion/multi_timeframe_ingest.py`, fronted by `dq.py` data-quality gates. It pulls **MBA candles** (mid, bid and ask in one request) from the OANDA v20 REST practice endpoint across H1, H4 and D1, and writes to the `fact_market_prices` hypertable with `INSERT … ON CONFLICT (<pk>)` so a re-run is a no-op rather than a duplicate.", "Every write goes through `src/common/db.py`. No module builds a connection string inline. Session timezone is pinned to UTC, because every day and week boundary in the risk layer downstream is computed in UTC and a local-time drift would silently move a daily loss budget.", "Column casing is a real hazard in this schema: only `\"Open\"` and `\"Close\"` are mixed-case and `\"timestamp\"` is reserved, so all three are double-quoted; everything else is lowercase. Code is written schema-aware — optional columns are never assumed to exist, because the live schema has drifted from the original design."],
-        "plain": ["This step is the delivery bay. It phones the broker, asks for the price history of each currency pair at three different zoom levels — hourly, four-hourly and daily — and files it away.", "Two things make it boring on purpose. First, asking twice does not create two copies; the second delivery is recognised and thrown away. Second, everything is stamped in one single timezone, so 'Tuesday' means the same Tuesday everywhere in the system."]
+        "technical": [
+          "Ingestion is a single governed writer: `src/system1/ingestion/multi_timeframe_ingest.py`, fronted by `dq.py` data-quality gates. It pulls **MBA candles** (mid, bid and ask in one request) from the OANDA v20 REST practice endpoint across H1, H4 and D1, and writes to the `fact_market_prices` hypertable with `INSERT … ON CONFLICT (<pk>)` so a re-run is a no-op rather than a duplicate.",
+          "Every write goes through `src/common/db.py`. No module builds a connection string inline. Session timezone is pinned to UTC, because every day and week boundary in the risk layer downstream is computed in UTC and a local-time drift would silently move a daily loss budget.",
+          "Column casing is a real hazard in this schema: only `\"Open\"` and `\"Close\"` are mixed-case and `\"timestamp\"` is reserved, so all three are double-quoted; everything else is lowercase. Code is written schema-aware — optional columns are never assumed to exist, because the live schema has drifted from the original design."
+        ],
+        "plain": [
+          "This step is the delivery bay. It phones the broker, asks for the price history of each currency pair at three different zoom levels — hourly, four-hourly and daily — and files it away.",
+          "Two things make it boring on purpose. First, asking twice does not create two copies; the second delivery is recognised and thrown away. Second, everything is stamped in one single timezone, so 'Tuesday' means the same Tuesday everywhere in the system."
+        ]
       },
       "tables": [
         {
           "title": "Sources and destinations",
-          "columns": ["Source", "Shape", "Cadence", "Lands in", "Guarantee"],
+          "columns": [
+            "Source",
+            "Shape",
+            "Cadence",
+            "Lands in",
+            "Guarantee"
+          ],
           "rows": [
-            ["OANDA v20 REST (practice)", "MBA candles — mid/bid/ask OHLC + volume", "Daily batch + weekly Saturday cron", "`fact_market_prices`", "Idempotent upsert on primary key"],
-            ["OANDA v20 REST (practice)", "Same, backfill mode", "On demand", "`fact_market_prices`", "Range-bounded, never truncates"],
-            ["Macro event text (auxiliary)", "Scraped headlines scored by FinBERT", "Ad hoc", "`fact_macro_events`", "Not enforced as a feature or a gate — MODEL-010 is unbuilt"]
+            [
+              "OANDA v20 REST (practice)",
+              "MBA candles — mid/bid/ask OHLC + volume",
+              "Daily batch + weekly Saturday cron",
+              "`fact_market_prices`",
+              "Idempotent upsert on primary key"
+            ],
+            [
+              "OANDA v20 REST (practice)",
+              "Same, backfill mode",
+              "On demand",
+              "`fact_market_prices`",
+              "Range-bounded, never truncates"
+            ],
+            [
+              "Macro event text (auxiliary)",
+              "Scraped headlines scored by FinBERT",
+              "Ad hoc",
+              "`fact_macro_events`",
+              "Not enforced as a feature or a gate — MODEL-010 is unbuilt"
+            ]
           ]
         },
         {
           "title": "Feature store — MODEL-002",
-          "columns": ["Property", "Value"],
+          "columns": [
+            "Property",
+            "Value"
+          ],
           "rows": [
-            ["Module", "`src/system1/features/feature_pipeline.py` + `definitions.py`"],
-            ["Format", "Versioned Parquet under `feature-store/{version}/`"],
-            ["Look-ahead policy", "Trailing-only. Every feature at bar *t* uses bars ≤ *t*"],
-            ["Determinism", "Byte-identical partitions for identical inputs"],
-            ["Consumers", "MODEL-003 (regimes), MODEL-006 (gatekeeper)"]
+            [
+              "Module",
+              "`src/system1/features/feature_pipeline.py` + `definitions.py`"
+            ],
+            [
+              "Format",
+              "Versioned Parquet under `feature-store/{version}/`"
+            ],
+            [
+              "Look-ahead policy",
+              "Trailing-only. Every feature at bar *t* uses bars ≤ *t*"
+            ],
+            [
+              "Determinism",
+              "Byte-identical partitions for identical inputs"
+            ],
+            [
+              "Consumers",
+              "MODEL-003 (regimes), MODEL-006 (gatekeeper)"
+            ]
           ]
         }
       ],
@@ -74,8 +158,17 @@
       "title": "Core Logic & Execution",
       "kind": "pipeline",
       "body": {
-        "technical": ["The runtime is organised as tasks MODEL-001…010. Every module is a `python -m` entry point, separates pure math from I/O, and registers runs to MLflow. Walk-forward folds are shared from `validation/walk_forward.py` — min train 36 months, 6-month step, 6-month out-of-sample, anchored — so regimes, attribution and the gatekeeper all cut time the same way.", "The controlling design decision is **strategy first, gatekeeper vetoes**. Strategies run blind on mechanical price rules with no idea what the regime is. The regime model labels history separately. Attribution joins the two *after the fact* at the trade's entry timestamp, using the causal label. This is what makes it possible to throw hundreds of dumb strategies at the wall without hand-coding regime logic into each one.", "Promotion-capable stages default to dry-run. `vet` writes `results/reports/proposed_*` unless `--live`; `gatekeeper.train --dry-run` never touches the live champion. The orchestrator is the **single governed writer** of the champion bundle (FIX-S1-009) — a second promotion path is prohibited, not merely discouraged."],
-        "plain": ["Think of it as a hiring process for trading rules.", "First, every candidate rule is let loose on decades of history with a blindfold on — it just follows its mechanical instructions and every trade it would have made is written down. Separately, a second program goes through the same history and marks each day with what the market was doing: trending, drifting sideways, or violent.", "Then the two lists are laid on top of each other. Now you can ask a sharp question: *this rule made money — but was that in calm markets or wild ones?* Rules that only work in one kind of weather get used only in that weather.", "Finally, a machine-learning referee learns to spot the trades that tend to fail even when the rule and the weather both look right, and gets a veto. Nothing is promoted automatically; almost every stage refuses to change anything unless explicitly told to."]
+        "technical": [
+          "The runtime is organised as tasks MODEL-001…010. Every module is a `python -m` entry point, separates pure math from I/O, and registers runs to MLflow. Walk-forward folds are shared from `validation/walk_forward.py` — min train 36 months, 6-month step, 6-month out-of-sample, anchored — so regimes, attribution and the gatekeeper all cut time the same way.",
+          "The controlling design decision is **strategy first, gatekeeper vetoes**. Strategies run blind on mechanical price rules with no idea what the regime is. The regime model labels history separately. Attribution joins the two *after the fact* at the trade's entry timestamp, using the causal label. This is what makes it possible to throw hundreds of dumb strategies at the wall without hand-coding regime logic into each one.",
+          "Promotion-capable stages default to dry-run. `vet` writes `results/reports/proposed_*` unless `--live`; `gatekeeper.train --dry-run` never touches the live champion. The orchestrator is the **single governed writer** of the champion bundle (FIX-S1-009) — a second promotion path is prohibited, not merely discouraged."
+        ],
+        "plain": [
+          "Think of it as a hiring process for trading rules.",
+          "First, every candidate rule is let loose on decades of history with a blindfold on — it just follows its mechanical instructions and every trade it would have made is written down. Separately, a second program goes through the same history and marks each day with what the market was doing: trending, drifting sideways, or violent.",
+          "Then the two lists are laid on top of each other. Now you can ask a sharp question: *this rule made money — but was that in calm markets or wild ones?* Rules that only work in one kind of weather get used only in that weather.",
+          "Finally, a machine-learning referee learns to spot the trades that tend to fail even when the rule and the weather both look right, and gets a veto. Nothing is promoted automatically; almost every stage refuses to change anything unless explicitly told to."
+        ]
       },
       "stages": [
         {
@@ -198,36 +291,125 @@
       "title": "Outputs & Contracts",
       "kind": "interfaces",
       "body": {
-        "technical": ["System 1 emits exactly two kinds of thing: **artifacts** to object storage and **messages** to a Pub/Sub topic. It never emits an order, and it holds no broker credential capable of placing one.", "The publish contract is ordering-critical: upload to an immutable versioned prefix → SHA256 verify the round trip → only then flip `latest.json`. A consumer that reads the pointer therefore can never observe a half-written bundle. Retention trims the oldest versions; it never overwrites.", "`QUEUE_PROVIDER` is now `pubsub` — it was `local` until recently, which meant signals landed in a directory on Computer 1 that no other machine could ever read. System 1's service account is **publisher-only**: it can push to `Scored_Signal_Queue` but cannot list topics or subscriptions, so it has no way to confirm anyone is on the other end."],
-        "plain": ["Two outputs, both one-way. A sealed model package on cloud storage, and a stream of scored trade ideas.", "Nothing here can place a trade. That is deliberate — the machine that decides what is a good idea is physically incapable of acting on its own opinion.", "The trade ideas now go into a real cloud postbox rather than a folder on one desk. But System 1 has posting rights only: it cannot look inside the postbox to check whether anyone is collecting. Confirmation has to come back from the other machines in writing."]
+        "technical": [
+          "System 1 emits exactly two kinds of thing: **artifacts** to object storage and **messages** to a Pub/Sub topic. It never emits an order, and it holds no broker credential capable of placing one.",
+          "The publish contract is ordering-critical: upload to an immutable versioned prefix → SHA256 verify the round trip → only then flip `latest.json`. A consumer that reads the pointer therefore can never observe a half-written bundle. Retention trims the oldest versions; it never overwrites.",
+          "`QUEUE_PROVIDER` is now `pubsub` — it was `local` until recently, which meant signals landed in a directory on Computer 1 that no other machine could ever read. System 1's service account is **publisher-only**: it can push to `Scored_Signal_Queue` but cannot list topics or subscriptions, so it has no way to confirm anyone is on the other end."
+        ],
+        "plain": [
+          "Two outputs, both one-way. A sealed model package on cloud storage, and a stream of scored trade ideas.",
+          "Nothing here can place a trade. That is deliberate — the machine that decides what is a good idea is physically incapable of acting on its own opinion.",
+          "The trade ideas now go into a real cloud postbox rather than a folder on one desk. But System 1 has posting rights only: it cannot look inside the postbox to check whether anyone is collecting. Confirmation has to come back from the other machines in writing."
+        ]
       },
       "tables": [
         {
           "title": "Published interfaces",
-          "columns": ["Interface", "Transport", "Contract", "Consumer"],
+          "columns": [
+            "Interface",
+            "Transport",
+            "Contract",
+            "Consumer"
+          ],
           "rows": [
-            ["Model bundle + `latest.json`", "GCS `scalable-brain-artifacts`", "SHA256 manifest, immutable prefixes", "System 2 (artifact sync)"],
-            ["Scored signals", "Pub/Sub `Scored_Signal_Queue`", "`contracts/signal-message-contract.json`", "System 3 (Guardian)"],
-            ["Regime→strategy map", "GCS artifact", "`contracts/regime-map-contract.json`", "System 2, System 3"],
-            ["Strategy weights", "GCS artifact", "`contracts/weights-contract.json`", "System 3"],
-            ["Regime status", "GCS artifact", "`contracts/regime-status-contract.json`", "System 2"],
-            ["Analytics bundle", "GCS `system1/analytics/`", "Versioned + pointer flip", "Telemetry / simulation"],
-            ["Gate-1 signal ledger", "GCS `telemetry/signals/<date>/<ts>-<sha8>.ndjson`", "28-field NDJSON row; enums `gate1_outcome` / `wire_action` / `shadow_verdict`", "Telemetry ingester -> Postgres `s1_scored_signals_log`"],
-            ["System 1 health", "GCS `telemetry/s1_health.json`", "`emitter.gate1` (outcome mix + `shadow`), `emitter.dlq` (by reason)", "Dashboard"]
+            [
+              "Model bundle + `latest.json`",
+              "GCS `scalable-brain-artifacts`",
+              "SHA256 manifest, immutable prefixes",
+              "System 2 (artifact sync)"
+            ],
+            [
+              "Scored signals",
+              "Pub/Sub `Scored_Signal_Queue`",
+              "`contracts/signal-message-contract.json`",
+              "System 3 (Guardian)"
+            ],
+            [
+              "Regime→strategy map",
+              "GCS artifact",
+              "`contracts/regime-map-contract.json`",
+              "System 2, System 3"
+            ],
+            [
+              "Strategy weights",
+              "GCS artifact",
+              "`contracts/weights-contract.json`",
+              "System 3"
+            ],
+            [
+              "Regime status",
+              "GCS artifact",
+              "`contracts/regime-status-contract.json`",
+              "System 2"
+            ],
+            [
+              "Analytics bundle",
+              "GCS `system1/analytics/`",
+              "Versioned + pointer flip",
+              "Telemetry / simulation"
+            ],
+            [
+              "Gate-1 signal ledger",
+              "GCS `telemetry/signals/<date>/<ts>-<sha8>.ndjson`",
+              "28-field NDJSON row; enums `gate1_outcome` / `wire_action` / `shadow_verdict`",
+              "Telemetry ingester -> Postgres `s1_scored_signals_log`"
+            ],
+            [
+              "System 1 health",
+              "GCS `telemetry/s1_health.json`",
+              "`emitter.gate1` (outcome mix + `shadow`), `emitter.dlq` (by reason)",
+              "Dashboard"
+            ]
           ]
         },
         {
           "title": "Signal message — required fields",
-          "columns": ["Field", "Type", "Note"],
+          "columns": [
+            "Field",
+            "Type",
+            "Note"
+          ],
           "rows": [
-            ["`schema_version`", "string", "Consumers reject unknown majors"],
-            ["`message_id` / `signal_id`", "string", "Idempotency keys"],
-            ["`instrument`, `granularity`", "string", "Granularity ∈ H1 / H4 / D1 / W1"],
-            ["`direction`, `entry`, `stop`, `target`", "string / number", "Prices, not sizes — System 1 never sizes"],
-            ["`model_score`, `threshold_applied`, `approved`", "number / bool", "Nullable when scoring is unavailable"],
-            ["`regime`, `regime_probs`", "string / object", "The causal label at signal time"],
-            ["`bundle_version`", "string", "Which sealed box produced this"],
-            ["`selection_basis`, `scoring_status`", "string", "Why this signal exists and whether the model spoke"]
+            [
+              "`schema_version`",
+              "string",
+              "Consumers reject unknown majors"
+            ],
+            [
+              "`message_id` / `signal_id`",
+              "string",
+              "Idempotency keys"
+            ],
+            [
+              "`instrument`, `granularity`",
+              "string",
+              "Granularity ∈ H1 / H4 / D1 / W1"
+            ],
+            [
+              "`direction`, `entry`, `stop`, `target`",
+              "string / number",
+              "Prices, not sizes — System 1 never sizes"
+            ],
+            [
+              "`model_score`, `threshold_applied`, `approved`",
+              "number / bool",
+              "Nullable when scoring is unavailable"
+            ],
+            [
+              "`regime`, `regime_probs`",
+              "string / object",
+              "The causal label at signal time"
+            ],
+            [
+              "`bundle_version`",
+              "string",
+              "Which sealed box produced this"
+            ],
+            [
+              "`selection_basis`, `scoring_status`",
+              "string",
+              "Why this signal exists and whether the model spoke"
+            ]
           ],
           "note": "Full schema: `contracts/signal-message-contract.json` in the source repository. `additionalProperties: false` — unknown fields are a hard reject."
         }
@@ -251,48 +433,143 @@
       "title": "Running It — Logs, Health Checks & Commands",
       "kind": "operations",
       "body": {
-        "technical": ["System 1 has no dashboard of its own. Everything below is either a local file on Computer 1 or a single artifact mirrored to GCS that the other machines (and this documentation) can read without a database connection or SSH access.", "Six cron jobs run the machine as of 2026-09-08: an hourly job at **:15** (structural regime labelling → ingest → build/score/publish signals → publish health → mirror the model card), a legacy weekday-evening job at **22:30** that mostly duplicates the hourly one now, a daily outcomes rebuild at **02:00** (weekdays), a daily strategy-stats publish at **05:40**, a daily heartbeat at **06:00**, and a Saturday catch-up ingest at **00:00**. **The retrain cron was re-enabled 2026-09-03** by owner decision, ending the hold Computer 2 had requested — `results/state/cron_holds.json` is now empty. It runs hourly, no-ops unless a trigger fires, and cannot currently promote a new gatekeeper model at all (a degeneracy guard correctly refuses — see the Work Orders callout above).", "The single most important state field in the whole system is `results/state/signal_emitter_state.json` → `last_signal_emitted_at`. It only advances on a real publish, never on a run — which is the direct fix for FIX-S1-016, where the producer ran on schedule for weeks, logged nothing alarming, and never once emitted a signal. A green heartbeat next to a null or stale `last_signal_emitted_at` is that failure mode recurring, not a healthy system."],
-        "plain": ["Nothing here needs a login or a dashboard. It's cron jobs writing plain files, plus one snapshot copied to the cloud so the other two computers can check on this one without asking it anything.", "The one number that matters more than any other is the timestamp of the last signal actually sent — not the last time the job ran. A job can run perfectly, on schedule, forever, and still never send anything. That exact failure happened here once for weeks before anyone noticed, because everything that could be checked said 'healthy' except the one thing nobody was reading."]
+        "technical": [
+          "System 1 has no dashboard of its own. Everything below is either a local file on Computer 1 or a single artifact mirrored to GCS that the other machines (and this documentation) can read without a database connection or SSH access.",
+          "Six cron jobs run the machine as of 2026-09-08: an hourly job at **:15** (structural regime labelling → ingest → build/score/publish signals → publish health → mirror the model card), a legacy weekday-evening job at **22:30** that mostly duplicates the hourly one now, a daily outcomes rebuild at **02:00** (weekdays), a daily strategy-stats publish at **05:40**, a daily heartbeat at **06:00**, and a Saturday catch-up ingest at **00:00**. **The retrain cron was re-enabled 2026-09-03** by owner decision, ending the hold Computer 2 had requested — `results/state/cron_holds.json` is now empty. It runs hourly, no-ops unless a trigger fires, and cannot currently promote a new gatekeeper model at all (a degeneracy guard correctly refuses — see the Work Orders callout above).",
+          "The single most important state field in the whole system is `results/state/signal_emitter_state.json` → `last_signal_emitted_at`. It only advances on a real publish, never on a run — which is the direct fix for FIX-S1-016, where the producer ran on schedule for weeks, logged nothing alarming, and never once emitted a signal. A green heartbeat next to a null or stale `last_signal_emitted_at` is that failure mode recurring, not a healthy system."
+        ],
+        "plain": [
+          "Nothing here needs a login or a dashboard. It's cron jobs writing plain files, plus one snapshot copied to the cloud so the other two computers can check on this one without asking it anything.",
+          "The one number that matters more than any other is the timestamp of the last signal actually sent — not the last time the job ran. A job can run perfectly, on schedule, forever, and still never send anything. That exact failure happened here once for weeks before anyone noticed, because everything that could be checked said 'healthy' except the one thing nobody was reading."
+        ]
       },
       "tables": [
         {
           "title": "Log files (on Computer 1, under `logs/`)",
-          "columns": ["File", "What it shows", "Written by"],
+          "columns": [
+            "File",
+            "What it shows",
+            "Written by"
+          ],
           "rows": [
-            ["`cron_hourly_signals.log`", "One block per run: ingest → build/score signals → publish → health publish → model-card mirror. The primary log for 'is it working right now'.", "Hourly, :15"],
-            ["`cron_signals.log`", "Legacy weekday-evening ingest + signal run. Mostly a no-op now — the hourly job has usually already processed the same bars.", "Weekdays, 22:30"],
-            ["`cron_heartbeat.log`", "Output of `monitoring.heartbeat` — the daily freshness rollup across prices, regimes, outcomes, the champion bundle and telemetry.", "Daily, 06:00"],
-            ["`cron_oanda_ingest.log`", "Saturday catch-up ingest, for the one day the hourly job's market-hours self-limiting makes a no-op.", "Saturdays, 00:00"],
-            ["`cron_system1_retrain.log`", "Retrain orchestrator. Re-enabled 2026-09-03; fires hourly, mostly logs `no_trigger_or_cooldown`. Cannot currently promote a gatekeeper — degeneracy guard refuses (Work Order 04).", "Hourly"]
+            [
+              "`cron_hourly_signals.log`",
+              "One block per run: ingest → build/score signals → publish → health publish → model-card mirror. The primary log for 'is it working right now'.",
+              "Hourly, :15"
+            ],
+            [
+              "`cron_signals.log`",
+              "Legacy weekday-evening ingest + signal run. Mostly a no-op now — the hourly job has usually already processed the same bars.",
+              "Weekdays, 22:30"
+            ],
+            [
+              "`cron_heartbeat.log`",
+              "Output of `monitoring.heartbeat` — the daily freshness rollup across prices, regimes, outcomes, the champion bundle and telemetry.",
+              "Daily, 06:00"
+            ],
+            [
+              "`cron_oanda_ingest.log`",
+              "Saturday catch-up ingest, for the one day the hourly job's market-hours self-limiting makes a no-op.",
+              "Saturdays, 00:00"
+            ],
+            [
+              "`cron_system1_retrain.log`",
+              "Retrain orchestrator. Re-enabled 2026-09-03; fires hourly, mostly logs `no_trigger_or_cooldown`. Cannot currently promote a gatekeeper — degeneracy guard refuses (Work Order 04).",
+              "Hourly"
+            ]
           ]
         },
         {
           "title": "State & telemetry files",
-          "columns": ["File", "Field that matters", "What it means"],
+          "columns": [
+            "File",
+            "Field that matters",
+            "What it means"
+          ],
           "rows": [
-            ["`results/state/signal_emitter_state.json`", "`last_signal_emitted_at`", "Timestamp of the last SIGNAL actually published — not the last run. Null means never emitted."],
-            ["`results/state/signal_emitter_state.json`", "`signals_published_total`", "Running lifetime count, so a week's activity can be read from two snapshots without parsing logs."],
-            ["`results/state/watcher_state.json`", "one timestamp per instrument+granularity", "The last bar the signal watcher has committed as already processed — how caught-up signal generation is."],
-            ["`results/state/ingest_progress.json`", "`last_bar_utc` per instrument+granularity", "The ingest cursor — how current the price data itself is, upstream of signals entirely."],
-            ["`results/state/cron_holds.json`", "held checks, reason, expiry", "Declared, evidenced exceptions to the heartbeat — e.g. the retrain-cron hold. A hold suppresses the alarm, never the underlying measurement."],
-            ["`telemetry/s1_health.json` (GCS, not local)", "full heartbeat payload", "The one artifact System 2 and System 3 can read without touching this machine, its database, or its filesystem at all."]
+            [
+              "`results/state/signal_emitter_state.json`",
+              "`last_signal_emitted_at`",
+              "Timestamp of the last SIGNAL actually published — not the last run. Null means never emitted."
+            ],
+            [
+              "`results/state/signal_emitter_state.json`",
+              "`signals_published_total`",
+              "Running lifetime count, so a week's activity can be read from two snapshots without parsing logs."
+            ],
+            [
+              "`results/state/watcher_state.json`",
+              "one timestamp per instrument+granularity",
+              "The last bar the signal watcher has committed as already processed — how caught-up signal generation is."
+            ],
+            [
+              "`results/state/ingest_progress.json`",
+              "`last_bar_utc` per instrument+granularity",
+              "The ingest cursor — how current the price data itself is, upstream of signals entirely."
+            ],
+            [
+              "`results/state/cron_holds.json`",
+              "held checks, reason, expiry",
+              "Declared, evidenced exceptions to the heartbeat — e.g. the retrain-cron hold. A hold suppresses the alarm, never the underlying measurement."
+            ],
+            [
+              "`telemetry/s1_health.json` (GCS, not local)",
+              "full heartbeat payload",
+              "The one artifact System 2 and System 3 can read without touching this machine, its database, or its filesystem at all."
+            ]
           ]
         },
         {
           "title": "Commands worth having memorised",
-          "columns": ["Command", "What it tells you"],
+          "columns": [
+            "Command",
+            "What it tells you"
+          ],
           "rows": [
-            ["`python -m src.monitoring.heartbeat --json`", "Overall health in one shot — exit 0 fresh / 1 warn / 2 critical, one row per underlying check (prices, regimes, outcomes, champion bundle, telemetry, retrain state, cron liveness, imports, holds)."],
-            ["`cat results/state/signal_emitter_state.json`", "Did the last run publish anything, and when did a signal last actually go out (see `last_signal_emitted_at` above)."],
-            ["`tail -f logs/cron_hourly_signals.log`", "Watch the current hour's run live — useful right after :15 past the hour."],
-            ["`crontab -l`", "Confirm which jobs are *actually installed*, not just documented. The retrain cron being absent here is deliberate; anything else missing is not."],
-            ["`python -m src.monitoring.publish_health`", "Force-publish the telemetry snapshot to GCS on demand, rather than waiting for the next hourly run."],
-            ["`python -m src.monitoring.model_card --verify`", "Check the locally mirrored model card matches the one actually pinned in the live published bundle."],
-            ["`python -m src.signals.run --once`", "Manually run one real signal pass in the foreground (a genuine emit, not a dry run)."],
-            ["`python -m src.signals.run --dry-run`", "Same, but only prints what it would emit — nothing is published."],
-            ["`gcloud pubsub subscriptions pull scored_signal_queue_sub --project=scalable-brain --limit=10 --format=json`", "Peek at the live signal queue's current backlog. Omit `--auto-ack` and nothing is consumed — messages become redeliverable again after the subscription's ack deadline (10s), so this is safe to run without taking anything away from System 3."],
-            ["`gcloud pubsub subscriptions pull scored_signal_dlq_sub --project=scalable-brain --limit=10 --format=json`", "Check for signals rejected as malformed rather than merely unconsumed."],
-            ["`psql -h localhost -p 5432 -U sa -d ForexBrainDB -c \"SELECT count(*) FROM fact_market_prices;\"`", "Confirm price ingest is actually landing rows, independent of anything downstream."]
+            [
+              "`python -m src.monitoring.heartbeat --json`",
+              "Overall health in one shot — exit 0 fresh / 1 warn / 2 critical, one row per underlying check (prices, regimes, outcomes, champion bundle, telemetry, retrain state, cron liveness, imports, holds)."
+            ],
+            [
+              "`cat results/state/signal_emitter_state.json`",
+              "Did the last run publish anything, and when did a signal last actually go out (see `last_signal_emitted_at` above)."
+            ],
+            [
+              "`tail -f logs/cron_hourly_signals.log`",
+              "Watch the current hour's run live — useful right after :15 past the hour."
+            ],
+            [
+              "`crontab -l`",
+              "Confirm which jobs are *actually installed*, not just documented. The retrain cron being absent here is deliberate; anything else missing is not."
+            ],
+            [
+              "`python -m src.monitoring.publish_health`",
+              "Force-publish the telemetry snapshot to GCS on demand, rather than waiting for the next hourly run."
+            ],
+            [
+              "`python -m src.monitoring.model_card --verify`",
+              "Check the locally mirrored model card matches the one actually pinned in the live published bundle."
+            ],
+            [
+              "`python -m src.signals.run --once`",
+              "Manually run one real signal pass in the foreground (a genuine emit, not a dry run)."
+            ],
+            [
+              "`python -m src.signals.run --dry-run`",
+              "Same, but only prints what it would emit — nothing is published."
+            ],
+            [
+              "`gcloud pubsub subscriptions pull scored_signal_queue_sub --project=scalable-brain --limit=10 --format=json`",
+              "Peek at the live signal queue's current backlog. Omit `--auto-ack` and nothing is consumed — messages become redeliverable again after the subscription's ack deadline (10s), so this is safe to run without taking anything away from System 3."
+            ],
+            [
+              "`gcloud pubsub subscriptions pull scored_signal_dlq_sub --project=scalable-brain --limit=10 --format=json`",
+              "Check for signals rejected as malformed rather than merely unconsumed."
+            ],
+            [
+              "`psql -h localhost -p 5432 -U sa -d ForexBrainDB -c \"SELECT count(*) FROM fact_market_prices;\"`",
+              "Confirm price ingest is actually landing rows, independent of anything downstream."
+            ]
           ]
         }
       ],
@@ -328,63 +605,275 @@
       "title": "Current State & Evidence",
       "kind": "evidence",
       "body": {
-        "technical": ["As of 2026-08-27 the pipeline is functioning end to end, the producer runs hourly, and a model set is published and loading. The live `regime_strategy_map.json` was regenerated 2026-08-24 and now carries 15 (strategy x regime) entries across three regimes — considerably more than the 6-entry map recorded here previously, which predates that republish. The honest qualification stands regardless of count: most of these strategies qualified, or were designated in, on small out-of-sample samples under a gate the owner deliberately relaxed, and are running on a practice account as a stated, accepted risk rather than an established edge."],
-        "plain": ["Everything below is deliberately unflattering. The machinery works, and works more often now than it used to. What it has found so far still does not amount to proof that any of these strategies makes money."]
+        "technical": [
+          "As of 2026-08-27 the pipeline is functioning end to end, the producer runs hourly, and a model set is published and loading. The live `regime_strategy_map.json` was regenerated 2026-08-24 and now carries 15 (strategy x regime) entries across three regimes — considerably more than the 6-entry map recorded here previously, which predates that republish. The honest qualification stands regardless of count: most of these strategies qualified, or were designated in, on small out-of-sample samples under a gate the owner deliberately relaxed, and are running on a practice account as a stated, accepted risk rather than an established edge."
+        ],
+        "plain": [
+          "Everything below is deliberately unflattering. The machinery works, and works more often now than it used to. What it has found so far still does not amount to proof that any of these strategies makes money."
+        ]
       },
       "tables": [
         {
           "title": "The live map — `regime_strategy_map.json` v2.0.0, generated 2026-08-23T18:12Z, part of model set `2026-08-24T10-08-20Z-cb697b59`",
-          "columns": ["Regime", "Strategy", "Basis", "OOS trades", "Profit factor", "Sharpe", "Max DD", "OOS months"],
+          "columns": [
+            "Regime",
+            "Strategy",
+            "Basis",
+            "OOS trades",
+            "Profit factor",
+            "Sharpe",
+            "Max DD",
+            "OOS months"
+          ],
           "rows": [
-            ["Trending-Up", "`xard_ma_cross_daily_open@H1`", "designated", "224", "1.11", "0.53", "17.4%", "23.7"],
-            ["Trending-Up", "`nnfx_backtrader@D1`", "designated", "114", "1.61", "1.22", "7.4%", "46.4"],
-            ["Trending-Up", "`reference_pullback_continuation@H4`", "designated", "59", "1.56", "0.83", "4.5%", "40.7"],
-            ["Trending-Up", "`double_bottom_measured_move@D1`", "designated", "34", "1.46", "0.57", "1.9%", "40.9"],
-            ["Trending-Down", "`liquidity_grab_fade@H4`", "qualified", "13", "8.28", "1.74", "0.1%", "23.6"],
-            ["Trending-Down", "`nnfx_backtrader@D1`", "designated", "114", "1.61", "1.22", "7.4%", "46.4"],
-            ["Trending-Down", "`reference_pullback_continuation@H4`", "designated", "59", "1.56", "0.83", "4.5%", "40.7"],
-            ["Trending-Down", "`double_bottom_measured_move@D1`", "designated", "34", "1.46", "0.57", "1.9%", "40.9"],
-            ["High-Vol", "`macd_divergence@H4`", "qualified", "20", "13.58", "2.92", "0.0%", "17.6"],
-            ["High-Vol", "`weekly_day_reversal_ea@D1`", "qualified", "5", "6.76", "0.85", "1.0%", "23.4"],
-            ["High-Vol", "`xard_ma_cross_daily_open@H1`", "designated", "172", "1.25", "1.13", "14.4%", "17.7"],
-            ["High-Vol", "`weekly_gap_fade@H1`", "designated", "100", "1.30", "0.80", "2.1%", "17.7"],
-            ["High-Vol", "`nnfx_backtrader@D1`", "designated", "114", "1.61", "1.22", "7.4%", "46.4"],
-            ["High-Vol", "`reference_pullback_continuation@H4`", "designated", "59", "1.56", "0.83", "4.5%", "40.7"],
-            ["High-Vol", "`double_bottom_measured_move@D1`", "designated", "34", "1.46", "0.57", "1.9%", "40.9"]
+            [
+              "Trending-Up",
+              "`xard_ma_cross_daily_open@H1`",
+              "designated",
+              "224",
+              "1.11",
+              "0.53",
+              "17.4%",
+              "23.7"
+            ],
+            [
+              "Trending-Up",
+              "`nnfx_backtrader@D1`",
+              "designated",
+              "114",
+              "1.61",
+              "1.22",
+              "7.4%",
+              "46.4"
+            ],
+            [
+              "Trending-Up",
+              "`reference_pullback_continuation@H4`",
+              "designated",
+              "59",
+              "1.56",
+              "0.83",
+              "4.5%",
+              "40.7"
+            ],
+            [
+              "Trending-Up",
+              "`double_bottom_measured_move@D1`",
+              "designated",
+              "34",
+              "1.46",
+              "0.57",
+              "1.9%",
+              "40.9"
+            ],
+            [
+              "Trending-Down",
+              "`liquidity_grab_fade@H4`",
+              "qualified",
+              "13",
+              "8.28",
+              "1.74",
+              "0.1%",
+              "23.6"
+            ],
+            [
+              "Trending-Down",
+              "`nnfx_backtrader@D1`",
+              "designated",
+              "114",
+              "1.61",
+              "1.22",
+              "7.4%",
+              "46.4"
+            ],
+            [
+              "Trending-Down",
+              "`reference_pullback_continuation@H4`",
+              "designated",
+              "59",
+              "1.56",
+              "0.83",
+              "4.5%",
+              "40.7"
+            ],
+            [
+              "Trending-Down",
+              "`double_bottom_measured_move@D1`",
+              "designated",
+              "34",
+              "1.46",
+              "0.57",
+              "1.9%",
+              "40.9"
+            ],
+            [
+              "High-Vol",
+              "`macd_divergence@H4`",
+              "qualified",
+              "20",
+              "13.58",
+              "2.92",
+              "0.0%",
+              "17.6"
+            ],
+            [
+              "High-Vol",
+              "`weekly_day_reversal_ea@D1`",
+              "qualified",
+              "5",
+              "6.76",
+              "0.85",
+              "1.0%",
+              "23.4"
+            ],
+            [
+              "High-Vol",
+              "`xard_ma_cross_daily_open@H1`",
+              "designated",
+              "172",
+              "1.25",
+              "1.13",
+              "14.4%",
+              "17.7"
+            ],
+            [
+              "High-Vol",
+              "`weekly_gap_fade@H1`",
+              "designated",
+              "100",
+              "1.30",
+              "0.80",
+              "2.1%",
+              "17.7"
+            ],
+            [
+              "High-Vol",
+              "`nnfx_backtrader@D1`",
+              "designated",
+              "114",
+              "1.61",
+              "1.22",
+              "7.4%",
+              "46.4"
+            ],
+            [
+              "High-Vol",
+              "`reference_pullback_continuation@H4`",
+              "designated",
+              "59",
+              "1.56",
+              "0.83",
+              "4.5%",
+              "40.7"
+            ],
+            [
+              "High-Vol",
+              "`double_bottom_measured_move@D1`",
+              "designated",
+              "34",
+              "1.46",
+              "0.57",
+              "1.9%",
+              "40.9"
+            ]
           ],
           "note": "15 entries, not the 6 recorded here previously — this map was regenerated 2026-08-24, after the version this page used to describe. `nnfx_backtrader@D1`, `reference_pullback_continuation@H4` and `double_bottom_measured_move@D1` are designated identically into all three covered regimes (owner override, pooled-strength justification, not regime-specific). Gates: PF ≥ 1.5, Sharpe ≥ 0.8, MaxDD ≤ 25%, WinRate ≥ 40%, Recovery ≥ 3.0, OOS ≥ 12 months. Ranging still has zero coverage. Designated entries carry a written `designated_reason` in the source artifact — read it before relying on one."
         },
         {
           "title": "Signal activity this week (as of 2026-08-27, hourly cron)",
-          "columns": ["Day", "Signals published", "Notes"],
+          "columns": [
+            "Day",
+            "Signals published",
+            "Notes"
+          ],
           "rows": [
-            ["Mon 2026-08-24", "5", "First full day on the new hourly cadence"],
-            ["Tue 2026-08-25", "9", ""],
-            ["Wed 2026-08-26", "10", "Last publish 21:15:36Z"],
-            ["Thu 2026-08-27", "0 (so far)", "~14h quiet — within normal variance, see the Operations section"]
+            [
+              "Mon 2026-08-24",
+              "5",
+              "First full day on the new hourly cadence"
+            ],
+            [
+              "Tue 2026-08-25",
+              "9",
+              ""
+            ],
+            [
+              "Wed 2026-08-26",
+              "10",
+              "Last publish 21:15:36Z"
+            ],
+            [
+              "Thu 2026-08-27",
+              "0 (so far)",
+              "~14h quiet — within normal variance, see the Operations section"
+            ]
           ],
           "note": "46 published total this week, 0 dead-lettered (`scored_signal_dlq_sub` empty). `scored_signal_queue_sub`'s backlog does not contain any of them, which is evidence — not proof — that something downstream is consuming. Source: `logs/cron_hourly_signals.log`, `results/state/signal_emitter_state.json`, and a non-destructive `gcloud pubsub subscriptions pull` (see Operations)."
         },
         {
           "title": "Data volumes",
-          "columns": ["Table", "Rows", "As of"],
+          "columns": [
+            "Table",
+            "Rows",
+            "As of"
+          ],
           "rows": [
-            ["`fact_market_prices`", "~4.68 M", "2026-08"],
-            ["`fact_market_regime_v2`", "847,151 — kappa ≥ 0.83", "2026-08-14"],
-            ["`fact_trade_outcomes`", "55,756", "2026-08-15"],
-            ["`fact_strategy_regime_attribution`", "40 cells / 38,610 OOS trades", "2026-08-15"]
+            [
+              "`fact_market_prices`",
+              "~4.68 M",
+              "2026-08"
+            ],
+            [
+              "`fact_market_regime_v2`",
+              "847,151 — kappa ≥ 0.83",
+              "2026-08-14"
+            ],
+            [
+              "`fact_trade_outcomes`",
+              "55,756",
+              "2026-08-15"
+            ],
+            [
+              "`fact_strategy_regime_attribution`",
+              "40 cells / 38,610 OOS trades",
+              "2026-08-15"
+            ]
           ],
           "note": "`fact_trade_outcomes` halved from 134,500 on purpose: the writer had been backtesting every strategy on both H1 and H4 regardless of its declared `primary_granularity`, counting two strategy pairs twice. That is double-counting coming out, not evidence being lost."
         },
         {
           "title": "What has been settled by measurement",
-          "columns": ["Question", "Answer", "Source"],
+          "columns": [
+            "Question",
+            "Answer",
+            "Source"
+          ],
           "rows": [
-            ["Do the legacy 10 strategies qualify?", "No — 0 of 36 clean cells, after regime labels were fixed and re-measured", "`task/OPEN.md` §1"],
-            ["Do regimes discriminate win rate?", "No — 0 of 10 strategies. Max spread among clean strategies 0.0567 vs a 0.10 bar", "Finding B, re-tested 2026-08-14"],
-            ["Do the 51 research strategies qualify on the original gates?", "47 built, 46 measured, **1 passing cell in ~230** — `demark_fractal_breakout` USD_JPY H4, 610 OOS trades, PF 1.51, Sharpe 1.11", "`N5-fleet-completion/SUMMARY.md`"],
-            ["Did regime-aware filtering rescue the fleet?", "No — OOS p-values 0.199 and 0.262 across 126 post-hoc comparisons. Null hypothesis accepted", "R3 trial, concluded 2026-08-16"],
-            ["Are the three live strategies an established edge?", "No. Stated explicitly: profit factors of 6.8–13.6 on 5–20 trades are small-sample artefacts, knowingly accepted on a practice account", "`comms/TONIGHT-2026-08-22-restore-trading.md`"]
+            [
+              "Do the legacy 10 strategies qualify?",
+              "No — 0 of 36 clean cells, after regime labels were fixed and re-measured",
+              "`task/OPEN.md` §1"
+            ],
+            [
+              "Do regimes discriminate win rate?",
+              "No — 0 of 10 strategies. Max spread among clean strategies 0.0567 vs a 0.10 bar",
+              "Finding B, re-tested 2026-08-14"
+            ],
+            [
+              "Do the 51 research strategies qualify on the original gates?",
+              "47 built, 46 measured, **1 passing cell in ~230** — `demark_fractal_breakout` USD_JPY H4, 610 OOS trades, PF 1.51, Sharpe 1.11",
+              "`N5-fleet-completion/SUMMARY.md`"
+            ],
+            [
+              "Did regime-aware filtering rescue the fleet?",
+              "No — OOS p-values 0.199 and 0.262 across 126 post-hoc comparisons. Null hypothesis accepted",
+              "R3 trial, concluded 2026-08-16"
+            ],
+            [
+              "Are the three live strategies an established edge?",
+              "No. Stated explicitly: profit factors of 6.8–13.6 on 5–20 trades are small-sample artefacts, knowingly accepted on a practice account",
+              "`comms/TONIGHT-2026-08-22-restore-trading.md`"
+            ]
           ]
         }
       ],

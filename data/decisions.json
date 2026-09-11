@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "as_of": "2026-09-08",
+  "as_of": "2026-09-11",
   "decisions": [
     {
       "id": "ADR-001",
@@ -193,6 +193,66 @@
       "open_questions": [
         "Does the re-measured map, held to the same engine, actually qualify more than the single 10-trade cell — and does it survive Work Order 05's holdout check once that runs?"
       ]
+    },
+    {
+      "id": "DEC-2026-09-11",
+      "title": "Re-enable signal emission — the halt's own precondition had been met",
+      "status": "accepted",
+      "date": "2026-09-11",
+      "systems": [
+        "system-1"
+      ],
+      "requires_approval_from": [],
+      "source": "issues/September-Week-2/2026-09-11.md; task/2026-September-week2/emit-a-signal/WORK-ORDER-06.md",
+      "problem": {
+        "technical": "For six days the producer ran hourly, reported healthy, and published nothing. Four causes were investigated and discarded in turn — an unbounded Pub/Sub publish, a stalled bar-watcher cursor, the ML gatekeeper's degeneracy, the holdout contamination. The actual cause was `DISABLE_LEGACY_SIGNALS=true`, a deliberate halt set 2026-09-05 whose note gated re-enabling on 'a vetting run that clears the rebuilt gate'. That run completed 2026-09-09. The flag stayed on because two independent reviews reported the live map as empty; it held six cells, selected and executed on the same `regime_structural` label. The ledger is unambiguous: seven signals on 2026-09-10 carry `wire_action=suppressed`.",
+        "plain": "The system looked broken for six days. It wasn't — a safety switch had been turned off on purpose, and the condition for turning it back on had already been met two days earlier. Nobody noticed because two separate reviews wrongly reported that there were no strategies left to trade. There were eight. Meanwhile the machine was quietly building real trade signals and throwing them in the bin."
+      },
+      "argument": {
+        "technical": "The halt was written against a specific artifact: a map generated 2026-08-24, selected on HMM causal labels and executed against structural ones at 19-36% agreement. That map no longer exists. The replacement is `structural-v2.1.0`, selected and routed on the same label, with `source_label` matching `ROUTING_SOURCE_LABEL`. The mismatch the halt was written to prevent is structurally impossible under the current artifact, so the halt's stated condition is satisfied and its continued application is stale rather than protective. Three latent defects were cleared before flipping: the bar-watcher's cursor never advanced on a quiet run (unbounded backlog growth); an uncommitted watcher change would have treated ~10,000 historical bars as newly closed; and the Pub/Sub publish had no timeout.",
+        "plain": "The switch was guarding against one specific problem, and that problem has been fixed — the strategy selection and the live trading now use the same definition of market conditions, which is exactly what was wrong before. Before flipping it back on, three separate faults were found and fixed, including one that would have flooded the system with thousands of out-of-date signals the moment it restarted."
+      },
+      "decision": {
+        "technical": "Re-enable emission. Withdraw the `xard_ma_cross_daily_open@H1@High-Vol` designation, which re-measured at PF 0.86 / Sharpe -0.38 once the strategy's pip-scaling defect was fixed — a designation overrides the gates, not arithmetic. Restore the HMM's walk-forward folds by replacing a hardcoded 2021 feature start with a fixed 2005 anchor; combined with the holdout clamp it had left 15.1 months against a 36-month minimum train, producing zero folds and a self-scored 1.000 accuracy at every granularity. Do NOT retrain the ML gatekeeper in the same window: dropping `strategy_id` raises at scorer load time and would take the producer down on startup.",
+        "plain": "Turn the signals back on. Drop one strategy that was found to lose money once its own bug was fixed. Fix the market-condition model, which had silently stopped validating itself properly — the tell was that it finished in 80 seconds instead of 35 minutes. Leave the machine-learning gatekeeper alone for now, because changing it would crash the live signal path."
+      },
+      "load_bearing_requirement": {
+        "technical": "Selection and routing must remain on the same regime label. If `attribute.SELECTION_SOURCE_LABEL` and `map_contract.ROUTING_SOURCE_LABEL` ever diverge again, every cell in the map becomes a claim about conditions that never fire it — the 2026-08-24 defect — and emission must halt rather than continue. The admissibility check in `map_contract` enforces this by refusing any map whose `source_label` does not match.",
+        "plain": "The rules for picking strategies and the rules for deciding when to trade them must use the same definition of market conditions. When they drifted apart before, the system was trading strategies under conditions they had never been tested in. If that ever happens again the system must stop, not carry on."
+      },
+      "consequences": {
+        "good": [
+          "Emission restored after six days, with the cause documented rather than worked around.",
+          "Three latent defects cleared on the way — an unbounded watcher backlog, a change that would have flooded the wire with stale bars, and an untimed Pub/Sub publish.",
+          "The HMM validates honestly again: 0 → 28 walk-forward folds per granularity, and causal labels are properly warm-up-masked instead of covering every bar.",
+          "No negative-expectancy cell remains in the map."
+        ],
+        "bad": [
+          "Emission will be sparse. Four of five instruments sit in `Trending-Down`, where no strategy qualified — every vetting run logs `STARVATION`.",
+          "The ML gatekeeper is unchanged and still discriminates on strategy identity rather than market state; its shadow statistics remain uninterpretable.",
+          "`holdout_accuracy` still reports 1.000, so the `regime_accuracy_ok` promotion gate is not a real check.",
+          "The published HMM artifact collapses two states onto `Ranging` and emits no `Trending-Up`. It is inert — nothing on the decision path reads it — but it is wrong and it ships."
+        ]
+      },
+      "transition": [
+        {
+          "step": "Done",
+          "text": "`DISABLE_LEGACY_SIGNALS=false`; designation withdrawn; HMM folds restored; watcher edit reverted; publish bounded at 30s and the producer at 10 minutes."
+        },
+        {
+          "step": "Next",
+          "text": "Run `serialize` then `publish_model_set` — the 8-cell map is built locally but the backend still serves the 6-cell bundle, because `publish_model_set` only pairs existing sub-pointers."
+        },
+        {
+          "step": "Then",
+          "text": "Revisit the vetting gates. The binding constraint is now coverage, not the pipeline: three of four regimes covered, and the one the market is actually in has nobody in it."
+        }
+      ],
+      "open_questions": [
+        "Should the gates be widened, or is an empty `Trending-Down` the honest answer? No strategy passed on structural labels there.",
+        "What replaces `regime_accuracy_ok` once it is admitted that a self-scored 1.000 is not a check?"
+      ],
+      "reviews": []
     }
   ]
 }
