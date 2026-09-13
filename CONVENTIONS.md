@@ -24,6 +24,7 @@ data/
 ├── architecture.json        Nodes, edges and traceable flows for the unified map
 ├── decisions.json           Architecture decision records — including open ones
 ├── goals.json               Milestone ladder, goals, dependency matrix, task tracker
+├── vision.json              The mandate, the risk ladder, the profit target, the phases, identity & habits
 └── systems/
     ├── system-1.json        One file per subsystem
     ├── system-2.json
@@ -152,6 +153,36 @@ disappears, which is the correct rendering. Never invent a number to fill the ba
 | `transition[]` | `{step, text}` |
 | `open_questions[]` | `string[]` |
 
+### 2.6 `data/vision.json`
+
+The hub's copy of `docs/goals/VISION.md` and `docs/goals/IDENTITY_AND_HABITS.md` in the
+source repository. Rendered by `vision.html`.
+
+| Key | Shape |
+|-----|-------|
+| `headline` | `{one_line, technical, plain, not[]}` — the vision in a sentence |
+| `owner_decisions` | `{date, note, items[]}` — decisions taken, not arguments to re-have |
+| `name`, `mandate`, `distinction`, `risk_ladder`, `target` | One object per page section; see `schema/vision.schema.json` |
+| `phases[]` | `{id, name, when, state, tagline, technical, plain, conditions[], exit}` |
+| `falsifiers`, `anti_goals`, `indicators`, `identity`, `planning` | The remaining sections |
+| `sources[]` | `{file, written, covers, revision_rule}` — the authoritative `docs/` files |
+
+Three rules specific to this file:
+
+- **Register is forward-looking. No current-state numbers.** Milestone states, map cell
+  counts, signal totals and heartbeat colour belong in `goals.json` and
+  `docs/critical/REPO_STATE.md`. `vision.json` is revised yearly; those change hourly, and a
+  stale number on this page reads as a claim rather than as a snapshot.
+- **`phases[].state` is sequenced.** Exactly one phase should be `in_progress`; the validator
+  warns at zero and at two or more, because both mean the file has drifted from reality.
+- **It is a rendering, not a source.** When this file and `docs/goals/VISION.md` disagree, the
+  `.md` wins and this file is what gets corrected. Say which document you drew from in the
+  commit message.
+
+Repeated shapes (`{technical, plain}` voice pairs, `{columns, rows}` tables, callouts) are
+declared once in the schema's `definitions` and referenced with local `$ref` —
+`tools/validate.mjs` resolves `#/definitions/<name>` within the same schema file.
+
 ---
 
 ## 3. Writing content — two invariants
@@ -195,6 +226,8 @@ page is the worst available outcome. List content gaps in your commit message an
 - **Tasks** — `id`, `title`, `detail`, `goal`
 - **Milestones** — `id`, `name`, `summary`, `plain`
 - **Decisions** — `id`, `title`, `problem.technical`, `decision.technical`
+- **Vision** — one entry per page section plus one per phase. The searchable text is *every*
+  string in that section's subtree, so a newly written field is searchable with no extra wiring
 - **Runbook headings** — heading text + next 3 non-heading lines as snippet
 
 **For new content to appear in search results, it needs no special registration.** The index
@@ -360,7 +393,13 @@ Pages are static HTML files in the repo root. Each:
    footer, search overlay, and theme/mode toggles
 
 **`activeKey`** must match one of the `matchKey` values in `NAV_GROUPS` in `core.js`:
-`overview`, `unified`, `systems`, `goals`, `operations`, `runbook`, `contributing`.
+`overview`, `vision`, `unified`, `systems`, `goals`, `operations`, `runbook`, `telegram`,
+`contributing`.
+
+The nav row holds eight links and fits on one line down to ~1360px. Adding a ninth will wrap
+it and double the header height — check the header at 1366px before adding one, and tighten
+the `@media (min-width: 861px) and (max-width: 1499px)` block in `main.css` rather than
+letting it wrap.
 
 To add a new page to the navigation:
 1. Add the page HTML file to the repo root
@@ -380,9 +419,11 @@ node tools/validate.mjs
 ```
 
 What it checks:
-- All five schemas (`schema/*.schema.json`) against their data files
+- Every schema in `schema/*.schema.json` against its data file, including local `$ref`s into
+  the schema's own `definitions`
 - Edge endpoints resolve to nodes; flow edges exist
 - Task `goal` and `system` references resolve
+- Vision phase ids are unique, and exactly one phase is `in_progress` (warn)
 - Decision system references resolve
 - System `status.state` is in `registry.status_vocabulary`
 - Section `kind` is in the vocabulary (warn)

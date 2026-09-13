@@ -45,6 +45,7 @@
     "status_vocabulary": { "type": "object" },
     "decisions_file": { "type": "string" },
     "goals_file": { "type": "string" },
-    "architecture_file": { "type": "string" }
+    "architecture_file": { "type": "string" },
+    "vision_file": { "type": "string" }
   }
 }

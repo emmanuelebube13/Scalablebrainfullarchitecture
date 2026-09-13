@@ -8,6 +8,7 @@
      - Tasks (title, detail)
      - Milestones (name, summary)
      - Decisions (title, problem, decision)
+     - Vision sections and phases
      - Runbook headings
 
    Keyboard: press / from any page to focus the search box.
@@ -26,6 +27,7 @@ const TYPES = {
   task:      { label: 'Task',        colour: 'var(--warn)' },
   milestone: { label: 'Milestone',   colour: 'var(--muted)' },
   decision:  { label: 'Decision',    colour: 'var(--bad)' },
+  vision:    { label: 'Vision',      colour: 'var(--accent)' },
   runbook:   { label: 'Runbook',     colour: 'var(--info)' },
 };
 
@@ -38,12 +40,13 @@ async function buildIndex() {
 
   INDEX = [];
 
-  const [{ registry, systems }, arch, goals, decisions] =
+  const [{ registry, systems }, arch, goals, decisions, vision] =
     await Promise.all([
       loadAll(),
       loadJSON('data/architecture.json').catch(() => null),
       loadJSON('data/goals.json').catch(() => null),
       loadJSON('data/decisions.json').catch(() => null),
+      loadJSON('data/vision.json').catch(() => null),
     ]);
 
   /* Architecture nodes */
@@ -158,6 +161,64 @@ async function buildIndex() {
         detail: detail.slice(0, 140),
         url: `architecture.html#decisions`,
         searchText: `${d.id} ${d.title} ${detail}`.toLowerCase(),
+      });
+    }
+  }
+
+  /* Vision — one entry per page section, plus one per phase.
+     The sections are prose-heavy and nested (tables inside groups inside
+     sections), so the searchable text is every string in the subtree rather
+     than a hand-listed set of keys — a new field is searchable the moment it
+     is written, which is the property the rest of this index has too. */
+  if (vision) {
+    const VISION_SECTIONS = [
+      ['name',        vision.name,        'The name'],
+      ['mandate',     vision.mandate,     'The mandate — strategic capital growth'],
+      ['distinction', vision.distinction, 'Evidence gates vs risk caps'],
+      ['ladder',      vision.risk_ladder, 'The risk ladder'],
+      ['target',      vision.target,      'The target — cumulative profit'],
+      ['anti-goals',  vision.anti_goals,  'Anti-goals — what we will not build'],
+      ['indicators',  vision.indicators,  'How you know it is working'],
+      ['identity',    vision.identity,    'Identity & habits'],
+      ['planning',    vision.planning,    'How the documents fit'],
+    ];
+
+    INDEX.push({
+      type: 'vision',
+      title: 'Vision — what Scalable Brain is for',
+      detail: vision.headline?.one_line?.slice(0, 140) ?? '',
+      url: 'vision.html',
+      searchText: `vision mandate ${flattenStrings(vision.headline)} ${flattenStrings(vision.owner_decisions)}`.toLowerCase(),
+    });
+
+    for (const [anchor, node, title] of VISION_SECTIONS) {
+      if (!node) continue;
+      INDEX.push({
+        type: 'vision',
+        title,
+        detail: (node.lede?.technical ?? node.statement ?? node.rule ?? '').slice(0, 140),
+        url: `vision.html#${anchor}`,
+        searchText: `${title} ${flattenStrings(node)}`.toLowerCase(),
+      });
+    }
+
+    for (const p of vision.phases ?? []) {
+      INDEX.push({
+        type: 'vision',
+        title: `${p.id} — ${p.name}`,
+        detail: [p.tagline, p.when].filter(Boolean).join(' · '),
+        url: 'vision.html#phases',
+        searchText: `${p.id} ${p.name} ${flattenStrings(p)}`.toLowerCase(),
+      });
+    }
+
+    if (vision.falsifiers) {
+      INDEX.push({
+        type: 'vision',
+        title: vision.falsifiers.title,
+        detail: vision.falsifiers.items?.[0]?.observation?.slice(0, 140) ?? '',
+        url: 'vision.html#phases',
+        searchText: `${vision.falsifiers.title} ${flattenStrings(vision.falsifiers)}`.toLowerCase(),
       });
     }
   }
@@ -350,6 +411,14 @@ function closeOverlay() {
 function escHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+/** Every string anywhere in a JSON subtree, joined — used to index nested content. */
+function flattenStrings(value) {
+  if (typeof value === 'string') return value;
+  if (Array.isArray(value)) return value.map(flattenStrings).join(' ');
+  if (value && typeof value === 'object') return Object.values(value).map(flattenStrings).join(' ');
+  return '';
 }
 
 function slugify(text) {

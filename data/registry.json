@@ -76,5 +76,6 @@
   },
   "decisions_file": "data/decisions.json",
   "goals_file": "data/goals.json",
-  "architecture_file": "data/architecture.json"
+  "architecture_file": "data/architecture.json",
+  "vision_file": "data/vision.json"
 }

@@ -7,7 +7,8 @@
  * Two passes:
  *   1. Structural — required keys, types and enums, from schema/*.schema.json.
  *      A deliberately small JSON Schema subset: type, required, properties,
- *      items, enum, pattern. Enough to catch the mistakes agents actually make.
+ *      items, enum, pattern, and local `$ref` into the same file's
+ *      `definitions`. Enough to catch the mistakes agents actually make.
  *   2. Referential — every edge endpoint resolves to a node, every flow edge
  *      exists, every task points at a real goal and a real system, every system
  *      file registered in registry.json is present and self-consistent.
@@ -45,7 +46,29 @@ function typeOf(v) {
   return typeof v;
 }
 
-function validate(value, schema, path, file) {
+/*
+ * Local `$ref` only — `#/definitions/<name>` inside the same schema file.
+ * `root` is threaded through validate() so a shape used in a dozen places
+ * (a {technical, plain} pair, a {columns, rows} table) is written once.
+ * An unresolvable ref is an error in the schema, not in the data, so it is
+ * reported against the schema path rather than silently skipped.
+ */
+function deref(schema, root, path, file) {
+  let s = schema;
+  const seen = new Set();
+  while (s && typeof s.$ref === 'string') {
+    if (seen.has(s.$ref)) { err(file, `${path} — circular $ref "${s.$ref}" in schema`); return null; }
+    seen.add(s.$ref);
+    const m = /^#\/definitions\/(.+)$/.exec(s.$ref);
+    const target = m ? root?.definitions?.[m[1]] : null;
+    if (!target) { err(file, `${path} — schema $ref "${s.$ref}" does not resolve`); return null; }
+    s = target;
+  }
+  return s;
+}
+
+function validate(value, schema, path, file, root = schema) {
+  schema = deref(schema, root, path, file);
   if (!schema) return;
 
   if (schema.type) {
@@ -71,7 +94,7 @@ function validate(value, schema, path, file) {
       if (!(key in value)) err(file, `${path} — missing required key "${key}"`);
     }
     for (const [key, sub] of Object.entries(schema.properties ?? {})) {
-      if (key in value) validate(value[key], sub, `${path}.${key}`, file);
+      if (key in value) validate(value[key], sub, `${path}.${key}`, file, root);
     }
     if (schema.additionalProperties === false) {
       for (const key of Object.keys(value)) {
@@ -81,7 +104,7 @@ function validate(value, schema, path, file) {
   }
 
   if (typeOf(value) === 'array' && schema.items) {
-    value.forEach((item, i) => validate(item, schema.items, `${path}[${i}]`, file));
+    value.forEach((item, i) => validate(item, schema.items, `${path}[${i}]`, file, root));
   }
 }
 
@@ -98,11 +121,13 @@ const registry = await readJSON('data/registry.json');
 const architecture = await readJSON('data/architecture.json');
 const goals = await readJSON('data/goals.json');
 const decisions = await readJSON('data/decisions.json');
+const vision = await readJSON('data/vision.json');
 
 if (registry) validate(registry, schemas.registry, 'registry', 'data/registry.json');
 if (architecture) validate(architecture, schemas.architecture, 'architecture', 'data/architecture.json');
 if (goals) validate(goals, schemas.goals, 'goals', 'data/goals.json');
 if (decisions) validate(decisions, schemas.decisions, 'decisions', 'data/decisions.json');
+if (vision) validate(vision, schemas.vision, 'vision', 'data/vision.json');
 
 /* ---- systems ---- */
 
@@ -209,6 +234,32 @@ if (goals) {
   }
 }
 
+/* ---- vision referential integrity ----
+ * The vision page is a rendering of docs/goals/*.md in the source repository,
+ * so there is nothing here to cross-reference against systems or goals. What
+ * can be checked is that the ladder and the phases stay internally coherent:
+ * duplicate ids would render twice and silently disagree, and a vision with no
+ * phase in flight means the plan has no current step, which is either a real
+ * finding or a stale file. Both are worth saying out loud.
+ */
+if (vision) {
+  const phaseIds = new Set();
+  for (const p of vision.phases ?? []) {
+    if (phaseIds.has(p.id)) err('data/vision.json', `duplicate phase id "${p.id}"`);
+    phaseIds.add(p.id);
+  }
+  const inFlight = (vision.phases ?? []).filter((p) => p.state === 'in_progress');
+  if (inFlight.length === 0) warn('data/vision.json', 'no phase is in_progress — the plan has no current step');
+  if (inFlight.length > 1) {
+    warn('data/vision.json', `${inFlight.length} phases are in_progress (${inFlight.map((p) => p.id).join(', ')}) — the phases are sequenced, so this is probably a stale state`);
+  }
+  for (const s of vision.sources ?? []) {
+    if (!s.file.startsWith('docs/')) {
+      warn('data/vision.json', `source "${s.file}" is not a docs/ path in the source repository`);
+    }
+  }
+}
+
 /* ---- decisions referential integrity ---- */
 if (decisions) {
   for (const d of decisions.decisions) {
@@ -225,7 +276,7 @@ for (const e of errors) console.error(`  ERROR ${e}`);
 console.log(
   `\n${systems.length} systems · ${architecture?.nodes.length ?? 0} nodes · ${architecture?.edges.length ?? 0} edges · ` +
   `${architecture?.flows.length ?? 0} flows · ${goals?.goals.length ?? 0} goals · ${goals?.tasks.length ?? 0} tasks · ` +
-  `${decisions?.decisions.length ?? 0} decisions`
+  `${decisions?.decisions.length ?? 0} decisions · ${vision?.phases.length ?? 0} vision phases`
 );
 console.log(errors.length ? `\nFAILED — ${errors.length} error(s), ${warnings.length} warning(s)` : `\nOK — ${warnings.length} warning(s)`);
 

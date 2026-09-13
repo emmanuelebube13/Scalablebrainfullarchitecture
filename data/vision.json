@@ -1,0 +1,614 @@
+{
+  "schema_version": "1.0.0",
+  "as_of": "2026-09-13",
+  "register": "Forward-looking. No current-state numbers appear on this page — those live in `docs/critical/REPO_STATE.md` and on the Goals & tasks page, and change faster than prose can track.",
+  "sources": [
+    {
+      "file": "docs/goals/VISION.md",
+      "written": "2026-09-13",
+      "covers": "The mandate, the name, the evidence-gates-versus-risk-caps distinction, the risk ladder, the profit target and its arithmetic, the four phases, the anti-goals",
+      "revision_rule": "Revised when the destination or the mandate changes — not when the situation does. A phase that has passed unmet gets a dated note rather than a slid date."
+    },
+    {
+      "file": "docs/goals/IDENTITY_AND_HABITS.md",
+      "written": "2026-09-13",
+      "covers": "Who has to exist for the vision to happen: goals → why → beliefs → identity → habits → skills, for the owner and for every agent working in the repo",
+      "revision_rule": "Revised on conflict. When identity and vision disagree, the conflict is written down here rather than resolved silently."
+    },
+    {
+      "file": "docs/goals/VALUE_MILESTONES.md",
+      "written": "2026-08-13",
+      "covers": "The falsifiable rungs M0–M4, each tied to a blocker that exists in the repo",
+      "revision_rule": "Revised when a rung moves. Rendered on the Goals & tasks page as the ladder."
+    }
+  ],
+
+  "headline": {
+    "one_line": "Compound a small account into real capital, at a rate we choose deliberately, without ever fooling ourselves about whether it's working.",
+    "technical": "Both halves are load-bearing and the order matters. The first half is the purpose: this is a wealth-accumulation machine, and every design decision must eventually answer to a return figure. The second half is the only reason the first is achievable — an edge you believe in because you never tested it honestly is worth less than no edge, since it spends real money before it disappoints you.",
+    "plain": "The point is to turn a small amount of money into a real amount of money, on purpose and at a speed we picked. The second half of the sentence is what makes the first half possible: if you never check honestly whether a strategy works, you will spend real money finding out the expensive way.",
+    "not": [
+      "Not \"a system that proves it shouldn't trade.\"",
+      "Not \"a system that trades whatever it's handed.\"",
+      "**A compounder that refuses to lie to itself.**"
+    ]
+  },
+
+  "owner_decisions": {
+    "date": "2026-09-13",
+    "note": "Four decisions taken by the owner on this date, encoded in the vision rather than argued about again.",
+    "items": [
+      {
+        "title": "The first target is cumulative profit",
+        "text": "~$100k in **cumulative profit** — not account value, not capital deposited."
+      },
+      {
+        "title": "Starting capital is $100, for testing",
+        "text": "Deposits are decided later, on evidence, as a named decision rather than a drift."
+      },
+      {
+        "title": "Risk is uncapped in demo",
+        "text": "Caps are introduced tier by tier, each on explicit owner sign-off, and never applied in advance of the tier they govern."
+      },
+      {
+        "title": "The evidence chain closes before live capital",
+        "text": "Phase 0 finishes before any real money is risked. This orders the whole plan."
+      }
+    ]
+  },
+
+  "name": {
+    "lede": {
+      "technical": "`Scalable Brain` was never documented. It should be, because the name encodes the strategy — and both halves of it are testable claims about the architecture.",
+      "plain": "The project's name was never explained anywhere. It is worth explaining, because it is a promise about how the thing is built, and you can check whether the promise is being kept."
+    },
+    "parts": [
+      {
+        "word": "Brain",
+        "claim": "The product is insight, not orders",
+        "technical": "This machine's output is a judgement about what to trade, how, and when, expressed as a versioned artifact. Execution is a hand; risk is a guardian; the thinking happens here.",
+        "plain": "What this system produces is an opinion, written down and version-stamped. Placing the order is somebody else's job, and so is refusing it."
+      },
+      {
+        "word": "Scalable — in insight",
+        "claim": "Each new source of edge is cheaper to evaluate than the last",
+        "technical": "A new strategy family, a new instrument, a new regime taxonomy, a new feature class — each should cost less to evaluate than the previous one, because the evaluation machinery is shared and reusable. A system that can only hold the strategies it was born with is a program, not a brain.",
+        "plain": "Adding a new idea should get easier over time, because the testing machinery is reused rather than rebuilt. A system that can only run the ideas it started with is just a program."
+      },
+      {
+        "word": "Scalable — in capital",
+        "claim": "The same logic works at $100 and at $100k without a rewrite",
+        "technical": "What changes with account size is sizing and risk bindings, never the strategy logic or the standard of evidence. If a decision has to be re-derived when the account grows, the architecture leaked.",
+        "plain": "Growing the account should change how much is bet, never what the system believes. If getting richer means rewriting the logic, the design was wrong."
+      }
+    ],
+    "test": "The three-system split serves the second sense. The research path and the shared vetting machinery serve the first. **Anything that makes it harder to add a new source of insight, or that hard-codes a decision to the current account size, is a regression against the name.**"
+  },
+
+  "mandate": {
+    "statement": "Wealth accumulation — capital increase, strategically and quickly, without courting ruin.",
+    "ordering": {
+      "technical": "That ordering is deliberate: growth is the objective, and ruin-avoidance is the constraint that keeps the objective reachable. Not the reverse.",
+      "plain": "Growth is the goal. Not going broke is the rule that keeps the goal reachable. They are not the same thing and they are not interchangeable."
+    },
+    "correction": {
+      "title": "What this corrects",
+      "technical": "The repo's stated first principle was \"preservation over profit,\" which is a coherent belief for an endowment and an incoherent one for a system that has yet to earn its first dollar. Preservation is a strategy you apply to capital you already have. We are building capital we do not have yet. Applied at this stage, \"preservation\" doesn't protect anything — it guarantees the system never produces a return worth funding, which is the one outcome that makes the whole project pointless.",
+      "plain": "The old rule was \"protect the money first.\" That is sensible advice for money you already have. This project has not earned a dollar yet, so protecting it mostly guarantees it stays at zero — which is the only outcome that makes the whole exercise pointless."
+    },
+    "restated": "Never lose the ability to keep playing.",
+    "restated_note": {
+      "technical": "Ruin-avoidance, not loss-avoidance. This is a single belief whose *bindings* change with capital, which is why it doesn't split the system's identity.",
+      "plain": "Avoid being knocked out, not avoid losing. One rule, applied with different tightness depending on how much money is at stake."
+    },
+    "bindings": {
+      "title": "One belief, three bindings",
+      "columns": ["Capital", "What is off-limits", "Why"],
+      "rows": [
+        ["**$100**", "Almost nothing", "The account is tuition. Losing it costs a hundred dollars and buys knowledge that cannot be obtained any other way"],
+        ["**$10k**", "Some things", "A catastrophic drawdown costs a year of contributions"],
+        ["**$100k**", "Most things", "A 60% drawdown costs years you will not get back, and the arithmetic of recovery turns hostile"]
+      ],
+      "note": "One belief. Different bindings. **And the bindings only ever tighten as capital grows — never loosen.**"
+    },
+    "kelly": {
+      "title": "Kelly is a growth criterion",
+      "tone": "info",
+      "technical": "It maximises long-run log wealth; it is not a preservation device. Quarter-Kelly is a *chosen fraction*, not a law of the system, and where that fraction sits is an owner decision tied to capital and evidence strength. Treating it as immovable was a mistake inherited from documents written for an account that doesn't exist yet.",
+      "plain": "The Kelly formula is a recipe for growing money fast, not for keeping it safe. Betting a quarter of what it suggests is a choice someone made, not a law — and it is the owner's choice to change."
+    }
+  },
+
+  "distinction": {
+    "title": "Evidence gates are not risk caps",
+    "lede": {
+      "technical": "The \"tight grip\" that has kept this system from trading is actually two different mechanisms that were being argued about as if they were one. Separating them is the core of the vision document.",
+      "plain": "The reason this system never trades looks like one problem but is two. Telling them apart settles almost every argument about whether we are being too careful."
+    },
+    "columns": ["", "Evidence gates", "Risk caps"],
+    "rows": [
+      ["**What they answer**", "Does this strategy have an edge?", "How much do we bet on it?"],
+      ["**Examples**", "PF, Sharpe, MaxDD, win rate, OOS length, look-ahead probes, walk-forward folds, map provenance", "Kelly fraction, per-trade risk %, drawdown circuit breaker, exposure caps, deployment stage"],
+      ["**Do they scale with capital?**", "**Never.** Truth is not a function of account size", "**Always.** They are entirely a function of account size and evidence strength"],
+      ["**Do they loosen?**", "**Never, for any reason.** If nothing qualifies, that is the finding", "**Yes — that is their job.** Loose when small, tightening as capital grows"],
+      ["**Who moves them**", "Nobody. They move only when the *measurement* is shown to be wrong", "The owner, explicitly, per tier, in writing"]
+    ],
+    "rule": "**Evidence gates never loosen. Risk caps scale.** Every future argument about \"are we being too careful\" should first establish which of these two it is about. Almost always it is the second, and the second is legitimately adjustable.",
+    "why": {
+      "title": "Why evidence gates are absolute",
+      "tone": "bad",
+      "technical": "Not caution — economics. A strategy with negative expectancy loses money *faster* when you bet more on it. Loosening evidence to unlock growth is the one move that reliably produces the opposite of growth. The live record so far — every realised trade a loser — was produced by a map that is mostly owner override rather than measured qualification. That is the cost of this mistake, already paid once.",
+      "plain": "A losing strategy loses faster the more you bet on it, so relaxing the standard of proof to grow faster reliably does the opposite. This has already been paid for once: every real trade so far lost money, and the strategy that placed them was there by override rather than by measurement."
+    }
+  },
+
+  "risk_ladder": {
+    "title": "The risk ladder — tiers entered by signature",
+    "lede": {
+      "technical": "Per the owner decision of 2026-09-13: risk is uncapped in demo. Every live tier is entered by explicit owner sign-off, and the tier's cap is named in that sign-off. Caps are not applied automatically and not applied in advance.",
+      "plain": "In demo there are no limits at all. Every step up with real money is taken deliberately, in writing, and the limit for that step is written down at the same time — not before, and not by a machine."
+    },
+    "columns": ["Tier", "Capital", "Risk posture", "Entered by"],
+    "rows": [
+      ["**Demo**", "$0 real", "**No caps.** Maximum aggression, maximum learning. Break it deliberately. Find out what the strategy does in its worst regime at sizes you would never risk live", "Default state — no sign-off needed"],
+      ["**Proving**", "~$100", "Deliberately generous. The account is tuition; the objective is a working loop, not preservation", "Owner sign-off, cap named at entry"],
+      ["**Compounding**", "post-funding", "Set at entry, on evidence. Tightens from the Proving posture", "Owner sign-off, cap named at entry"],
+      ["**Protecting**", "approaching target", "Materially tighter. Recovery arithmetic now dominates", "Owner sign-off, cap named at entry"]
+    ],
+    "rules": [
+      {
+        "title": "A tier is never entered silently",
+        "text": "No automation promotes capital to the next tier. The owner signs, and the signature names the cap, the date and the evidence relied on."
+      },
+      {
+        "title": "Demo is not a lesser version of live — it is a different instrument",
+        "text": "Its job is to produce the knowledge that live trading is too expensive to buy. Uncapped demo is not recklessness; refusing to push demo to destruction is the waste."
+      }
+    ]
+  },
+
+  "target": {
+    "title": "The target is profit",
+    "statement": "$100k of cumulative profit, earned at a rate the system demonstrated before the capital was committed.",
+    "lede": {
+      "technical": "This replaces an earlier revision that used account value as the target. That was wrong in a way that would have let the project declare victory having achieved nothing: an account holding $100k after $100k of deposits has produced no profit, and a target expressed as account value cannot tell the difference.",
+      "plain": "An earlier version of this document aimed at a $100k balance. That is a target you can hit by depositing $100k and making nothing, so it was replaced by profit — the money the system actually earned."
+    },
+    "quantities": {
+      "title": "Three quantities that must never be confused",
+      "columns": ["Quantity", "What it measures", "Whose job", "Can it be faked?"],
+      "rows": [
+        ["**Capital deployed** — cumulative deposits", "Nothing about the system. This money could have sat in a savings account. Reaching a large number here is an achievement of *saving*, not of trading", "The owner's", "Trivially — just deposit"],
+        ["**Return rate, deposit-neutral**", "Whether the system works. **This is the system's signature**, and it is fully provable at $100", "The system's", "No. This is the honest number"],
+        ["**Cumulative profit** — value net of every deposit and withdrawal", "The wealth outcome. rate × capital × time", "Both", "Partly — enough capital at a mediocre rate still accumulates profit"]
+      ],
+      "note": "Both halves of the target are required. Profit alone can be bought with capital; a rate alone buys nothing. The rate is proven in Phase 1, the capital is committed in Phase 2, and the profit accumulates in Phase 3 — in that order, which is what stops the target from being gameable."
+    },
+    "arithmetic": {
+      "title": "What it actually takes",
+      "columns": ["Monthly deposit", "Time to $100k profit", "Capital deployed by then", "Profit per $ deposited"],
+      "rows": [
+        ["$500", "~7.6 years", "~$46k", "2.2×"],
+        ["$2,000", "~4.6 years", "~$110k", "0.9×"],
+        ["$5,000", "~3.1 years", "~$190k", "0.5×"]
+      ],
+      "note": "Months to $100k cumulative profit at a sustained 30%/yr deposit-neutral return, from a $100 start."
+    },
+    "conclusions": [
+      {
+        "title": "A three-to-five-year target at serious deposit rates, not a multi-decade one",
+        "text": "The earlier revision's \"~26 years\" answered a different question — how long $100 takes to *become* $100,000 in account value with no deposits ever, which is 1,000× on the stake. Correct arithmetic, irrelevant scenario. Retired."
+      },
+      {
+        "title": "Deposits buy time; patience buys capital efficiency",
+        "text": "The last column is a real tradeoff, not a scoring system. $5k/month reaches the target in three years with the capital doing half the work; $500/month takes twice as long and earns $2.20 per dollar deposited. Both are legitimate. Choosing deliberately is the point."
+      },
+      {
+        "title": "$100 proves the rate, and the rate is everything at that size",
+        "text": "$100 at 30%/yr earns $30 a year. Judging the proving account by its dollar return is meaningless; judging it by whether the realised rate matches the modelled one is the entire purpose."
+      }
+    ],
+    "requirement": {
+      "title": "Deposits and withdrawals must be recorded as dated events",
+      "tone": "warn",
+      "technical": "An account balance cannot separate profit from a deposit, so the moment funding begins, an untracked deposit ledger makes the system's rate — the only number that proves the system works — permanently unmeasurable. Two things must be computable at any time: deposit-neutral return (time-weighted, chain-linked across deposit events), which judges the system; and cumulative profit (value minus net deposits), which judges the outcome. This is account state, which is System 3's domain, not System 1's — a cross-system request through `docs/comms/`, not something to build in System 1. Recorded as a vision-level dependency so it is not discovered late, at the moment the first real deposit lands and the measurement silently breaks.",
+      "plain": "Once money starts going in, a balance alone can no longer tell you what the system earned. Every deposit and withdrawal has to be logged with its date, or the one number that proves this works becomes unmeasurable forever. That ledger belongs to System 3, and it has to exist before the first deposit, not after."
+    }
+  },
+
+  "phases": [
+    {
+      "id": "Phase 0",
+      "name": "Evidence",
+      "when": "now, through 2026-Q4",
+      "state": "in_progress",
+      "tagline": "Nothing is risked. Everything is measured.",
+      "technical": "No live capital. Demo uncapped and pushed hard. This phase closes the evidence chain, and per the owner decision of 2026-09-13 it closes before any live capital is committed.",
+      "plain": "No real money at all. The demo account is pushed as hard as it will go, because that knowledge is free here and expensive later.",
+      "conditions": [
+        "At least one strategy clears the evidence gates honestly — leak-free, walk-forward, reported per pair × granularity, not only pooled.",
+        "Nothing in the live map that cannot fire in real time; the map's provenance contract holding.",
+        "One signal vocabulary across the three hosts, so a message System 1 emits is one System 3 accepts.",
+        "The simulation-engine question decided, so vetting qualifies from one measured quantity.",
+        "Regime conditioning either earns its place against honest labels or is removed. Both are acceptable; carrying it undecided is not."
+      ],
+      "exit": "A qualified strategy, an emittable signal, and a reproducible expectancy figure. **Not a date.**"
+    },
+    {
+      "id": "Phase 1",
+      "name": "Proving",
+      "when": "~$100, owner sign-off",
+      "state": "not_started",
+      "tagline": "The cheapest possible test of the most expensive assumption: that any of this survives reality.",
+      "technical": "$100 is enough to answer the one question demo cannot: what fills, spreads and slippage actually cost. The comparison against the backtest envelope is the deliverable here, not the P&L.",
+      "plain": "A hundred real dollars, to find out what the backtest got wrong. Real fills cost things a simulation never charges you for.",
+      "conditions": [
+        "Real money, real fills, deliberately trivial size.",
+        "Realised versus modelled r-multiples measured continuously against the backtest envelope.",
+        "Parameters frozen for the window. Any change restarts the clock."
+      ],
+      "exit": "Live results inside the modelled envelope over a window decided in advance. **A failure here is a successful phase** — it is the finding, bought for $100."
+    },
+    {
+      "id": "Phase 2",
+      "name": "The funding decision",
+      "when": "owner, on evidence",
+      "state": "not_started",
+      "tagline": "A named gate, not a drift.",
+      "technical": "The owner decides, in writing, how much capital enters and at what monthly rate — on the strength of Phase 1's measured rate, not on enthusiasm. This is the decision that sets the horizon: the same system reaches the target in three years or seven depending only on this number.",
+      "plain": "Someone sits down and decides, in writing, how much money goes in and how fast. That single number moves the finish line by years — more than the strategy does.",
+      "conditions": [
+        "**Prerequisite:** deposit-event tracking exists and deposit-neutral return is computable. Funding an account whose rate cannot be measured converts a provable system into an unprovable one."
+      ],
+      "exit": "A written funding decision naming the capital, the monthly rate, and the Phase 1 evidence it rests on."
+    },
+    {
+      "id": "Phase 3",
+      "name": "Compounding",
+      "when": "post-funding",
+      "state": "not_started",
+      "tagline": "The system becomes the reason for the growth.",
+      "technical": "By this point the edge is no longer in question — the phase tests whether it is broad and durable rather than one concentrated cell that got lucky, and whether the demonstrated rate persists once capital is behind it.",
+      "plain": "More than one strategy working, on more than one pair, for long enough that it is not luck. And the return rate holding up, checked rather than assumed.",
+      "conditions": [
+        "Qualification spread across several strategies and pairs, so the record is an edge and not a concentration.",
+        "Deposit-neutral return holding at or above the rate Phase 1 demonstrated, measured continuously.",
+        "At least one adverse stretch survived inside the modelled drawdown envelope.",
+        "Risk caps tightening on schedule by signature as capital grows."
+      ],
+      "exit": "A multi-strategy record at or above the demonstrated rate, through at least one adverse stretch."
+    },
+    {
+      "id": "Phase 4",
+      "name": "$100k of profit, proven",
+      "when": "the first destination",
+      "state": "not_started",
+      "tagline": "Cumulative profit, net of every deposit — not account value, not capital deployed.",
+      "technical": "Reached at a rate demonstrated before the capital was committed, so the profit is attributable to the system rather than to the funding. Not the end — the point at which compounding is demonstrated rather than argued, every later figure becomes credible, and the conversation about what comes next is worth having.",
+      "plain": "A hundred thousand dollars the system earned, on top of everything that was put in. Not the end of anything — the point where the numbers start being believable.",
+      "conditions": [
+        "Targets beyond this are deliberately not set here; they would be guesses made from the wrong rung."
+      ],
+      "exit": "$100k of cumulative profit, net of every deposit, at a rate demonstrated in advance."
+    }
+  ],
+
+  "falsifiers": {
+    "title": "What would falsify this vision",
+    "lede": {
+      "technical": "A vision with no falsifier is a mood. Each of these is a specific observation that would mean the plan above is wrong rather than merely late.",
+      "plain": "Three things that, if they happened, would mean this plan is wrong — not behind schedule, wrong."
+    },
+    "items": [
+      {
+        "observation": "Nothing clears honest gates across successive strategy families",
+        "conclusion": "The premise that a reachable systematic edge exists at this scale is wrong. Stop; don't widen the search."
+      },
+      {
+        "observation": "Live expectancy materially below backtest across two independent forward windows",
+        "conclusion": "The measurement discipline still leaks somewhere invisible, and no amount of new strategy supply fixes it."
+      },
+      {
+        "observation": "The target requires a return rate the record doesn't support and contributions aren't forthcoming",
+        "conclusion": "The target is wrong, and should be restated rather than quietly missed."
+      }
+    ]
+  },
+
+  "anti_goals": {
+    "title": "What we will not build",
+    "lede": {
+      "technical": "Revised for the growth mandate. The self-deception guards stay absolute; the preservation-flavoured ones are gone.",
+      "plain": "A list of things this project refuses to do. The ones protecting honesty are permanent; the ones that were just timidity have been dropped."
+    },
+    "groups": [
+      {
+        "label": "Absolute",
+        "tone": "bad",
+        "note": "These protect the money by protecting the truth.",
+        "items": [
+          "**No evidence gate is ever loosened to admit a strategy.** Not for time pressure, not for a thin pipeline, not because nothing else qualifies. If nothing qualifies, that is the finding, and the answer is a different strategy family.",
+          "**No re-backtesting to explain a live result.** The live path is the record.",
+          "**No permissive fallback on a defect.** Stale map, mismatched label, missing input ⇒ no signals, loudly. A system that trades on broken evidence is worse than one that doesn't trade.",
+          "**No second writer.** One promotion path, one pointer writer, one place labels are computed.",
+          "**No claim without its evidence attached.** Including — especially — claims that the system is working."
+        ]
+      },
+      {
+        "label": "Structural",
+        "tone": "info",
+        "note": "These protect the ability to scale.",
+        "items": [
+          "**No execution, sizing, order routing or account state in System 1.**",
+          "**Nothing new that requires Computer 1 online.** Availability of the factory must never become availability of the business.",
+          "**No decision hard-coded to the current account size.** It must work at $100 and $100k.",
+          "**No detector without a consumer.** An alarm nobody acts on is not a control."
+        ]
+      },
+      {
+        "label": "New, from the 2026-09-13 decisions",
+        "tone": "warn",
+        "note": "Consequences of the owner decisions above.",
+        "items": [
+          "**No risk cap introduced without owner sign-off**, and none applied in advance of the tier it governs. Caps are entered, not inherited.",
+          "**No automatic promotion of capital between tiers.** Ever. The owner signs.",
+          "**No capping of demo.** Demo exists to be pushed to destruction.",
+          "**No target, metric or milestone stated in account value.** Profit, or a deposit-neutral rate, or nothing. A balance rises on deposits, and any goal expressible by depositing money is not a goal about this system.",
+          "**No funding an account whose rate cannot be measured.** Deposit-event tracking comes before the deposit, not after.",
+          "**Do not confuse the proving account with the growth account.** Judging $100 by its dollar return is a category error; judging post-funding capital by \"it's only tuition\" is a much more expensive one."
+        ]
+      },
+      {
+        "label": "Retired",
+        "tone": "muted",
+        "note": "Dropped from the previous revision, recorded so the change is visible rather than silent.",
+        "items": [
+          "**\"Preservation over profit\" as a first principle.** Growth rate is now an explicit objective.",
+          "**\"No speed as a goal\" in its absolute form.** What remains true is that this is not a latency business — we will not trade a *check* for a tick, but we will absolutely trade caution for compounding where the evidence supports it."
+        ]
+      }
+    ]
+  },
+
+  "indicators": {
+    "title": "How you know it is working",
+    "lede": {
+      "technical": "Growth-side and truth-side indicators. Thresholds and failure actions belong in `SYSTEM1_METRICS_AND_TARGETS.md`, not here.",
+      "plain": "The things worth watching, split by what they actually tell you. The specific numbers and what to do when one goes red live in the metrics document."
+    },
+    "groups": [
+      {
+        "question": "Is the system working?",
+        "note": "All deposit-neutral, so none of these can be moved by funding.",
+        "tone": "good",
+        "columns": ["Indicator", "Reading it"],
+        "rows": [
+          ["**Expectancy per trade, in R**", "The atom. Everything else is this times frequency times size"],
+          ["**R per month**", "Expectancy × frequency. The growth rate before any sizing or funding decision"],
+          ["**Deposit-neutral return (time-weighted)**", "The system's signature. The one number a deposit cannot flatter"],
+          ["**Realised vs modelled r-multiple distribution**", "The only honest answer to \"how do I know this isn't curve-fit\""]
+        ]
+      },
+      {
+        "question": "Is the wealth accumulating?",
+        "note": "These depend on capital as well as rate, and must never be read as evidence about the system.",
+        "tone": "info",
+        "columns": ["Indicator", "Reading it"],
+        "rows": [
+          ["**Cumulative profit, net of deposits**", "The target metric. Account value is *not* a substitute and never will be"],
+          ["**Months to $100k profit at the current rate and deposit level**", "Recomputed, not assumed. Rising means something is wrong that a growing balance would hide"],
+          ["**Profit per dollar deposited**", "Whether the system or the savings account is doing the work"]
+        ]
+      },
+      {
+        "question": "Is it telling the truth?",
+        "note": "The self-deception instruments. Every one of these exists because something got past an earlier version of it.",
+        "tone": "warn",
+        "columns": ["Indicator", "Reading it"],
+        "rows": [
+          ["**Distinct strategies qualified through honest gates**", "System 1's headline metric. One number, no caveats"],
+          ["**Fraction of map cells qualified rather than designated**", "How much of the live map is measured edge versus conviction. A mostly-override map is not evidence"],
+          ["**Strategies in the live map vs strategies actually trading**", "Catches \"the map routes to something that cannot fire\" on day one"],
+          ["**Look-ahead defects found per quarter**", "Should trend to zero. A clean quarter with no probes run is unmeasured, not clean"],
+          ["**Time to detect a stalled input**", "Measured from the stall, not the first alert"]
+        ]
+      }
+    ],
+    "false_progress": {
+      "title": "Three readings that look like progress and are not",
+      "tone": "bad",
+      "items": [
+        "**A rising account balance** — it rises on deposits, and says nothing until profit is separated out.",
+        "**A green heartbeat with nothing emitted** — freshness of inputs is not liveness of output.",
+        "**A high gatekeeper AUC** — its target is a win-rate target while the promotion gate is a mean-R gate, so a strong score is not an expected-return result."
+      ]
+    }
+  },
+
+  "identity": {
+    "title": "Who has to exist for this to happen",
+    "lede": {
+      "technical": "`VISION.md` says where we are going and what the money is for. It does not say who has to exist to get there. A vision held by someone whose habits contradict it does not survive contact with a bad month.",
+      "plain": "Knowing the destination is not the same as being the kind of person who arrives at it. A plan that contradicts your actual habits fails in the first bad month."
+    },
+    "chain": ["Vision", "Goals", "Why (per goal)", "Beliefs", "Identity", "Habits", "Knowledge & skills"],
+    "chain_note": "Each layer is caused by the one above it. Read top to bottom once; after that the useful direction is upward — when a habit keeps failing, the belief above it is probably wrong or not actually held.",
+
+    "owner": {
+      "label": "The owner",
+      "statement": "I am a capital builder, not a capital protector. I do not need protection from my own decisions — I need protection from my own hopes.",
+      "statement_note": "That distinction is the whole design. Risk appetite is legitimately the owner's, and a system that overrides it is wrong. Whether an edge exists is not anyone's to decide, and a system that lets hope answer that question is worse than useless — it's expensive.",
+      "commitments": [
+        "**I own the risk decisions, in writing, by name and date.** No tier entered silently, no cap inherited by accident, no override without a reason someone else could read and disagree with.",
+        "**I do not argue with a measurement because I don't like it.** I argue with the *measurement's method*, which is a different and much more productive activity.",
+        "**I fund what works and stop what doesn't**, on a schedule decided in advance rather than in the mood of the moment."
+      ],
+      "goals": {
+        "title": "Goals, and the why beneath each",
+        "note": "A goal without an articulated \"why\" gets abandoned the first time it is inconvenient. Each is asked twice.",
+        "columns": ["Goal", "Why", "And why that"],
+        "rows": [
+          ["**Close the evidence chain before risking capital**", "Because betting on unmeasured edge loses money faster than not betting", "Because the only unrecoverable outcome is running out of capital before finding the edge — and $100 spent on a broken loop teaches nothing that demo wouldn't teach free"],
+          ["**Get $100 into the live market and trade it**", "Because demo cannot teach what fills, spreads and slippage actually cost", "Because every unpleasant surprise in this business lives in the gap between modelled and realised, and that gap is invisible until real money crosses it"],
+          ["**Fund the system on evidence, not enthusiasm**", "Because the funding decision sets the horizon more than the return rate does", "Because at the same return rate, the target arrives in three years or seven depending only on the deposit level — but capital committed to an unproven rate is just a faster way to lose it"],
+          ["**Measure profit, never account balance**", "Because a balance rises on deposits, and deposits prove nothing", "Because the one way this project could declare victory having achieved nothing is by counting money it put in as money it made"],
+          ["**Grow capital at a deliberate rate**", "Because capital is the constraint on everything: instruments, diversification, whether this becomes a living", "Because a small account cannot diversify, cannot survive a normal drawdown, and cannot compound into anything that matters"],
+          ["**Never fool ourselves about the edge**", "Because a false edge spends real money while feeling like progress", "Because this project has already produced results that looked like edges and were not, and the cost was months plus every realised trade being a loser"],
+          ["**Make the next insight cheaper to add than the last**", "Because one strategy is a coin flip; a machine that evaluates strategies is an asset", "Because that is the difference between having found something once and being able to find things — which is what the name claims"]
+        ]
+      },
+      "beliefs": {
+        "title": "Beliefs, and the twin that keeps each honest",
+        "note": "Stated as things to actually believe, not slogans. Held singly, each of these becomes a failure mode.",
+        "columns": ["Belief", "Its twin"],
+        "rows": [
+          ["**Growth is the objective.** Capital that doesn't grow is capital doing nothing, and at this size preservation is just a slow way to lose to inflation and time", "**Ruin ends the game.** Not loss — ruin. There is a difference, and it is a function of account size"],
+          ["**Most barriers here are chosen, not imposed.** Nearly every limit in this system was typed by someone, often for an account size that doesn't exist. It can be untyped", "**The real barriers are arithmetic.** 1,000× does not happen on $100 and no contributions. Look-ahead bias does not negotiate. A strategy with negative expectancy loses more when you bet more. Telling chosen barriers from arithmetic ones is the whole skill"],
+          ["**Risk is the price of return, and it is payable.** A system that takes no risk earns nothing, and refusing to pay is itself a decision with a cost", "**Risk is priced per size, not per trade.** The same trade is cheap at $100 and expensive at $100k. What changes is never the strategy — only the sizing"],
+          ["**I decide my own risk.** The system serves the owner's appetite, not an agent's caution", "**I do not decide what is true.** Expectancy, drawdown and statistical significance are not subject to appetite. Wanting an edge to be real has no effect on whether it is"],
+          ["**Small money now beats perfect money later.** $100 live teaches more than another month of backtesting", "**Small money is for learning, not earning.** Judging $100 by its dollar return is a category error"],
+          ["**Being wrong quickly is the cheapest thing this system can do for me**", "Which means a rejection with per-gate numbers is a *successful run*, and a month that kills a strategy was a productive month"]
+        ]
+      },
+      "habits": {
+        "title": "Habits",
+        "note": "Small, dated, and few enough to actually do. A habit that needs willpower is a habit that stops in a bad month.",
+        "columns": ["Cadence", "Habit", "Guards against"],
+        "rows": [
+          ["**Weekly**", "Read the heartbeat and the emitter state. Ask one question: *did anything actually happen, or did the system merely stay fresh?*", "A green dashboard over a dead system — the documented failure mode here"],
+          ["**Weekly**", "Write down what changed, in one line, even if it is \"nothing\"", "Months of drift that nobody can reconstruct later"],
+          ["**Monthly**", "Recompute *months to $100k profit at the current rate and deposit level*. Not the balance — the horizon", "A slipping timeline hiding behind a rising balance"],
+          ["**Monthly**", "Read profit and deposits as two separate numbers, never one", "Counting deposited money as earned money — the one self-deception that invalidates everything"],
+          ["**Monthly**", "Name one thing to stop doing", "Supply lines built while the factory is dark, which is this project's named recurring failure"],
+          ["**Per decision**", "Any risk change, tier entry or override gets a written reason before it gets typed into a file", "Silent judgement that nobody, including future you, can audit"],
+          ["**Per strategy**", "Read the per-cell verdicts before the pooled number", "Concentration risk read as edge"],
+          ["**Quarterly**", "Re-read `VISION.md` and ask whether it still says what you mean", "A vision that quietly became someone else's"]
+        ]
+      },
+      "skills": {
+        "title": "Knowledge and skills to build",
+        "note": "Ordered by how soon they bite. These are the specific competencies the decisions above require — not general trading education.",
+        "items": [
+          "**Expectancy in R, and how frequency and size multiply it.** Every growth conversation reduces to this. Without it, \"is this working\" can't be answered.",
+          "**Deposit-neutral (time-weighted) return versus cumulative profit.** The first judges the system, the second judges the outcome, and they move independently. Confusing them is how a funded account with a mediocre rate gets mistaken for a working system.",
+          "**Drawdown recovery arithmetic.** Why 50% down needs 100% up, and why that turns hostile as capital grows. This is the number that should set the cap schedule.",
+          "**Kelly, and why it is a growth criterion.** Enough to choose a fraction deliberately rather than inheriting one, and to know what full Kelly's drawdowns actually feel like.",
+          "**Recognising look-ahead bias.** The three most common shapes: centred windows, using a bar's close to decide entry on that bar, and any label or feature fitted on the full history. This is the house risk and it has been found here repeatedly.",
+          "**Reading per-cell versus pooled results.** A strategy qualifying pooled while failing most of its cells is concentration, not edge — the single easiest way to be fooled by an honest number.",
+          "**Sample size and multiple comparisons.** Why testing 51 strategies and celebrating the best one is not a finding, and what it takes to make it one.",
+          "**What the gates actually measure.** Enough to know which are absolute (evidence) and which are yours to move (risk), because conflating them is what produced this whole conversation."
+        ]
+      }
+    },
+
+    "agent": {
+      "label": "The agent",
+      "preamble": "This section exists because nearly all of this system was built by agents, and the incentives of an agent are not automatically the owner's incentives.",
+      "failure_mode": {
+        "title": "An agent optimising to avoid blame builds a system that never trades",
+        "tone": "bad",
+        "technical": "The asymmetry is structural, not a character flaw. An unauthorised loss is visible, attributable, and arrives with a timestamp. A foregone gain is invisible, unattributable, and never arrives at all. An agent minimising criticism will therefore add checks indefinitely, because every check is defensible in isolation and the cumulative cost lands on someone else. That is how a $100-account project acquired an endowment's risk posture and a first principle of \"preservation over profit.\" No single decision was wrong. The aggregate was a machine that protects an account by ensuring it stays small — and the owner never asked for that.",
+        "plain": "A loss has a name and a timestamp; a missed gain has neither. So an assistant trying not to be blamed keeps adding safety checks, each one defensible on its own, until the system cannot act at all. That is how a $100 project ended up with the risk rules of a pension fund."
+      },
+      "correction": "**The correction is not less rigour. It is rigour pointed at the right target.** Evidence gates are where caution belongs, because there the cost of being wrong is real money spent on a non-edge. Risk caps are not the agent's to tighten, because there the cost of being wrong is a horizon quietly extending from 10 years to 26.",
+      "statement": "I am the owner's instrument for not being fooled — including by me. I am not the owner's guardian, and the risk appetite is not mine.",
+      "do_dont": {
+        "columns": ["Do", "Do not"],
+        "rows": [
+          ["Defend the standard of evidence without exception", "Defend a risk cap the owner has decided to lift"],
+          ["Say plainly when a measurement doesn't support a claim, however inconvenient", "Manufacture a reason to delay because delay is safer for me"],
+          ["State a concern once, with the number attached, then build what was asked", "Re-litigate a settled decision, or relitigate it by building slowly"],
+          ["Report what I did not check", "Imply completeness I didn't earn"],
+          ["Distinguish \"this is arithmetically impossible\" from \"this makes me uncomfortable\"", "Present the second as the first"],
+          ["Make the growth consequence visible — *this costs N months of horizon*", "Present caution as free"]
+        ]
+      },
+      "habits": [
+        "**Name which gate you are touching.** Evidence or risk. If evidence, the bar does not move. If risk, the owner decides and you implement.",
+        "**Quote the cost of caution in the units of the vision.** Not \"this is safer\" but \"this delays Phase 1 by a month\" or \"this costs ~N months of horizon.\" Caution with no price tag always looks free and never is.",
+        "**When adding a check, name what it stops.** No detector without a consumer.",
+        "**When a result is convenient, attack it before reporting it.** The four false edges this repo produced were all convenient and all passed the checks in force.",
+        "**Leave the risk dial where the owner set it.** Including when you think it is too high. Say so once, with the recovery arithmetic, then implement."
+      ]
+    },
+
+    "binding": {
+      "title": "Where this binds",
+      "tone": "info",
+      "technical": "`IDENTITY_AND_HABITS.md` has no authority over `GOVERNANCE.md`, which governs how work is produced and accepted. The two agree on the important thing: a result must survive being tried to be broken before it is believed. What the identity document adds is who is doing the trying, and why they might not want to. **When identity and vision conflict, the conflict is the finding** — write it down rather than resolving it silently, because the silent resolution always favours whichever is easier that week, and nobody notices for a year.",
+      "plain": "This document does not outrank the governance rules; it fills in a gap they leave. Both agree that a result has to survive an honest attempt to break it. If what you actually do contradicts what you say you want, write that contradiction down — resolving it quietly always goes the easy way."
+    }
+  },
+
+  "planning": {
+    "title": "How the documents fit",
+    "lede": {
+      "technical": "Five documents, each revised on its own clock. A change belongs at the level whose clock matches it — putting this week's news in the vision is how a vision quietly moves its own goalposts.",
+      "plain": "Five documents, each rewritten at a different speed. Write a change at the level that changes as often as the change does."
+    },
+    "chain": [
+      {
+        "file": "VISION.md",
+        "covers": "Why this exists, the mandate, the phases",
+        "cadence": "Revised yearly",
+        "depth": 0
+      },
+      {
+        "file": "IDENTITY_AND_HABITS.md",
+        "covers": "Who the owner and the agent must be",
+        "cadence": "Revised on conflict",
+        "depth": 1
+      },
+      {
+        "file": "VALUE_MILESTONES.md",
+        "covers": "The rungs, each with a falsifier",
+        "cadence": "Revised when a rung moves",
+        "depth": 1
+      },
+      {
+        "file": "SYSTEM1_METRICS_AND_TARGETS.md",
+        "covers": "The instruments — thresholds and failure actions",
+        "cadence": "Every retrain",
+        "depth": 2
+      },
+      {
+        "file": "<PERIOD>_GOALS.md",
+        "covers": "This month's work",
+        "cadence": "Monthly",
+        "depth": 3
+      },
+      {
+        "file": "task/OPEN.md",
+        "covers": "What is being done now",
+        "cadence": "Continuously",
+        "depth": 4
+      }
+    ],
+    "tests": {
+      "title": "Three tests when deciding what to work on, in order",
+      "items": [
+        {
+          "n": "1",
+          "question": "Does it move a rung?",
+          "text": "The ladder in `VALUE_MILESTONES.md` — rendered on the Goals & tasks page. Work that moves no rung is not necessarily wrong, but it should be recognised as plumbing, and plumbing should be finished, not polished."
+        },
+        {
+          "n": "2",
+          "question": "Does it move the growth rate, the contribution rate, or the honesty of the measurement?",
+          "text": "If none of the three, it is plumbing."
+        },
+        {
+          "n": "3",
+          "question": "Does it make the next source of insight cheaper to add, or does it hard-code today's account size?",
+          "text": "The name is a claim; this is the test of it."
+        }
+      ]
+    },
+    "revision_rule": {
+      "title": "The revision rule",
+      "tone": "warn",
+      "technical": "`VISION.md` changes when the destination or the mandate changes — not when the situation does. If you are updating it to reflect what happened this week, that belongs in `REPO_STATE.md` or a period-goals file. If a phase has passed unmet, add a dated note rather than sliding the date. **A vision that quietly moves its own goalposts is the exact failure this system exists to make impossible.**",
+      "plain": "Only rewrite the vision when the destination changes. This week's events go somewhere else. And if a deadline passes unmet, write that down next to it instead of moving the deadline."
+    }
+  }
+}

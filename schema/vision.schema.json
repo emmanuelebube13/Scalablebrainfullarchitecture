@@ -1,0 +1,351 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Scalable Brain — vision and planning content layer",
+  "description": "Shape of data/vision.json, rendered by vision.html. Content is drawn from docs/goals/VISION.md and docs/goals/IDENTITY_AND_HABITS.md in the source repository. Forward-looking register only: no current-state numbers belong in this file (they live in goals.json and REPO_STATE.md).",
+  "type": "object",
+  "required": ["schema_version", "as_of", "sources", "headline", "owner_decisions", "name", "mandate", "distinction", "risk_ladder", "target", "phases", "falsifiers", "anti_goals", "indicators", "identity", "planning"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "as_of": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "register": { "type": "string" },
+
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["file", "written", "covers"],
+        "properties": {
+          "file": { "type": "string" },
+          "written": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+          "covers": { "type": "string" },
+          "revision_rule": { "type": "string" }
+        }
+      }
+    },
+
+    "headline": {
+      "type": "object",
+      "required": ["one_line"],
+      "properties": {
+        "one_line": { "type": "string" },
+        "technical": { "type": "string" },
+        "plain": { "type": "string" },
+        "not": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+
+    "owner_decisions": {
+      "type": "object",
+      "required": ["date", "items"],
+      "properties": {
+        "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "note": { "type": "string" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["title", "text"],
+            "properties": { "title": { "type": "string" }, "text": { "type": "string" } }
+          }
+        }
+      }
+    },
+
+    "name": {
+      "type": "object",
+      "required": ["parts"],
+      "properties": {
+        "lede": { "$ref": "#/definitions/voiced" },
+        "parts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["word", "claim"],
+            "properties": {
+              "word": { "type": "string" },
+              "claim": { "type": "string" },
+              "technical": { "type": "string" },
+              "plain": { "type": "string" }
+            }
+          }
+        },
+        "test": { "type": "string" }
+      }
+    },
+
+    "mandate": {
+      "type": "object",
+      "required": ["statement", "restated"],
+      "properties": {
+        "statement": { "type": "string" },
+        "ordering": { "$ref": "#/definitions/voiced" },
+        "correction": { "$ref": "#/definitions/callout" },
+        "restated": { "type": "string" },
+        "restated_note": { "$ref": "#/definitions/voiced" },
+        "bindings": { "$ref": "#/definitions/table" },
+        "kelly": { "$ref": "#/definitions/callout" }
+      }
+    },
+
+    "distinction": {
+      "type": "object",
+      "required": ["title", "columns", "rows", "rule"],
+      "properties": {
+        "title": { "type": "string" },
+        "lede": { "$ref": "#/definitions/voiced" },
+        "columns": { "type": "array", "items": { "type": "string" } },
+        "rows": { "type": "array", "items": { "type": "array", "items": { "type": "string" } } },
+        "rule": { "type": "string" },
+        "why": { "$ref": "#/definitions/callout" }
+      }
+    },
+
+    "risk_ladder": {
+      "type": "object",
+      "required": ["title", "columns", "rows"],
+      "properties": {
+        "title": { "type": "string" },
+        "lede": { "$ref": "#/definitions/voiced" },
+        "columns": { "type": "array", "items": { "type": "string" } },
+        "rows": { "type": "array", "items": { "type": "array", "items": { "type": "string" } } },
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["title", "text"],
+            "properties": { "title": { "type": "string" }, "text": { "type": "string" } }
+          }
+        }
+      }
+    },
+
+    "target": {
+      "type": "object",
+      "required": ["title", "statement", "quantities"],
+      "properties": {
+        "title": { "type": "string" },
+        "statement": { "type": "string" },
+        "lede": { "$ref": "#/definitions/voiced" },
+        "quantities": { "$ref": "#/definitions/table" },
+        "arithmetic": { "$ref": "#/definitions/table" },
+        "conclusions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["title", "text"],
+            "properties": { "title": { "type": "string" }, "text": { "type": "string" } }
+          }
+        },
+        "requirement": { "$ref": "#/definitions/callout" }
+      }
+    },
+
+    "phases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "when", "state", "exit"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "when": { "type": "string" },
+          "state": { "enum": ["done", "in_progress", "not_started", "blocked"] },
+          "tagline": { "type": "string" },
+          "technical": { "type": "string" },
+          "plain": { "type": "string" },
+          "conditions": { "type": "array", "items": { "type": "string" } },
+          "exit": { "type": "string" }
+        }
+      }
+    },
+
+    "falsifiers": {
+      "type": "object",
+      "required": ["title", "items"],
+      "properties": {
+        "title": { "type": "string" },
+        "lede": { "$ref": "#/definitions/voiced" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["observation", "conclusion"],
+            "properties": { "observation": { "type": "string" }, "conclusion": { "type": "string" } }
+          }
+        }
+      }
+    },
+
+    "anti_goals": {
+      "type": "object",
+      "required": ["title", "groups"],
+      "properties": {
+        "title": { "type": "string" },
+        "lede": { "$ref": "#/definitions/voiced" },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["label", "items"],
+            "properties": {
+              "label": { "type": "string" },
+              "tone": { "$ref": "#/definitions/tone" },
+              "note": { "type": "string" },
+              "items": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+
+    "indicators": {
+      "type": "object",
+      "required": ["title", "groups"],
+      "properties": {
+        "title": { "type": "string" },
+        "lede": { "$ref": "#/definitions/voiced" },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["question", "columns", "rows"],
+            "properties": {
+              "question": { "type": "string" },
+              "note": { "type": "string" },
+              "tone": { "$ref": "#/definitions/tone" },
+              "columns": { "type": "array", "items": { "type": "string" } },
+              "rows": { "type": "array", "items": { "type": "array", "items": { "type": "string" } } }
+            }
+          }
+        },
+        "false_progress": {
+          "type": "object",
+          "required": ["title", "items"],
+          "properties": {
+            "title": { "type": "string" },
+            "tone": { "$ref": "#/definitions/tone" },
+            "items": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    },
+
+    "identity": {
+      "type": "object",
+      "required": ["title", "chain", "owner", "agent"],
+      "properties": {
+        "title": { "type": "string" },
+        "lede": { "$ref": "#/definitions/voiced" },
+        "chain": { "type": "array", "items": { "type": "string" } },
+        "chain_note": { "type": "string" },
+        "owner": {
+          "type": "object",
+          "required": ["label", "statement"],
+          "properties": {
+            "label": { "type": "string" },
+            "statement": { "type": "string" },
+            "statement_note": { "type": "string" },
+            "commitments": { "type": "array", "items": { "type": "string" } },
+            "goals": { "$ref": "#/definitions/table" },
+            "beliefs": { "$ref": "#/definitions/table" },
+            "habits": { "$ref": "#/definitions/table" },
+            "skills": { "$ref": "#/definitions/list" }
+          }
+        },
+        "agent": {
+          "type": "object",
+          "required": ["label", "statement"],
+          "properties": {
+            "label": { "type": "string" },
+            "preamble": { "type": "string" },
+            "failure_mode": { "$ref": "#/definitions/callout" },
+            "correction": { "type": "string" },
+            "statement": { "type": "string" },
+            "do_dont": { "$ref": "#/definitions/table" },
+            "habits": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "binding": { "$ref": "#/definitions/callout" }
+      }
+    },
+
+    "planning": {
+      "type": "object",
+      "required": ["title", "chain", "tests"],
+      "properties": {
+        "title": { "type": "string" },
+        "lede": { "$ref": "#/definitions/voiced" },
+        "chain": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["file", "covers", "cadence", "depth"],
+            "properties": {
+              "file": { "type": "string" },
+              "covers": { "type": "string" },
+              "cadence": { "type": "string" },
+              "depth": { "type": "integer" }
+            }
+          }
+        },
+        "tests": {
+          "type": "object",
+          "required": ["title", "items"],
+          "properties": {
+            "title": { "type": "string" },
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["n", "question", "text"],
+                "properties": {
+                  "n": { "type": "string" },
+                  "question": { "type": "string" },
+                  "text": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "revision_rule": { "$ref": "#/definitions/callout" }
+      }
+    }
+  },
+
+  "definitions": {
+    "tone": { "enum": ["good", "info", "warn", "bad", "muted"] },
+    "voiced": {
+      "type": "object",
+      "properties": { "technical": { "type": "string" }, "plain": { "type": "string" } }
+    },
+    "callout": {
+      "type": "object",
+      "required": ["title"],
+      "properties": {
+        "title": { "type": "string" },
+        "tone": { "$ref": "#/definitions/tone" },
+        "technical": { "type": "string" },
+        "plain": { "type": "string" }
+      }
+    },
+    "table": {
+      "type": "object",
+      "required": ["columns", "rows"],
+      "properties": {
+        "title": { "type": "string" },
+        "note": { "type": "string" },
+        "columns": { "type": "array", "items": { "type": "string" } },
+        "rows": { "type": "array", "items": { "type": "array", "items": { "type": "string" } } }
+      }
+    },
+    "list": {
+      "type": "object",
+      "required": ["items"],
+      "properties": {
+        "title": { "type": "string" },
+        "note": { "type": "string" },
+        "items": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

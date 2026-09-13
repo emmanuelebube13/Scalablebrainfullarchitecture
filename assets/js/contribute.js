@@ -58,6 +58,19 @@ const SCHEMAS = [
     note: 'A task whose `goal` or `system` does not resolve is a validation error, not a rendering quirk — `node tools/validate.mjs` catches it.',
   },
   {
+    title: 'data/vision.json — mandate, phases, identity & habits',
+    columns: ['Key', 'Shape', 'Notes'],
+    rows: [
+      ['`headline`', '`{one_line, technical, plain, not[]}`', 'The vision in a sentence, plus what it is deliberately *not*'],
+      ['`owner_decisions`', '`{date, note, items[]}`', 'Decisions already taken. Not arguments to re-open'],
+      ['`mandate`, `distinction`, `risk_ladder`, `target`', 'one object per section', 'Each carries a two-voice `lede` and its own tables and callouts'],
+      ['`phases[]`', '`{id, name, when, state, tagline, technical, plain, conditions[], exit}`', '`state` ∈ done / in_progress / not_started / blocked. Exactly one should be `in_progress`'],
+      ['`anti_goals`, `indicators`, `identity`, `planning`', 'one object per section', 'The refusals, the instruments, who has to exist, and the document chain'],
+      ['`sources[]`', '`{file, written, covers, revision_rule}`', 'The authoritative `docs/goals/*.md` files this page renders'],
+    ],
+    note: 'Forward-looking register: **no current-state numbers belong in this file.** Milestone states and live counts live in `data/goals.json`; this file is revised yearly and a stale number here reads as a claim. It is a rendering of `docs/goals/VISION.md` and `docs/goals/IDENTITY_AND_HABITS.md` — when they disagree, the `.md` wins.',
+  },
+  {
     title: 'data/decisions.json — architecture decision records',
     columns: ['Key', 'Shape', 'Notes'],
     rows: [

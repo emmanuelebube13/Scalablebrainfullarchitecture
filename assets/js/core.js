@@ -176,6 +176,7 @@ const NAV_GROUPS = [
     label: 'Reference',
     items: [
       ['index.html',                'Overview',    'overview'],
+      ['vision.html',               'Vision',      'vision'],
       ['architecture.html',         'Unified map', 'unified'],
       ['system.html?id=system-1',   'Systems',     'systems'],
     ],

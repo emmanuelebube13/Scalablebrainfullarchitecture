@@ -17,6 +17,8 @@ Two things, sharing one Git-backed content layer:
    **Plain English** voice, switched from the header.
 2. **An operations tracker.** A milestone ladder, macro and subsystem goals, a cross-system
    dependency matrix, and a per-week task list.
+3. **A statement of intent.** What the money is for, the risk ladder, the profit target and the
+   five phases — rendered from the `docs/goals/` files in the source repository.
 
 The design constraint that shapes everything else: **no content is written in HTML.** Every
 page fetches JSON from `data/` and renders it. Humans, scripts and automated agents all edit
@@ -32,6 +34,7 @@ data/                         The content layer — the only thing you normally 
 ├── architecture.json         Nodes, edges and traceable flows for the unified map
 ├── decisions.json            Architecture decision records, including open ones
 ├── goals.json                Milestones, goals, dependency matrix, task tracker
+├── vision.json               Mandate, risk ladder, profit target, phases, identity & habits
 └── systems/system-N.json     One file per subsystem, all sharing one schema
 
 schema/                       JSON Schema for each content file
@@ -39,6 +42,7 @@ templates/system.template.json  Copy this to add System 4
 tools/validate.mjs            Zero-dependency validator (structure + cross-references)
 
 index.html                    Overview
+vision.html                   Vision & planning — mandate, phases, identity & habits
 architecture.html             Unified interactive map + decision records
 system.html?id=system-N       Subsystem page — one page serves every system
 goals.html                    Goals, milestones, dependency matrix, tasks
@@ -112,3 +116,6 @@ served verbatim. There is no build step: a push is a deploy.
 - Node and edge `status` is one of `live` / `degraded` / `blocked` / `planned`. Anything other than
   `live` renders dashed — the map cannot draw a broken link as a working one.
 - Dates are ISO `YYYY-MM-DD`. State claims carry an `as_of`.
+- `data/vision.json` is forward-looking and holds no current-state numbers — those live in
+  `data/goals.json`. It is a rendering of `docs/goals/*.md` in the source repository, so when
+  the two disagree the `.md` wins.
