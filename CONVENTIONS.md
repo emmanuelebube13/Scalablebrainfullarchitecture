@@ -393,8 +393,7 @@ Pages are static HTML files in the repo root. Each:
    footer, search overlay, and theme/mode toggles
 
 **`activeKey`** must match one of the `matchKey` values in `NAV_GROUPS` in `core.js`:
-`overview`, `vision`, `unified`, `systems`, `goals`, `operations`, `runbook`, `telegram`,
-`contributing`.
+`overview`, `vision`, `unified`, `systems`, `edge`, `goals`, `operations`, `runbook`, `telegram`.
 
 The nav row holds eight links and fits on one line down to ~1360px. Adding a ninth will wrap
 it and double the header height — check the header at 1366px before adding one, and tighten

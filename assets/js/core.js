@@ -177,23 +177,18 @@ const NAV_GROUPS = [
     items: [
       ['index.html',                'Overview',    'overview'],
       ['vision.html',               'Vision',      'vision'],
-      ['architecture.html',         'Unified map', 'unified'],
+      ['architecture.html',         'Map',         'unified'],
       ['system.html?id=system-1',   'Systems',     'systems'],
+      ['edge-exploration.html',     'Edge',        'edge'],
     ],
   },
   {
     label: 'State',
     items: [
-      ['goals.html',      'Goals & tasks', 'goals'],
-      ['operations.html', 'Operations',    'operations'],
-      ['runbook.html',    'Runbook',       'runbook'],
-      ['telegram.html',   'Telegram',      'telegram'],
-    ],
-  },
-  {
-    label: 'Meta',
-    items: [
-      ['contribute.html', 'Contributing', 'contributing'],
+      ['goals.html',      'Goals',     'goals'],
+      ['operations.html', 'Ops',       'operations'],
+      ['runbook.html',    'Runbook',   'runbook'],
+      ['telegram.html',   'Telegram',  'telegram'],
     ],
   },
 ];

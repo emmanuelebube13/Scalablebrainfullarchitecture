@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Edge research — Scalable Brain</title>
+<meta name="description" content="Four research paths for finding new trading edges, ordered by cost of evidence. Each is gated by the one before it.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/css/main.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header id="site-header"></header>
+
+<main id="main">
+  <section class="hero edge-hero">
+    <div class="wrap">
+      <div class="eyebrow" id="edge-asof">Loading…</div>
+      <h1 id="edge-title"></h1>
+      <p class="lede" id="edge-lede"></p>
+    </div>
+  </section>
+
+  <!-- In-page section nav. Links are injected from the paths array so
+       the nav and the rendered sections are the same list. -->
+  <nav class="vnav" id="edge-nav" aria-label="Sections of this page"></nav>
+
+  <div id="content"></div>
+</main>
+
+<footer id="site-footer"></footer>
+<script type="module" src="assets/js/edge-exploration.js"></script>
+</body>
+</html>

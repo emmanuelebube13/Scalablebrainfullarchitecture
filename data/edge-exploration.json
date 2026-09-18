@@ -1,0 +1,96 @@
+{
+  "schema_version": "1.0.0",
+  "as_of": "2026-09-18",
+  "title": "Where the next edge comes from",
+  "eyebrow": "Strategy research · exploration roadmap",
+  "lede": {
+    "technical": "Four research paths ordered by cost of evidence — each builds on the evaluation loop the system already has, and each is gated by the one before it.",
+    "plain": "Four ways to find strategies that actually work, ordered from cheapest to most expensive to test. Each one only makes sense after the one before it is proven."
+  },
+  "paths": [
+    {
+      "id": "costs",
+      "number": 1,
+      "title": "Real costs from live fills",
+      "eyebrow": "Days, not weeks",
+      "body": {
+        "technical": "The flat 2.4-pip cost bracket (1 pip spread + 0.5 pip slippage + commission equivalent) is applied uniformly across all pairs and all sessions. System 2's fill data can replace it with observed per-pair, per-session cost distributions. Several near-zero strategies (`kiss_h4`, `currency_momentum_factor`) live or die on ~0.5 pips of cost precision — the bracket is wider than their expected edge.",
+        "plain": "Right now every strategy is charged the same trading cost regardless of which pair it trades or when. The real cost varies — some pairs are cheaper at certain times. We already have the actual fill data from the broker. Using it instead of the flat estimate would show us whether some strategies that currently look dead are actually alive (or vice versa)."
+      },
+      "evidence": "System 2 fill logs, OANDA execution reports.",
+      "blocked_by": "Nothing — the data exists now.",
+      "priority": 1,
+      "priority_note": "Cheapest evidence, highest leverage",
+      "callout": {
+        "tone": "good",
+        "title": "Pure measurement",
+        "text": "This is pure measurement improvement — no new strategy code, no new data source. It changes what passes the gates without changing the gates themselves."
+      }
+    },
+    {
+      "id": "lower-tf",
+      "number": 2,
+      "title": "M15 / M30 strategies",
+      "eyebrow": "The data already exists",
+      "body": {
+        "technical": "The price database holds 2.6M+ M15/M30 bars. Lower timeframes mean structurally higher signal frequency — the direct answer to \"fires a couple of times a week\" without needing owner designation of marginal strategies. Requires the `STRATEGY_EXPERIMENT_STANDARD` applied at the new granularity, and it is where the streaming question (cron vs continuous emitter) would eventually become real.",
+        "plain": "The system already has the price data for 15-minute and 30-minute bars — millions of them. Strategies on these timeframes would trade more often, which is what the system needs to generate enough signals to be statistically meaningful. But they need to be tested to the same standard as everything else."
+      },
+      "evidence": "`fact_market_prices` row counts at M15/M30 granularity.",
+      "blocked_by": "Cost calibration (Path 1) should land first — measuring faster strategies with wrong costs wastes the work.",
+      "priority": 2,
+      "priority_note": "Highest-leverage new strategy work",
+      "callout": {
+        "tone": "info",
+        "title": "Streaming question",
+        "text": "This is where the streaming question becomes real. M15 strategies need signals within minutes of bar close, not within an hour. Until then, cron is correct."
+      }
+    },
+    {
+      "id": "session",
+      "number": 3,
+      "title": "Session / time-of-day conditioning",
+      "eyebrow": "Zero new infrastructure",
+      "body": {
+        "technical": "London open and New York open behaviour is a well-documented FX effect. The existing H1/H4 strategies can be conditioned on session (London, NY, Asian) without any new data source — it is a function of the bar timestamp. Testable on current data with the current evaluation loop. The hypothesis is that some strategies that fail pooled across all sessions pass within a single session.",
+        "plain": "Markets behave differently at different times of day — London morning is different from Tokyo afternoon. We can test whether the existing strategies work better when they only trade during specific sessions. This needs no new data at all — we already know what time each bar is."
+      },
+      "evidence": "Existing `fact_market_prices` timestamps, academic literature on FX session effects.",
+      "blocked_by": "Nothing technically, but sequenced after Path 1 because session costs also vary.",
+      "priority": 3,
+      "priority_note": "Free option on existing strategy set",
+      "callout": {
+        "tone": "info",
+        "title": "Conditioning, not a new family",
+        "text": "This is conditioning, not a new strategy family. It narrows when existing strategies trade, which can turn a pooled failure into a session-specific pass."
+      }
+    },
+    {
+      "id": "nlp",
+      "number": 4,
+      "title": "FinBERT and news-driven signals",
+      "eyebrow": "The biggest lift",
+      "body": {
+        "technical": "`src/nlp/` exists in the repo but is unwired — `finbert.py` and `macro_scraper.py` are present but not part of the pipeline. This is a genuinely new data source rather than a new formula applied to price. Requires: a news ingestion pipeline with point-in-time discipline (no look-ahead on publication timestamps), a FinBERT inference step, feature engineering from sentiment scores, and its own leakage review by `leakage-hunter`. Sequenced last because it needs the evaluation loop proven on simpler paths first.",
+        "plain": "The system already has code for reading financial news and scoring sentiment — it just is not connected to anything. This would be the first time the system uses information beyond price to make decisions. It is the biggest project of the four and should come last, after we have proven the testing process works on the simpler paths."
+      },
+      "evidence": "`src/nlp/finbert.py`, `src/nlp/macro_scraper.py` (present, unwired).",
+      "blocked_by": "Paths 1–3 proving the evaluation loop.",
+      "priority": 4,
+      "priority_note": "Biggest integration risk",
+      "callout": {
+        "tone": "warn",
+        "title": "New data source warning",
+        "text": "This is a new data source, not an optimisation. It needs its own ingestion, its own point-in-time discipline, and its own leakage review. Do not shortcut the sequencing."
+      }
+    }
+  ],
+  "recommendation": {
+    "id": "recommendation",
+    "title": "Recommendation",
+    "body": {
+      "technical": "The ordering is deliberate: each path is gated by evidence from the one before it. Path 1 (cost calibration) changes what passes the existing gates without changing any strategy code — it is pure measurement and should take days. Path 2 (lower timeframes) is the highest-leverage new strategy work but depends on correct costs. Path 3 (session conditioning) is a free option on the existing strategy set. Path 4 (NLP) is the owner's stated vision and the destination, but it carries the most integration risk and should prove its evaluation loop on paths that are cheaper to get wrong.",
+      "plain": "Do them in order. The first one is cheap and changes the picture immediately. The second one adds the most new trading opportunities. The third one is free — it just narrows when things trade. The fourth one is the big one, and you earn the right to attempt it by proving the testing process on the first three."
+    }
+  }
+}
