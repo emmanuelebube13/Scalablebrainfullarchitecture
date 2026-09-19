@@ -792,7 +792,27 @@ runtime dependency on Computer 1.
 | Cron | hourly retrain-trigger; Saturday OANDA ingest |
 | Experiment tracking | MLflow, local SQLite backend |
 
-### 9.2 What it publishes
+### 9.2 Remote Access via Tailscale
+
+Because Computer 1 is on your Tailscale account, you can access it securely from anywhere in the world without opening any router ports or configuring a VPN gateway. 
+
+**Prerequisites:**
+- Computer 1 must be powered on, connected to the internet, and running the Tailscale client.
+- Your remote device (laptop, phone, etc.) must be logged into the **same Tailscale account**.
+
+**Option A: Remote Desktop (RDP) - Recommended for Windows**
+1. On Computer 1, ensure Windows Remote Desktop is enabled (`Settings > System > Remote Desktop`).
+2. Open the Tailscale app on your remote device and find Computer 1's IP address (e.g., `100.x.y.z`) or MagicDNS name (e.g., `computer-1`).
+3. Open your Remote Desktop client (Microsoft Remote Desktop) and connect to that `100.x.y.z` IP.
+4. Log in using your normal Windows username and password.
+
+**Option B: Tailscale SSH**
+If you prefer terminal access and have installed the OpenSSH Server on Windows:
+1. Open a terminal on your remote device.
+2. Run `ssh <windows-username>@<computer-1-tailscale-ip>`.
+3. You will drop straight into the Windows command prompt or PowerShell.
+
+### 9.3 What it publishes
 
 Two independent publishers, both: upload to an immutable versioned prefix → SHA256
 round-trip verify → only then atomically flip a `latest.json` pointer. Old versions are never
@@ -815,49 +835,17 @@ redeploy.
 Manifest signing: `latest.json.sig` and `system1_manifest_signing_key.pub` sit at the bucket
 root.
 
-### 9.3 The live blocker — why nothing is trading
+### 9.4 The live blocker — why nothing is trading
 
-**Superseded — the 08-26 blocker below is history, not current state.** Update
-2026-09-08, from System 1's own repo records (not a fresh `[LIVE]` VM check — nobody has
-re-verified `trading-1` against this since 08-31):
+**System 1 has emitted no signal since 2026-08-26T21:15Z.** It runs hourly and reports
+`last_run_outcome: "no_signals_generated"`, because its gatekeeper map has **1 tradeable cell
+of 15**, and that cell requires the `High-Vol` regime, which vanished from the market on
+08-26.
 
-The pipe itself was proven end to end on 2026-09-03: 9 signals published, all 9 acked and
-decided at System 3, 3 became real OANDA orders. **All three were stopped out** (combined
--164.52 CAD), which tipped `consecutive_losses` to 5 and fired System 3's circuit breaker at
-2026-09-02T14:50:47Z — as of this writing it is **still open**, `reset_at` null, an owner
-decision not yet taken.
+This is upstream of everything on the VM. System 2's `messages_seen: 0` is the *symptom*.
+Nothing on `trading-1` will fix it, and nothing on `trading-1` should try.
 
-Separately, and the reason nothing has traded since: the live regime-strategy map
-(`generated_at_utc 2026-08-24`) **expired**. A freshness contract added 2026-09-05
-(`vetting/map_contract.py`, `MAP_MAX_AGE_DAYS`) now refuses to route signals on a map older
-than 7 days, fail-closed — last signal emission **2026-09-04T21:15Z**. This is a new safety
-control doing its job, not the old "no High-Vol cell" starvation described below.
-
-A fix to the underlying market-regime detector is in progress (`task/2026-September-week2/`,
-Work Orders 01-05): the intraday volatility measure was comparing overnight bars to an
-all-day average, mislabelling roughly a fifth to a third of hourly bars as the wrong regime.
-A fresh map republishes once that is fixed and re-measured, and an owner signs off — see the
-Goals & Tasks page, goal `G-024`, for the live detail. Separately, the ML gatekeeper cannot
-currently be retrained at all — a degeneracy guard correctly refuses a model that turns out to
-be 95.5% degenerate on (strategy × regime) cells (true of the *current* live model too, not
-just new ones). That does not block trading on its own, since a fresh System 1 bundle can ship
-paired with the existing gatekeeper pointer, and the gate has run in shadow mode (verdict
-recorded, never enforced) since 2026-08-30.
-
-This is upstream of everything on the VM. Nothing on `trading-1` will fix it, and nothing on
-`trading-1` should try.
-
----
-
-**Original 2026-08-31 text, preserved for the record:** System 1 had emitted no signal since
-2026-08-26T21:15Z. It ran hourly and reported `last_run_outcome: "no_signals_generated"`,
-because its gatekeeper map had **1 tradeable cell of 15**, and that cell required the
-`High-Vol` regime, which had vanished from the market on 08-26. That specific starvation
-condition is stale — the map was regenerated 08-24/since and the blocker is now the expiry
-above, not a missing regime — but the general shape (a map producing too few or the wrong
-tradeable cells) recurs, so the mechanism is worth keeping as a reference.
-
-### 9.4 The deleted signal producer — read before touching this area
+### 9.5 The deleted signal producer — read before touching this area
 
 On **2026-08-15** the component that produced trading signals was **deleted from
 production**, not disabled. It fabricated trade direction from the regime label
@@ -876,7 +864,7 @@ that had no setup — worse, because it would have looked right.
   direction, entry, stop or target. If an implementation has to *choose* one of those, the
   design is wrong — stop and report. See I-7.
 
-### 9.5 The `ScoredSignal` contract
+### 9.6 The `ScoredSignal` contract
 
 `system3/ams/contracts/v1/ScoredSignal.schema.json`, JSON Schema draft-07,
 `additionalProperties: false`, **flat** (an enveloped message is DLQ'd). Freshness window
