@@ -56,46 +56,68 @@
   },
   "future_device_upgrade": {
     "title": "Future device upgrade",
-    "technical": "The next development workstation should be a standard ATX Linux desktop that removes the current four-core CPU and 32 GB memory ceiling while leaving room for local model work. The machine is a research and development host, not the always-on execution host: System 2 and System 3 remain on their designated infrastructure.",
-    "plain": "When this computer is replaced, it should be a roomy Linux desktop for data, databases, backtests and model building. It should be easy to expand later, while the always-on trading systems stay where they belong.",
+    "technical": "If this machine becomes the single always-on host for Systems 1, 2 and 3, buy the smallest reliable ATX Linux platform that can run the services continuously, then upgrade only when measurements or an operational requirement justify it. The first build must include power protection, backups and recovery procedures; a GPU and large capacity are optional stages, not entry requirements.",
+    "plain": "Start with a dependable Linux desktop that can run everything, but do not buy the biggest machine on day one. Add memory, mirrored storage, a second host and a GPU only when the workload or the money at risk makes them necessary.",
     "requirements": [
       [
         "CPU",
-        "16-core AMD Ryzen 9 on the AM5 platform, or a current equivalent",
-        "Parallel ingestion, PostgreSQL work, Docker and backtests"
+        "12-core AMD Ryzen 9 on AM5, or a current equivalent; 16 cores later",
+        "Enough parallelism for all three systems and ordinary research"
       ],
       [
         "Memory",
-        "128 GB DDR5 (2 x 64 GB); 64 GB is the minimum starting point",
-        "Large dataframes, PostgreSQL, containers and concurrent experiments"
+        "64 GB DDR5 initially; expand to 128 GB when memory pressure is measured",
+        "Runs the services and moderate research without paying for unused capacity"
       ],
       [
         "GPU",
-        "NVIDIA GPU with at least 24 GB VRAM for serious local ML; defer it or use a 16 GB card if cloud training is preferred",
-        "Local model training and inference; not required for ordinary ingestion"
+        "No dedicated GPU initially; add NVIDIA 16-24 GB VRAM only for measured local ML demand",
+        "Ingestion, PostgreSQL and execution do not require a GPU"
       ],
       [
         "Storage",
-        "2 TB NVMe for Linux and tools plus 4 TB NVMe for PostgreSQL, market data and artifacts",
-        "Separate system and high-volume research workloads"
+        "One reliable 2 TB NVMe initially; add mirrored/enterprise storage before meaningful live capital",
+        "Keeps the starting build simple while defining the reliability upgrade"
       ],
       [
         "Expansion",
-        "ATX case and motherboard, four RAM slots, multiple NVMe slots, 2.5 Gb Ethernet",
-        "Future RAM, storage and GPU upgrades"
+        "ATX case and motherboard, four RAM slots, multiple NVMe slots, wired Ethernet",
+        "Allows staged RAM, storage and GPU upgrades"
       ],
       [
         "Power and cooling",
-        "1000-1200 W ATX 3.x 80+ Gold PSU and strong airflow cooling",
-        "Headroom for a high-end GPU and sustained workloads"
+        "850 W 80+ Gold PSU and quiet continuous-duty cooling initially; 1000-1200 W with a high-end GPU",
+        "Avoids paying for GPU headroom before it is needed"
       ],
       [
         "Backup",
-        "External or NAS backup for database dumps, feature stores, models and manifests",
-        "Hardware failure must not become data loss"
+        "UPS plus automated external/cloud backups from day one; second host later",
+        "Power loss and disk failure must not stop or erase the system"
       ]
     ],
-    "buying_rule": "Prefer a standard ATX desktop over another office SFF machine or laptop. Buy the platform for expandability; add the expensive GPU only when local ML workload justifies it.",
+    "buying_rule": "Buy the platform for expandability, not maximum specifications. The minimum viable always-on build is the default; every upgrade needs a workload, reliability or capital-risk trigger.",
+    "upgrade_stages": [
+      {
+        "stage": "Stage 1 — minimum viable host",
+        "trigger": "Start here when consolidating the systems; suitable for demo or low-risk operation after recovery drills pass.",
+        "changes": "12-core CPU, 64 GB RAM, one 2 TB NVMe, no dedicated GPU, 850 W Gold PSU, UPS, wired Ethernet and automated off-machine backups."
+      },
+      {
+        "stage": "Stage 2 — reliability before meaningful live capital",
+        "trigger": "Before the host carries money that would be painful to lose, or when one disk/power/network failure is unacceptable.",
+        "changes": "ECC-capable 128 GB RAM, mirrored enterprise SSDs, tested restore procedure, monitoring, backup internet and a cold or cloud recovery host."
+      },
+      {
+        "stage": "Stage 3 — research capacity",
+        "trigger": "Upgrade when ingestion queues, PostgreSQL memory pressure or backtest duration is repeatedly limiting work.",
+        "changes": "16-core CPU, 256 GB RAM if measured workloads need it, and a separate 4-8 TB data NVMe."
+      },
+      {
+        "stage": "Stage 4 — local machine learning",
+        "trigger": "Only when cloud GPU cost, latency or privacy makes local training economically justified.",
+        "changes": "NVIDIA GPU with 16-24 GB or more VRAM, stronger cooling and a 1000-1200 W ATX 3.x PSU."
+      }
+    ],
     "components": [
       {
         "id": "cpu",
