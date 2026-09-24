@@ -77,10 +77,7 @@ try {
     const U = V.future_device_upgrade;
     main.append(section('future-device', U.title, 'A workstation worth upgrading into',
       voice(U, mode),
-      renderTable({
-        columns: ['Component', 'Requirement', 'Why it matters'],
-        rows: U.requirements,
-      }),
+      renderConfigurator(U.components),
       el('p', { class: 'vrule', html: inline(`**Buying rule.** ${U.buying_rule}`) })));
 
     /* ---- the name ---- */
@@ -279,6 +276,141 @@ try {
       el('div', { class: 'vphase-exit' },
         el('strong', { text: 'Exit condition' }),
         el('span', { html: inline(p.exit) })));
+  }
+
+  
+  function renderConfigurator(components) {
+    if (!components) return el('div');
+    
+    // State
+    const state = {};
+    components.forEach(c => {
+      state[c.id] = c.options.find(o => o.is_default) || c.options[0];
+    });
+
+    const container = el('div', { class: 'configurator-container' });
+    const visualizer = el('div', { class: 'pc-visualizer' });
+    const panel = el('div', { class: 'pc-panel' });
+    
+    const style = el('style', { text: `
+      .configurator-container { display: flex; gap: 2rem; margin: 2rem 0; flex-wrap: wrap; }
+      .pc-visualizer { 
+        flex: 1; min-width: 300px; 
+        background: var(--bg-card, #1a1a1a); 
+        border-radius: 12px; border: 1px solid var(--border, #333); 
+        position: relative; aspect-ratio: 4/4;
+        background-image: 
+          linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+        background-size: 20px 20px;
+        overflow: hidden;
+      }
+      .pc-part { 
+        position: absolute; 
+        background: rgba(100, 100, 255, 0.1); 
+        border: 2px solid rgba(100, 100, 255, 0.4); 
+        border-radius: 6px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.5rem; cursor: pointer; transition: all 0.3s ease;
+      }
+      .pc-part:hover { background: rgba(100, 100, 255, 0.2); border-color: rgba(100, 100, 255, 0.8); transform: scale(1.02); }
+      .pc-part.active { background: rgba(100, 255, 100, 0.2); border-color: rgba(100, 255, 100, 0.8); box-shadow: 0 0 15px rgba(100, 255, 100, 0.3); }
+      .pc-panel { flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 1rem; }
+      .part-details { background: var(--bg-card, #1a1a1a); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border, #333); }
+      .part-details h3 { margin-top: 0; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+      .option-list { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1rem; }
+      .option-item { 
+        padding: 1rem; border-radius: 8px; border: 1px solid var(--border, #444); 
+        cursor: pointer; transition: all 0.2s; background: rgba(0,0,0,0.2);
+      }
+      .option-item:hover { border-color: #888; }
+      .option-item.selected { border-color: #6464ff; background: rgba(100, 100, 255, 0.1); }
+      .option-name { font-weight: bold; margin-bottom: 0.25rem; }
+      .option-prices { font-size: 0.9em; color: var(--text-muted, #aaa); margin-bottom: 0.5rem; }
+      .option-impact { font-size: 0.9em; line-height: 1.4; }
+      .total-price { 
+        margin-top: auto; background: var(--bg-card, #1a1a1a); padding: 1.5rem; 
+        border-radius: 12px; border: 1px solid var(--border, #333);
+        display: flex; justify-content: space-between; align-items: center;
+      }
+      .total-price strong { font-size: 1.2rem; }
+      .price-nums { text-align: right; }
+      .price-nums div { font-family: monospace; font-size: 1.1rem; }
+    ` });
+
+    let activePartId = components[0].id;
+
+    function render() {
+      visualizer.innerHTML = '';
+      panel.innerHTML = '';
+      
+      // Render visualizer
+      components.forEach(c => {
+        const part = el('div', { 
+          class: `pc-part ${activePartId === c.id ? 'active' : ''}`,
+          style: { left: `${c.x}%`, top: `${c.y}%`, width: `${c.w}%`, height: `${c.h}%` },
+          title: c.name
+        }, el('span', { text: c.icon }));
+        
+        part.addEventListener('click', () => {
+          activePartId = c.id;
+          render();
+        });
+        
+        visualizer.append(part);
+      });
+
+      // Render panel
+      const activeComponent = components.find(c => c.id === activePartId);
+      if (activeComponent) {
+        const details = el('div', { class: 'part-details' });
+        details.append(el('h3', { text: `${activeComponent.icon} ${activeComponent.name}` }));
+        
+        const optionList = el('div', { class: 'option-list' });
+        activeComponent.options.forEach(opt => {
+          const isSelected = state[activeComponent.id].id === opt.id;
+          const optEl = el('div', { class: `option-item ${isSelected ? 'selected' : ''}` });
+          
+          optEl.append(
+            el('div', { class: 'option-name', text: opt.name }),
+            el('div', { class: 'option-prices', text: `New: $${opt.price_new} | Used: $${opt.price_used}` }),
+            el('div', { class: 'option-impact', html: inline(opt.impact) })
+          );
+          
+          optEl.addEventListener('click', () => {
+            state[activeComponent.id] = opt;
+            render();
+          });
+          
+          optionList.append(optEl);
+        });
+        
+        details.append(optionList);
+        panel.append(details);
+      }
+
+      // Render total
+      let totalNew = 0;
+      let totalUsed = 0;
+      Object.values(state).forEach(opt => {
+        totalNew += opt.price_new;
+        totalUsed += opt.price_used;
+      });
+
+      const totalEl = el('div', { class: 'total-price' });
+      totalEl.append(
+        el('strong', { text: 'Estimated Total' }),
+        el('div', { class: 'price-nums' },
+          el('div', { text: `New: $${totalNew}` }),
+          el('div', { text: `Used: $${totalUsed}` })
+        )
+      );
+      panel.append(totalEl);
+    }
+
+    render();
+    container.append(style, visualizer, panel);
+    return container;
   }
 
   function skillList(spec) {
