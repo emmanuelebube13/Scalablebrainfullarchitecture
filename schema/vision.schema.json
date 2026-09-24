@@ -223,6 +223,9 @@
                     "impact": {
                       "type": "string"
                     },
+                    "stage": {
+                      "type": "string"
+                    },
                     "is_default": {
                       "type": "boolean"
                     }
