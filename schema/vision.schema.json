@@ -148,6 +148,18 @@
         "buying_rule": {
           "type": "string"
         },
+        "upgrade_stages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["stage", "trigger", "changes"],
+            "properties": {
+              "stage": { "type": "string" },
+              "trigger": { "type": "string" },
+              "changes": { "type": "string" }
+            }
+          }
+        },
         "components": {
           "type": "array",
           "items": {
