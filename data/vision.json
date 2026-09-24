@@ -57,6 +57,22 @@
     ]
   },
 
+  "future_device_upgrade": {
+    "title": "Future device upgrade",
+    "technical": "The next development workstation should be a standard ATX Linux desktop that removes the current four-core CPU and 32 GB memory ceiling while leaving room for local model work. The machine is a research and development host, not the always-on execution host: System 2 and System 3 remain on their designated infrastructure.",
+    "plain": "When this computer is replaced, it should be a roomy Linux desktop for data, databases, backtests and model building. It should be easy to expand later, while the always-on trading systems stay where they belong.",
+    "requirements": [
+      ["CPU", "16-core AMD Ryzen 9 on the AM5 platform, or a current equivalent", "Parallel ingestion, PostgreSQL work, Docker and backtests"],
+      ["Memory", "128 GB DDR5 (2 x 64 GB); 64 GB is the minimum starting point", "Large dataframes, PostgreSQL, containers and concurrent experiments"],
+      ["GPU", "NVIDIA GPU with at least 24 GB VRAM for serious local ML; defer it or use a 16 GB card if cloud training is preferred", "Local model training and inference; not required for ordinary ingestion"],
+      ["Storage", "2 TB NVMe for Linux and tools plus 4 TB NVMe for PostgreSQL, market data and artifacts", "Separate system and high-volume research workloads"],
+      ["Expansion", "ATX case and motherboard, four RAM slots, multiple NVMe slots, 2.5 Gb Ethernet", "Future RAM, storage and GPU upgrades"],
+      ["Power and cooling", "1000-1200 W ATX 3.x 80+ Gold PSU and strong airflow cooling", "Headroom for a high-end GPU and sustained workloads"],
+      ["Backup", "External or NAS backup for database dumps, feature stores, models and manifests", "Hardware failure must not become data loss"]
+    ],
+    "buying_rule": "Prefer a standard ATX desktop over another office SFF machine or laptop. Buy the platform for expandability; add the expensive GPU only when local ML workload justifies it."
+  },
+
   "name": {
     "lede": {
       "technical": "`Scalable Brain` was never documented. It should be, because the name encodes the strategy — and both halves of it are testable claims about the architecture.",
