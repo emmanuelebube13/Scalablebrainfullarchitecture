@@ -148,6 +148,9 @@
         "buying_rule": {
           "type": "string"
         },
+        "funding_rule": {
+          "$ref": "#/definitions/callout"
+        },
         "upgrade_stages": {
           "type": "array",
           "items": {

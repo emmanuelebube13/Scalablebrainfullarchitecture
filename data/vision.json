@@ -58,6 +58,11 @@
     "title": "Future device upgrade",
     "technical": "If this machine becomes the single always-on host for Systems 1, 2 and 3, buy the smallest reliable ATX Linux platform that can run the services continuously, then upgrade only when measurements or an operational requirement justify it. The first build must include power protection, backups and recovery procedures; a GPU and large capacity are optional stages, not entry requirements.",
     "plain": "Start with a dependable Linux desktop that can run everything, but do not buy the biggest machine on day one. Add memory, mirrored storage, a second host and a GPU only when the workload or the money at risk makes them necessary.",
+    "funding_rule": {
+      "title": "Build it from realized profits",
+      "technical": "Do not fund the computer from deposits, borrowed money, or unrealized gains. After a sustained profitable period, move only a pre-decided share of realized net profit into a separate hardware fund. The fund must not reduce broker margin, operating reserves, emergency savings, or the risk budget required by the current system.",
+      "plain": "Let the system pay for its own upgrade. Only use money the system has actually earned, set it aside separately, and never take money needed for trading, bills, or recovery."
+    },
     "requirements": [
       [
         "CPU",
@@ -99,7 +104,7 @@
     "upgrade_stages": [
       {
         "stage": "Stage 1 — minimum viable host",
-        "trigger": "Start here when consolidating the systems; suitable for demo or low-risk operation after recovery drills pass.",
+        "trigger": "Buy only after a realized-profit hardware fund can cover it without weakening the trading operation; suitable for demo or low-risk operation after recovery drills pass.",
         "changes": "12-core CPU, 64 GB RAM, one 2 TB NVMe, no dedicated GPU, 850 W Gold PSU, UPS, wired Ethernet and automated off-machine backups."
       },
       {
