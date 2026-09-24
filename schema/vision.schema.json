@@ -148,6 +148,16 @@
         "buying_rule": {
           "type": "string"
         },
+        "review_tool": {
+          "type": "object",
+          "required": ["title", "text", "href", "label"],
+          "properties": {
+            "title": { "type": "string" },
+            "text": { "type": "string" },
+            "href": { "type": "string" },
+            "label": { "type": "string" }
+          }
+        },
         "upgrade_stages": {
           "type": "array",
           "items": {

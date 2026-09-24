@@ -96,6 +96,12 @@
       ]
     ],
     "buying_rule": "Buy the platform for expandability, not maximum specifications. The minimum viable always-on build is the default; every upgrade needs a workload, reliability or capital-risk trigger.",
+    "review_tool": {
+      "title": "Review a real listing before buying",
+      "text": "Paste a specification or upload a product image to compare it with this staged plan. The reviewer is advisory: verify the exact model, condition, warranty, thermals, storage health and seller claims yourself.",
+      "href": "pc-review.html",
+      "label": "Open PC Review Assistant"
+    },
     "upgrade_stages": [
       {
         "stage": "Stage 1 — minimum viable host",

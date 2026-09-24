@@ -54,8 +54,12 @@ store:
 
 ```bash
 export GEMINI_API_KEY='rotated-key-from-google-ai-studio'
-node tools/pc-review-server.mjs
+tools/run-pc-review.sh
 ```
+
+For convenience, serve this site in another terminal with `python3 -m http.server 8080`,
+then open `http://localhost:8080/pc-review.html`. Keep the terminal running the proxy
+open while using the reviewer. The launcher refuses to start when the key is absent.
 
 The browser posts the specification and optional image to `/api/pc-review`; the proxy
 calls Gemini and returns a structured comparison against the staged host plan. Set

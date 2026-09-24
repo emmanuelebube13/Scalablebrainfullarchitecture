@@ -82,6 +82,10 @@ try {
         columns: ['Upgrade stage', 'Buy it when', 'What changes'],
         rows: (U.upgrade_stages ?? []).map((stage) => [stage.stage, stage.trigger, stage.changes]),
       }),
+      U.review_tool ? el('div', { class: 'callout t-info' },
+        el('h4', { text: U.review_tool.title }),
+        el('p', { html: inline(U.review_tool.text) }),
+        el('a', { class: 'button', href: U.review_tool.href, text: U.review_tool.label })) : null,
       el('p', { class: 'vrule', html: inline(`**Buying rule.** ${U.buying_rule}`) })));
 
     /* ---- the name ---- */
