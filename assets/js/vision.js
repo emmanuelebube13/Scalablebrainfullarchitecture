@@ -283,6 +283,7 @@ try {
   }
 
   
+  
   function renderConfigurator(components) {
     if (!components) return el('div');
     
@@ -296,50 +297,144 @@ try {
     const visualizer = el('div', { class: 'pc-visualizer' });
     const panel = el('div', { class: 'pc-panel' });
     
+    // We will use CSS variables from the theme instead of hardcoded colors.
     const style = el('style', { text: `
-      .configurator-container { display: flex; gap: 2rem; margin: 2rem 0; flex-wrap: wrap; }
-      .pc-visualizer { 
-        flex: 1; min-width: 300px; 
-        background: var(--bg-card, #1a1a1a); 
-        border-radius: 12px; border: 1px solid var(--border, #333); 
-        position: relative; aspect-ratio: 4/4;
-        background-image: 
-          linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-        background-size: 20px 20px;
-        overflow: hidden;
+      .configurator-container { 
+        display: flex; gap: 2rem; margin: 3rem 0; flex-wrap: wrap; 
+        font-family: var(--sans);
       }
+      .pc-visualizer { 
+        flex: 1.2; min-width: 320px; 
+        background: var(--bg-sunken); 
+        border-radius: var(--radius); 
+        border: 1px solid var(--border-strong); 
+        position: relative; 
+        aspect-ratio: 4/4.5;
+        padding: 20px;
+        box-shadow: inset 0 0 40px rgba(0,0,0,0.1);
+      }
+      
+      /* The PC Case and Motherboard base layer */
+      .pc-case-bg {
+        position: absolute;
+        top: 5%; left: 5%; right: 5%; bottom: 5%;
+        background: var(--bg-raised);
+        border: 2px solid var(--border);
+        border-radius: var(--radius-sm);
+        box-shadow: var(--shadow);
+      }
+      .motherboard-bg {
+        position: absolute;
+        top: 5%; left: 5%; right: 25%; bottom: 25%;
+        background: var(--panel);
+        border: 1px solid var(--border-strong);
+        border-radius: 4px;
+        background-image: 
+          repeating-linear-gradient(0deg, transparent, transparent 19px, var(--border) 20px),
+          repeating-linear-gradient(90deg, transparent, transparent 19px, var(--border) 20px);
+        opacity: 0.8;
+      }
+      
       .pc-part { 
         position: absolute; 
-        background: rgba(100, 100, 255, 0.1); 
-        border: 2px solid rgba(100, 100, 255, 0.4); 
-        border-radius: 6px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.5rem; cursor: pointer; transition: all 0.3s ease;
+        background: var(--bg);
+        border: 2px solid var(--border-strong); 
+        border-radius: 4px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        cursor: pointer; transition: all 0.2s cubic-bezier(0.1, 0.7, 0.1, 1);
+        color: var(--text-dim);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        z-index: 10;
+        overflow: hidden;
       }
-      .pc-part:hover { background: rgba(100, 100, 255, 0.2); border-color: rgba(100, 100, 255, 0.8); transform: scale(1.02); }
-      .pc-part.active { background: rgba(100, 255, 100, 0.2); border-color: rgba(100, 255, 100, 0.8); box-shadow: 0 0 15px rgba(100, 255, 100, 0.3); }
-      .pc-panel { flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 1rem; }
-      .part-details { background: var(--bg-card, #1a1a1a); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border, #333); }
-      .part-details h3 { margin-top: 0; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
-      .option-list { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1rem; }
+      
+      /* Techy accents on parts */
+      .pc-part::before {
+        content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
+        background: var(--border-strong); transition: all 0.2s;
+      }
+      
+      .pc-part:hover { 
+        border-color: var(--accent); 
+        color: var(--text);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      }
+      .pc-part:hover::before { background: var(--accent); }
+      
+      .pc-part.active { 
+        border-color: var(--s2); 
+        color: var(--text);
+        background: var(--bg-raised);
+        box-shadow: 0 0 0 2px var(--s2), 0 10px 25px rgba(0,0,0,0.15);
+      }
+      .pc-part.active::before { background: var(--s2); }
+      
+      .part-icon { font-size: 1.8rem; margin-bottom: 4px; filter: grayscale(0.5); transition: all 0.2s; }
+      .pc-part:hover .part-icon, .pc-part.active .part-icon { filter: grayscale(0); transform: scale(1.1); }
+      .part-label { font-size: 0.75rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; }
+      
+      .pc-panel { 
+        flex: 1; min-width: 320px; display: flex; flex-direction: column; gap: 1rem; 
+      }
+      .part-details { 
+        background: var(--bg-raised); padding: 1.5rem; 
+        border-radius: var(--radius); border: 1px solid var(--border); 
+        box-shadow: var(--shadow);
+      }
+      .part-details h3 { 
+        margin-top: 0; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;
+        font-family: var(--font-display); font-size: 2rem; color: var(--text);
+      }
+      
+      .option-list { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 0.5rem; }
       .option-item { 
-        padding: 1rem; border-radius: 8px; border: 1px solid var(--border, #444); 
-        cursor: pointer; transition: all 0.2s; background: rgba(0,0,0,0.2);
+        padding: 1.25rem; border-radius: var(--radius-sm); border: 1px solid var(--border); 
+        cursor: pointer; transition: all 0.2s; background: var(--bg);
+        position: relative; overflow: hidden;
       }
-      .option-item:hover { border-color: #888; }
-      .option-item.selected { border-color: #6464ff; background: rgba(100, 100, 255, 0.1); }
-      .option-name { font-weight: bold; margin-bottom: 0.25rem; }
-      .option-prices { font-size: 0.9em; color: var(--text-muted, #aaa); margin-bottom: 0.5rem; }
-      .option-impact { font-size: 0.9em; line-height: 1.4; }
+      .option-item::after {
+        content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+        background: transparent; transition: all 0.2s;
+      }
+      .option-item:hover { border-color: var(--border-strong); background: var(--bg-raised); }
+      .option-item.selected { 
+        border-color: var(--s2); 
+        background: var(--bg-raised); 
+      }
+      .option-item.selected::after { background: var(--s2); }
+      
+      .option-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; }
+      .option-name { font-weight: 600; color: var(--text); font-size: 1.1rem; padding-right: 1rem; }
+      
+      .option-prices { 
+        display: flex; flex-direction: column; align-items: flex-end; gap: 0.25rem;
+        font-family: var(--mono); font-size: 0.85rem;
+      }
+      .price-badge { 
+        padding: 2px 6px; border-radius: 4px; background: var(--bg-sunken); border: 1px solid var(--border);
+        color: var(--text-dim); white-space: nowrap;
+      }
+      .price-badge.new { color: var(--s1); border-color: rgba(232, 168, 48, 0.3); background: rgba(232, 168, 48, 0.05); }
+      .price-badge.used { color: var(--s3); border-color: rgba(160, 120, 240, 0.3); background: rgba(160, 120, 240, 0.05); }
+      
+      .option-impact { font-size: 0.95rem; line-height: 1.5; color: var(--text-dim); margin-top: 0.5rem; }
+      
       .total-price { 
-        margin-top: auto; background: var(--bg-card, #1a1a1a); padding: 1.5rem; 
-        border-radius: 12px; border: 1px solid var(--border, #333);
-        display: flex; justify-content: space-between; align-items: center;
+        margin-top: auto; background: var(--bg-raised); padding: 1.5rem; 
+        border-radius: var(--radius); border: 1px solid var(--border);
+        box-shadow: var(--shadow); display: flex; justify-content: space-between; align-items: center;
       }
-      .total-price strong { font-size: 1.2rem; }
-      .price-nums { text-align: right; }
-      .price-nums div { font-family: monospace; font-size: 1.1rem; }
+      .total-price strong { font-size: 1.25rem; color: var(--text); font-family: var(--font-display); letter-spacing: 0.02em; }
+      .price-nums { text-align: right; display: flex; flex-direction: column; gap: 0.4rem; }
+      .total-badge { 
+        display: inline-flex; justify-content: space-between; min-width: 120px;
+        padding: 4px 8px; border-radius: 4px; font-family: var(--mono); font-size: 1rem;
+        background: var(--bg-sunken); border: 1px solid var(--border);
+      }
+      .total-badge.new { color: var(--s1); border-color: rgba(232, 168, 48, 0.3); }
+      .total-badge.used { color: var(--s3); border-color: rgba(160, 120, 240, 0.3); }
+      .total-badge span:first-child { color: var(--text-faint); font-size: 0.8rem; text-transform: uppercase; align-self: center; }
     ` });
 
     let activePartId = components[0].id;
@@ -348,13 +443,22 @@ try {
       visualizer.innerHTML = '';
       panel.innerHTML = '';
       
-      // Render visualizer
+      // Draw background case & motherboard
+      visualizer.append(
+        el('div', { class: 'pc-case-bg' }),
+        el('div', { class: 'motherboard-bg' })
+      );
+      
+      // Render visualizer parts
       components.forEach(c => {
         const part = el('div', { 
           class: `pc-part ${activePartId === c.id ? 'active' : ''}`,
           style: { left: `${c.x}%`, top: `${c.y}%`, width: `${c.w}%`, height: `${c.h}%` },
           title: c.name
-        }, el('span', { text: c.icon }));
+        }, 
+        el('div', { class: 'part-icon', text: c.icon }),
+        el('div', { class: 'part-label', text: c.id })
+        );
         
         part.addEventListener('click', () => {
           activePartId = c.id;
@@ -375,11 +479,22 @@ try {
           const isSelected = state[activeComponent.id].id === opt.id;
           const optEl = el('div', { class: `option-item ${isSelected ? 'selected' : ''}` });
           
-          optEl.append(
-            el('div', { class: 'option-name', text: opt.name }),
-            el('div', { class: 'option-prices', text: `New: $${opt.price_new} | Used: $${opt.price_used}` }),
-            el('div', { class: 'option-impact', html: inline(opt.impact) })
-          );
+          const header = el('div', { class: 'option-header' });
+          header.append(el('div', { class: 'option-name', text: opt.name }));
+          
+          const prices = el('div', { class: 'option-prices' });
+          if (opt.price_new > 0 || opt.price_used > 0) {
+            prices.append(
+              el('span', { class: 'price-badge new', text: `New $${opt.price_new}` }),
+              el('span', { class: 'price-badge used', text: `Used $${opt.price_used}` })
+            );
+          } else {
+             prices.append(el('span', { class: 'price-badge', text: 'Free / Base' }));
+          }
+          header.append(prices);
+          
+          optEl.append(header);
+          optEl.append(el('div', { class: 'option-impact', html: inline(opt.impact) }));
           
           optEl.addEventListener('click', () => {
             state[activeComponent.id] = opt;
@@ -405,8 +520,8 @@ try {
       totalEl.append(
         el('strong', { text: 'Estimated Total' }),
         el('div', { class: 'price-nums' },
-          el('div', { text: `New: $${totalNew}` }),
-          el('div', { text: `Used: $${totalUsed}` })
+          el('div', { class: 'total-badge new' }, el('span', {text:'New'}), el('span', { text: `$${totalNew}` })),
+          el('div', { class: 'total-badge used' }, el('span', {text:'Used'}), el('span', { text: `$${totalUsed}` }))
         )
       );
       panel.append(totalEl);
@@ -417,7 +532,7 @@ try {
     return container;
   }
 
-  function skillList(spec) {
+function skillList(spec) {
     return el('div', { class: 'vskills' },
       el('h3', { text: spec.title }),
       spec.note ? el('p', { class: 'table-note', html: inline(spec.note) }) : null,
