@@ -78,6 +78,7 @@ try {
     main.append(section('future-device', U.title, 'A workstation worth upgrading into',
       voice(U, mode),
       renderConfigurator(U.components),
+      U.funding_rule ? renderCallout(U.funding_rule, mode) : null,
       renderTable({
         columns: ['Upgrade stage', 'Buy it when', 'What changes'],
         rows: (U.upgrade_stages ?? []).map((stage) => [stage.stage, stage.trigger, stage.changes]),
