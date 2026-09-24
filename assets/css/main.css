@@ -77,50 +77,6 @@
 * { box-sizing: border-box; }
 
 html { scroll-behavior: smooth; }
-    .pc-review-layout {
-      display: grid;
-      grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.2fr);
-      gap: 2rem;
-    }
-
-    .pc-review-form,
-    .pc-review-result {
-      background: var(--bg-raised);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.5rem;
-      box-shadow: var(--shadow);
-    }
-
-    .pc-review-form { display: grid; gap: 0.75rem; align-content: start; }
-    .pc-review-form label { color: var(--text); font-weight: 600; }
-    .pc-review-form textarea,
-    .pc-review-form input[type="file"] {
-      width: 100%;
-      color: var(--text);
-      background: var(--bg-sunken);
-      border: 1px solid var(--border-strong);
-      border-radius: var(--radius-sm);
-      padding: 0.75rem;
-      font: inherit;
-    }
-    .pc-review-form textarea { resize: vertical; }
-    .button {
-      border: 0;
-      border-radius: var(--radius-sm);
-      padding: 0.8rem 1rem;
-      background: var(--accent);
-      color: var(--on-accent);
-      font: 600 1rem var(--sans);
-      cursor: pointer;
-    }
-    .button:hover { filter: brightness(1.08); }
-    .pc-review-output table { width: 100%; margin-top: 1rem; }
-    .pc-review-output h2 { margin-top: 0; }
-
-    @media (max-width: 760px) {
-      .pc-review-layout { grid-template-columns: 1fr; }
-    }
 
 body {
   margin: 0;
