@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scalable Brain — PC Review</title>
+<meta name="description" content="Compare a PC specification or image against the Scalable Brain staged host plan.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header id="site-header"></header>
+<main id="main">
+  <section class="hero">
+    <div class="wrap">
+      <div class="eyebrow">PC REVIEW · FUTURE DEVICE PLAN</div>
+      <h1>Should this machine join the Brain?</h1>
+      <p class="lede">Paste a listing or upload a product image. The reviewer compares it against the staged always-on host plan and tells you what is good, missing, overpriced, or premature.</p>
+    </div>
+  </section>
+  <section class="section">
+    <div class="wrap pc-review-layout">
+      <form id="review-form" class="pc-review-form">
+        <label for="specification">PC specification or listing</label>
+        <textarea id="specification" rows="14" placeholder="Paste CPU, motherboard, RAM, GPU, storage, PSU, cooling, price and condition here..."></textarea>
+        <label for="image">Optional product image</label>
+        <input id="image" type="file" accept="image/png,image/jpeg,image/webp">
+        <p id="image-name" class="table-note">No image selected.</p>
+        <button type="submit" class="button">Compare this PC</button>
+        <p class="table-note">The page never contains an API key. It sends the review to the configured server endpoint only.</p>
+      </form>
+      <section class="pc-review-result" aria-live="polite">
+        <div id="review-status" class="callout t-info">Ready for a specification or image.</div>
+        <article id="review-output" class="pc-review-output"></article>
+      </section>
+    </div>
+  </section>
+</main>
+<footer id="site-footer"></footer>
+<script type="module" src="assets/js/pc-review.js"></script>
+</body>
+</html>
