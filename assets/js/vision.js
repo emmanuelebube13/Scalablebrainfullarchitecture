@@ -369,6 +369,8 @@ try {
         box-shadow: 0 0 0 2px var(--s2), 0 10px 25px rgba(0,0,0,0.15);
       }
       .pc-part.active::before { background: var(--s2); }
+      .pc-part[data-component="cooling"] .part-icon { animation: fan-spin 1.8s linear infinite; }
+      @keyframes fan-spin { to { transform: rotate(360deg); } }
       
       .part-icon { font-size: 1.8rem; margin-bottom: 4px; filter: grayscale(0.5); transition: all 0.2s; }
       .pc-part:hover .part-icon, .pc-part.active .part-icon { filter: grayscale(0); transform: scale(1.1); }
@@ -453,6 +455,7 @@ try {
       components.forEach(c => {
         const part = el('div', { 
           class: `pc-part ${activePartId === c.id ? 'active' : ''}`,
+          'data-component': c.id,
           style: { left: `${c.x}%`, top: `${c.y}%`, width: `${c.w}%`, height: `${c.h}%` },
           title: c.name
         }, 
@@ -494,6 +497,7 @@ try {
           header.append(prices);
           
           optEl.append(header);
+          if (opt.stage) optEl.append(el('span', { class: 'pill', text: opt.stage }));
           optEl.append(el('div', { class: 'option-impact', html: inline(opt.impact) }));
           
           optEl.addEventListener('click', () => {

@@ -134,6 +134,7 @@
             "price_new": 400,
             "price_used": 300,
             "impact": "Good baseline for parallel ingestion. Sufficient for most PostgreSQL work.",
+            "stage": "Baseline",
             "is_default": true
           },
           {
@@ -141,7 +142,8 @@
             "name": "AMD Ryzen 9 7950X (16-core)",
             "price_new": 550,
             "price_used": 450,
-            "impact": "Maximized parallel processing. Best for running concurrent experiments and heavy Docker workloads."
+            "impact": "Maximized parallel processing. Best for running concurrent experiments and heavy Docker workloads.",
+            "stage": "Stage 3: capacity"
           }
         ]
       },
@@ -160,6 +162,7 @@
             "price_new": 200,
             "price_used": 150,
             "impact": "Minimum for heavy PostgreSQL and containers.",
+            "stage": "Baseline",
             "is_default": true
           },
           {
@@ -167,7 +170,8 @@
             "name": "128 GB DDR5 (4x32GB)",
             "price_new": 450,
             "price_used": 350,
-            "impact": "No more OOM errors with large dataframes. Enables fully in-memory DB operations."
+            "impact": "No more OOM errors with large dataframes. Enables fully in-memory DB operations.",
+            "stage": "Stage 2: reliability"
           }
         ]
       },
@@ -186,6 +190,7 @@
             "price_new": 0,
             "price_used": 0,
             "impact": "Cloud training required. Fine for standard data engineering.",
+            "stage": "Baseline",
             "is_default": true
           },
           {
@@ -193,14 +198,16 @@
             "name": "NVIDIA RTX 4070 Ti Super (16GB)",
             "price_new": 800,
             "price_used": 650,
-            "impact": "Capable of local fine-tuning and running medium-sized models."
+            "impact": "Capable of local fine-tuning and running medium-sized models.",
+            "stage": "Stage 4: local ML"
           },
           {
             "id": "gpu-high",
             "name": "NVIDIA RTX 4090 / 3090 (24GB)",
             "price_new": 1800,
             "price_used": 900,
-            "impact": "Serious local ML. Run large models locally without cloud dependency."
+            "impact": "Serious local ML. Run larger models locally without cloud dependency.",
+            "stage": "Stage 4: local ML"
           }
         ]
       },
@@ -219,6 +226,7 @@
             "price_new": 130,
             "price_used": 80,
             "impact": "Basic system drive. Data storage might get cramped.",
+            "stage": "Baseline",
             "is_default": true
           },
           {
@@ -226,7 +234,8 @@
             "name": "2TB System NVMe + 4TB Data NVMe",
             "price_new": 400,
             "price_used": 250,
-            "impact": "Separate system and high-volume research workloads. No bottlenecking."
+            "impact": "Separate system and high-volume research workloads. No bottlenecking.",
+            "stage": "Stage 2: reliability"
           }
         ]
       },
@@ -245,6 +254,7 @@
             "price_new": 120,
             "price_used": 80,
             "impact": "Sufficient for base build, might struggle with heavy GPU upgrades.",
+            "stage": "Baseline",
             "is_default": true
           },
           {
@@ -252,7 +262,148 @@
             "name": "1200W ATX 3.0 Platinum",
             "price_new": 250,
             "price_used": 150,
-            "impact": "Massive headroom for sustained workloads and future high-end GPUs."
+            "impact": "Massive headroom for sustained workloads and future high-end GPUs.",
+            "stage": "Stage 4: local ML"
+          }
+        ]
+      },
+      {
+        "id": "platform",
+        "name": "Platform",
+        "icon": "▦",
+        "x": 10,
+        "y": 12,
+        "w": 16,
+        "h": 18,
+        "options": [
+          {
+            "id": "platform-base",
+            "name": "AM5 ATX motherboard, 4 RAM slots, 2+ NVMe slots",
+            "price_new": 220,
+            "price_used": 140,
+            "impact": "The expansion foundation: wired Ethernet, upgradeable memory and room for separate system/data drives.",
+            "stage": "Baseline",
+            "is_default": true
+          },
+          {
+            "id": "platform-workstation",
+            "name": "ECC-capable workstation board with remote management",
+            "price_new": 450,
+            "price_used": 280,
+            "impact": "Prefer before meaningful live capital when memory integrity and remote recovery matter.",
+            "stage": "Stage 2: reliability"
+          }
+        ]
+      },
+      {
+        "id": "cooling",
+        "name": "Cooling and fans",
+        "icon": "❄",
+        "x": 58,
+        "y": 48,
+        "w": 30,
+        "h": 22,
+        "options": [
+          {
+            "id": "cooling-base",
+            "name": "Large tower air cooler + four quiet case fans",
+            "price_new": 110,
+            "price_used": 60,
+            "impact": "Keeps a 24/7 CPU workload stable without adding liquid-cooling maintenance.",
+            "stage": "Baseline",
+            "is_default": true
+          },
+          {
+            "id": "cooling-heavy",
+            "name": "Premium airflow case + six fans / 280 mm cooler",
+            "price_new": 260,
+            "price_used": 140,
+            "impact": "Needed only for sustained high-power CPU/GPU workloads; monitor temperatures before upgrading.",
+            "stage": "Stage 3-4: capacity / ML"
+          }
+        ]
+      },
+      {
+        "id": "network",
+        "name": "Network",
+        "icon": "↔",
+        "x": 12,
+        "y": 62,
+        "w": 18,
+        "h": 12,
+        "options": [
+          {
+            "id": "network-base",
+            "name": "Wired 1 Gb Ethernet",
+            "price_new": 0,
+            "price_used": 0,
+            "impact": "Use wired networking for the broker, database and cloud connections. Wi-Fi is not the primary path.",
+            "stage": "Baseline",
+            "is_default": true
+          },
+          {
+            "id": "network-redundant",
+            "name": "2.5 Gb Ethernet + 4G/5G backup internet",
+            "price_new": 180,
+            "price_used": 90,
+            "impact": "Add when the host is responsible for continuous execution and an ISP outage is unacceptable.",
+            "stage": "Stage 2: reliability"
+          }
+        ]
+      },
+      {
+        "id": "power-backup",
+        "name": "UPS and power",
+        "icon": "⚡",
+        "x": 32,
+        "y": 76,
+        "w": 24,
+        "h": 18,
+        "options": [
+          {
+            "id": "power-base",
+            "name": "900-1500 VA UPS with USB shutdown",
+            "price_new": 180,
+            "price_used": 90,
+            "impact": "Required from day one for an always-on host. Allows clean shutdown during short outages.",
+            "stage": "Baseline",
+            "is_default": true
+          },
+          {
+            "id": "power-online",
+            "name": "Online UPS with replaceable battery",
+            "price_new": 500,
+            "price_used": 250,
+            "impact": "Upgrade when power quality or uptime risk justifies it; test the shutdown path regularly.",
+            "stage": "Stage 2: reliability"
+          }
+        ]
+      },
+      {
+        "id": "backup",
+        "name": "Backup and recovery",
+        "icon": "▣",
+        "x": 62,
+        "y": 76,
+        "w": 26,
+        "h": 18,
+        "options": [
+          {
+            "id": "backup-base",
+            "name": "External backup drive + encrypted cloud copies",
+            "price_new": 180,
+            "price_used": 100,
+            "impact": "Back up database dumps, models, manifests and configuration from the first day.",
+            "stage": "Baseline",
+            "is_default": true
+          },
+          {
+            "id": "backup-host",
+            "name": "NAS or second recovery host with tested restores",
+            "price_new": 700,
+            "price_used": 350,
+            "impact": "Add before meaningful live capital if this machine is the only execution host.",
+            "stage": "Stage 2: reliability"
           }
         ]
       }
