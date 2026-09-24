@@ -284,27 +284,31 @@ try {
 
   
   
+  
   function renderConfigurator(components) {
     if (!components) return el('div');
     
     // State
     const state = {};
+    const cart = new Set(); // holds IDs of components currently added to cart
+    
     components.forEach(c => {
       state[c.id] = c.options.find(o => o.is_default) || c.options[0];
+      // Default: don't put in cart, or maybe put baseline items? The user said "tick what you want to add".
+      // We will start empty so they can tick exactly what they want.
     });
 
     const container = el('div', { class: 'configurator-container' });
     const visualizer = el('div', { class: 'pc-visualizer' });
     const panel = el('div', { class: 'pc-panel' });
     
-    // We will use CSS variables from the theme instead of hardcoded colors.
     const style = el('style', { text: `
       .configurator-container { 
         display: flex; gap: 2rem; margin: 3rem 0; flex-wrap: wrap; 
         font-family: var(--sans);
       }
       .pc-visualizer { 
-        flex: 1.2; min-width: 320px; 
+        flex: 1.2; min-width: 100%; 
         background: var(--bg-sunken); 
         border-radius: var(--radius); 
         border: 1px solid var(--border-strong); 
@@ -313,130 +317,135 @@ try {
         padding: 20px;
         box-shadow: inset 0 0 40px rgba(0,0,0,0.1);
       }
+      @media (min-width: 768px) {
+        .pc-visualizer { min-width: 320px; }
+      }
       
-      /* The PC Case and Motherboard base layer */
       .pc-case-bg {
-        position: absolute;
-        top: 5%; left: 5%; right: 5%; bottom: 5%;
-        background: var(--bg-raised);
-        border: 2px solid var(--border);
-        border-radius: var(--radius-sm);
-        box-shadow: var(--shadow);
+        position: absolute; top: 5%; left: 5%; right: 5%; bottom: 5%;
+        background: var(--bg-raised); border: 2px solid var(--border);
+        border-radius: var(--radius-sm); box-shadow: var(--shadow);
       }
       .motherboard-bg {
-        position: absolute;
-        top: 5%; left: 5%; right: 25%; bottom: 25%;
-        background: var(--panel);
-        border: 1px solid var(--border-strong);
-        border-radius: 4px;
+        position: absolute; top: 5%; left: 5%; right: 25%; bottom: 25%;
+        background: var(--panel); border: 1px solid var(--border-strong);
+        border-radius: 4px; opacity: 0.8;
         background-image: 
           repeating-linear-gradient(0deg, transparent, transparent 19px, var(--border) 20px),
           repeating-linear-gradient(90deg, transparent, transparent 19px, var(--border) 20px);
-        opacity: 0.8;
       }
       
       .pc-part { 
         position: absolute; 
-        background: var(--bg);
-        border: 2px solid var(--border-strong); 
-        border-radius: 4px;
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        background: var(--bg); border: 2px solid var(--border-strong); 
+        border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center;
         cursor: pointer; transition: all 0.2s cubic-bezier(0.1, 0.7, 0.1, 1);
-        color: var(--text-dim);
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        z-index: 10;
-        overflow: hidden;
+        color: var(--text-dim); box-shadow: 0 4px 10px rgba(0,0,0,0.05); z-index: 10;
       }
       
-      /* Techy accents on parts */
       .pc-part::before {
         content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
         background: var(--border-strong); transition: all 0.2s;
       }
       
       .pc-part:hover { 
-        border-color: var(--accent); 
-        color: var(--text);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        border-color: var(--accent); color: var(--text);
+        transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.1);
       }
       .pc-part:hover::before { background: var(--accent); }
       
       .pc-part.active { 
-        border-color: var(--s2); 
-        color: var(--text);
-        background: var(--bg-raised);
-        box-shadow: 0 0 0 2px var(--s2), 0 10px 25px rgba(0,0,0,0.15);
+        border-color: var(--accent); color: var(--text);
+        background: var(--bg-raised); box-shadow: 0 0 0 2px var(--accent), 0 10px 25px rgba(0,0,0,0.15);
       }
-      .pc-part.active::before { background: var(--s2); }
-      .pc-part[data-component="cooling"] .part-icon { animation: fan-spin 1.8s linear infinite; }
-      @keyframes fan-spin { to { transform: rotate(360deg); } }
+      .pc-part.active::before { background: var(--accent); }
+      
+      .pc-part.in-cart {
+        border-color: var(--s2);
+        color: var(--text);
+      }
+      .pc-part.in-cart::before { background: var(--s2); }
+      .pc-part.in-cart .cart-indicator { opacity: 1; transform: scale(1); }
+      
+      .cart-indicator {
+        position: absolute; top: -8px; right: -8px; width: 20px; height: 20px;
+        background: var(--s2); color: var(--on-accent); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;
+        opacity: 0; transform: scale(0); transition: all 0.2s;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      }
       
       .part-icon { font-size: 1.8rem; margin-bottom: 4px; filter: grayscale(0.5); transition: all 0.2s; }
-      .pc-part:hover .part-icon, .pc-part.active .part-icon { filter: grayscale(0); transform: scale(1.1); }
-      .part-label { font-size: 0.75rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; }
+      .pc-part:hover .part-icon, .pc-part.active .part-icon, .pc-part.in-cart .part-icon { filter: grayscale(0); transform: scale(1.1); }
+      .part-label { font-size: 0.75rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; text-align: center; }
       
-      .pc-panel { 
-        flex: 1; min-width: 320px; display: flex; flex-direction: column; gap: 1rem; 
+      .pc-panel { flex: 1; min-width: 100%; display: flex; flex-direction: column; gap: 1rem; }
+      @media (min-width: 768px) {
+        .pc-panel { min-width: 320px; }
       }
+      
       .part-details { 
         background: var(--bg-raised); padding: 1.5rem; 
-        border-radius: var(--radius); border: 1px solid var(--border); 
-        box-shadow: var(--shadow);
+        border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow);
       }
+      .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
       .part-details h3 { 
-        margin-top: 0; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;
+        margin: 0; display: flex; align-items: center; gap: 0.75rem;
         font-family: var(--font-display); font-size: 2rem; color: var(--text);
       }
+      
+      .cart-toggle {
+        display: flex; align-items: center; gap: 0.5rem; cursor: pointer;
+        font-weight: bold; font-size: 0.9rem; color: var(--text);
+        background: var(--bg); padding: 0.5rem 1rem; border-radius: 20px;
+        border: 1px solid var(--border); transition: all 0.2s;
+      }
+      .cart-toggle:hover { background: var(--panel); border-color: var(--text-dim); }
+      .cart-toggle.added { background: rgba(82, 201, 126, 0.1); border-color: var(--s2); color: var(--s2); }
+      .cart-toggle input { display: none; }
+      .check-icon { font-size: 1.1rem; }
       
       .option-list { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 0.5rem; }
       .option-item { 
         padding: 1.25rem; border-radius: var(--radius-sm); border: 1px solid var(--border); 
-        cursor: pointer; transition: all 0.2s; background: var(--bg);
-        position: relative; overflow: hidden;
+        cursor: pointer; transition: all 0.2s; background: var(--bg); position: relative; overflow: hidden;
       }
       .option-item::after {
         content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
         background: transparent; transition: all 0.2s;
       }
       .option-item:hover { border-color: var(--border-strong); background: var(--bg-raised); }
-      .option-item.selected { 
-        border-color: var(--s2); 
-        background: var(--bg-raised); 
-      }
-      .option-item.selected::after { background: var(--s2); }
+      .option-item.selected { border-color: var(--accent); background: var(--bg-raised); }
+      .option-item.selected::after { background: var(--accent); }
       
       .option-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; }
       .option-name { font-weight: 600; color: var(--text); font-size: 1.1rem; padding-right: 1rem; }
-      
-      .option-prices { 
-        display: flex; flex-direction: column; align-items: flex-end; gap: 0.25rem;
-        font-family: var(--mono); font-size: 0.85rem;
-      }
-      .price-badge { 
-        padding: 2px 6px; border-radius: 4px; background: var(--bg-sunken); border: 1px solid var(--border);
-        color: var(--text-dim); white-space: nowrap;
-      }
+      .option-prices { display: flex; flex-direction: column; align-items: flex-end; gap: 0.25rem; font-family: var(--mono); font-size: 0.85rem; }
+      .price-badge { padding: 2px 6px; border-radius: 4px; background: var(--bg-sunken); border: 1px solid var(--border); color: var(--text-dim); white-space: nowrap; }
       .price-badge.new { color: var(--s1); border-color: rgba(232, 168, 48, 0.3); background: rgba(232, 168, 48, 0.05); }
-      .price-badge.used { color: var(--s3); border-color: rgba(160, 120, 240, 0.3); background: rgba(160, 120, 240, 0.05); }
+      .price-badge.used { color: var(--info); border-color: rgba(160, 120, 240, 0.3); background: rgba(160, 120, 240, 0.05); }
       
       .option-impact { font-size: 0.95rem; line-height: 1.5; color: var(--text-dim); margin-top: 0.5rem; }
       
-      .total-price { 
-        margin-top: auto; background: var(--bg-raised); padding: 1.5rem; 
-        border-radius: var(--radius); border: 1px solid var(--border);
-        box-shadow: var(--shadow); display: flex; justify-content: space-between; align-items: center;
+      .cart-summary {
+        background: var(--bg-raised); padding: 1.5rem; border-radius: var(--radius); 
+        border: 1px solid var(--border); box-shadow: var(--shadow);
       }
+      .cart-items { margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.5rem; }
+      .cart-item { display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--text-dim); }
+      .cart-item strong { color: var(--text); }
+      
+      .total-price { display: flex; justify-content: space-between; align-items: center; }
       .total-price strong { font-size: 1.25rem; color: var(--text); font-family: var(--font-display); letter-spacing: 0.02em; }
       .price-nums { text-align: right; display: flex; flex-direction: column; gap: 0.4rem; }
       .total-badge { 
-        display: inline-flex; justify-content: space-between; min-width: 120px;
-        padding: 4px 8px; border-radius: 4px; font-family: var(--mono); font-size: 1rem;
-        background: var(--bg-sunken); border: 1px solid var(--border);
+        display: inline-flex; justify-content: space-between; min-width: 120px; padding: 4px 8px; 
+        border-radius: 4px; font-family: var(--mono); font-size: 1rem; background: var(--bg-sunken); border: 1px solid var(--border);
       }
       .total-badge.new { color: var(--s1); border-color: rgba(232, 168, 48, 0.3); }
-      .total-badge.used { color: var(--s3); border-color: rgba(160, 120, 240, 0.3); }
+      .total-badge.used { color: var(--info); border-color: rgba(160, 120, 240, 0.3); }
       .total-badge span:first-child { color: var(--text-faint); font-size: 0.8rem; text-transform: uppercase; align-self: center; }
+      .empty-cart-msg { color: var(--text-dim); font-style: italic; font-size: 0.9rem; text-align: center; }
     ` });
 
     let activePartId = components[0].id;
@@ -453,12 +462,16 @@ try {
       
       // Render visualizer parts
       components.forEach(c => {
+        const inCart = cart.has(c.id);
+        const isActive = activePartId === c.id;
+        
         const part = el('div', { 
-          class: `pc-part ${activePartId === c.id ? 'active' : ''}`,
+          class: `pc-part ${isActive ? 'active' : ''} ${inCart ? 'in-cart' : ''}`,
           'data-component': c.id,
           style: { left: `${c.x}%`, top: `${c.y}%`, width: `${c.w}%`, height: `${c.h}%` },
           title: c.name
         }, 
+        el('div', { class: 'cart-indicator', text: '✓' }),
         el('div', { class: 'part-icon', text: c.icon }),
         el('div', { class: 'part-label', text: c.id })
         );
@@ -475,15 +488,31 @@ try {
       const activeComponent = components.find(c => c.id === activePartId);
       if (activeComponent) {
         const details = el('div', { class: 'part-details' });
-        details.append(el('h3', { text: `${activeComponent.icon} ${activeComponent.name}` }));
+        
+        const header = el('div', { class: 'panel-header' });
+        header.append(el('h3', { text: `${activeComponent.icon} ${activeComponent.name}` }));
+        
+        const inCart = cart.has(activeComponent.id);
+        const toggleBtn = el('label', { class: `cart-toggle ${inCart ? 'added' : ''}` },
+          el('span', { class: 'check-icon', text: inCart ? '✓' : '+' }),
+          el('span', { text: inCart ? 'Added to Cart' : 'Add to Cart' })
+        );
+        toggleBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (cart.has(activeComponent.id)) cart.delete(activeComponent.id);
+          else cart.add(activeComponent.id);
+          render();
+        });
+        header.append(toggleBtn);
+        details.append(header);
         
         const optionList = el('div', { class: 'option-list' });
         activeComponent.options.forEach(opt => {
           const isSelected = state[activeComponent.id].id === opt.id;
           const optEl = el('div', { class: `option-item ${isSelected ? 'selected' : ''}` });
           
-          const header = el('div', { class: 'option-header' });
-          header.append(el('div', { class: 'option-name', text: opt.name }));
+          const optHeader = el('div', { class: 'option-header' });
+          optHeader.append(el('div', { class: 'option-name', text: opt.name }));
           
           const prices = el('div', { class: 'option-prices' });
           if (opt.price_new > 0 || opt.price_used > 0) {
@@ -494,14 +523,18 @@ try {
           } else {
              prices.append(el('span', { class: 'price-badge', text: 'Free / Base' }));
           }
-          header.append(prices);
+          optHeader.append(prices);
           
-          optEl.append(header);
+          optEl.append(optHeader);
           if (opt.stage) optEl.append(el('span', { class: 'pill', text: opt.stage }));
           optEl.append(el('div', { class: 'option-impact', html: inline(opt.impact) }));
           
           optEl.addEventListener('click', () => {
             state[activeComponent.id] = opt;
+            // Optionally add to cart automatically when an option is clicked
+            if (!cart.has(activeComponent.id)) {
+              cart.add(activeComponent.id);
+            }
             render();
           });
           
@@ -515,20 +548,39 @@ try {
       // Render total
       let totalNew = 0;
       let totalUsed = 0;
-      Object.values(state).forEach(opt => {
-        totalNew += opt.price_new;
-        totalUsed += opt.price_used;
-      });
+      const cartItemsEl = el('div', { class: 'cart-items' });
+      
+      if (cart.size > 0) {
+        components.forEach(c => {
+          if (cart.has(c.id)) {
+            const opt = state[c.id];
+            totalNew += opt.price_new;
+            totalUsed += opt.price_used;
+            
+            cartItemsEl.append(el('div', { class: 'cart-item' },
+              el('span', { text: c.name }),
+              el('strong', { text: `+$${opt.price_new}` })
+            ));
+          }
+        });
+      } else {
+        cartItemsEl.append(el('div', { class: 'empty-cart-msg', text: 'Select components to build your estimate.' }));
+      }
 
+      const summaryEl = el('div', { class: 'cart-summary' });
+      summaryEl.append(cartItemsEl);
+      
       const totalEl = el('div', { class: 'total-price' });
       totalEl.append(
-        el('strong', { text: 'Estimated Total' }),
+        el('strong', { text: 'Cart Total' }),
         el('div', { class: 'price-nums' },
           el('div', { class: 'total-badge new' }, el('span', {text:'New'}), el('span', { text: `$${totalNew}` })),
           el('div', { class: 'total-badge used' }, el('span', {text:'Used'}), el('span', { text: `$${totalUsed}` }))
         )
       );
-      panel.append(totalEl);
+      summaryEl.append(totalEl);
+      
+      panel.append(summaryEl);
     }
 
     render();
