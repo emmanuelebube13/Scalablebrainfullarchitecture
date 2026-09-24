@@ -51,6 +51,26 @@
       }
     },
 
+    "future_device_upgrade": {
+      "type": "object",
+      "required": ["title", "technical", "plain", "requirements", "buying_rule"],
+      "properties": {
+        "title": { "type": "string" },
+        "technical": { "type": "string" },
+        "plain": { "type": "string" },
+        "requirements": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": { "type": "string" }
+          }
+        },
+        "buying_rule": { "type": "string" }
+      }
+    },
+
     "name": {
       "type": "object",
       "required": ["parts"],

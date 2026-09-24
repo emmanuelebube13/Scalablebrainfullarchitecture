@@ -20,6 +20,7 @@ const main = $('#content');
    can never exist without a way to reach it. */
 const SECTIONS = [
   ['name',        'The name'],
+  ['future-device', 'Future device'],
   ['mandate',     'The mandate'],
   ['distinction', 'Gates vs caps'],
   ['ladder',      'Risk ladder'],
@@ -71,6 +72,16 @@ try {
           el('div', { class: 'card vdecision' },
             el('h3', { text: d.title }),
             el('p', { class: 'goal-why', html: inline(d.text) }))))));
+
+    /* ---- future device upgrade ---- */
+    const U = V.future_device_upgrade;
+    main.append(section('future-device', U.title, 'A workstation worth upgrading into',
+      voice(U, mode),
+      renderTable({
+        columns: ['Component', 'Requirement', 'Why it matters'],
+        rows: U.requirements,
+      }),
+      el('p', { class: 'vrule', html: inline(`**Buying rule.** ${U.buying_rule}`) })));
 
     /* ---- the name ---- */
     main.append(section('name', 'The name', '`Scalable` and `Brain` are both claims',
