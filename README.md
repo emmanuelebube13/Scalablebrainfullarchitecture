@@ -44,26 +44,7 @@ tools/validate.mjs            Zero-dependency validator (structure + cross-refer
 index.html                    Overview
 vision.html                   Vision & planning — mandate, phases, identity & habits
 architecture.html             Unified interactive map + decision records
-pc-review.html                PC specification/image reviewer (requires a backend proxy)
 system.html?id=system-N       Subsystem page — one page serves every system
-## PC review assistant
-
-`pc-review.html` is a static interface. It never contains a Gemini key. Run the safe
-proxy locally or deploy it as a private/serverless service with the key in its secret
-store:
-
-```bash
-export GEMINI_API_KEY='rotated-key-from-google-ai-studio'
-node tools/pc-review-server.mjs
-```
-
-The browser posts the specification and optional image to `/api/pc-review`; the proxy
-calls Gemini and returns a structured comparison against the staged host plan. Set
-`GEMINI_MODEL` and `ALLOWED_ORIGIN` in the server environment as needed. **Never put
-`GEMINI_API_KEY` in this repository, GitHub Actions logs, HTML, JavaScript, or a public
-`.env` file.** Any key pasted into chat, a public issue, or a committed file must be
-revoked immediately and replaced. For a separately deployed proxy, open the page with
-`?endpoint=https://your-proxy.example/api/pc-review`; the endpoint contains no key.
 goals.html                    Goals, milestones, dependency matrix, tasks
 contribute.html               How to edit the data layer
 
