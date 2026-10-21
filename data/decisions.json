@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "as_of": "2026-09-11",
+  "as_of": "2026-10-20",
   "decisions": [
     {
       "id": "ADR-001",
@@ -19,37 +19,37 @@
       "source": "docs/design/ADR-001-where-inference-runs.md",
       "problem": {
         "technical": "Two incompatible architectures are on record and neither document acknowledges the other. The ratified `README.md` says System 2 syncs the bundle and runs live inference itself, with no dependency on Computer 1. A 2026-08-02 ruling says entry logic belongs to System 1, which emits scored signals on `Scored_Signal_Queue`. The code implements the second: `src/signals/` and `src/queue_producer/` run a continuous producer on Computer 1 and System 2 waits on its output.",
-        "plain": "Two documents describe two different systems, and each was written as if the other did not exist. One says the execution machine should run the model itself. The other says the research machine should send it finished trade ideas. The code follows the second — which means the whole operation depends on the least reliable computer in the building."
+        "plain": "Two documents describe two different systems, and each was written as if the other did not exist. One says the execution machine should run the model itself. The other says the research machine should send it finished trade ideas. The code follows the second \u2014 which means the whole operation depends on the least reliable computer in the building."
       },
       "argument": {
         "technical": "Computer 1 runs on a box whose wifi drops at random; that unreliability is the stated reason GCS was introduced in the first place. Under the current implementation, if Computer 1 is asleep or its cron is misconfigured, **nothing trades anywhere** regardless of Systems 2 and 3 being healthy. That coupling appears in no design document, and it is the direct cause of the 2026-08-22 incident in which the producer had never emitted a single message in its life and nobody could see why. A system whose liveness depends on its least reliable component has its dependency direction backwards.",
-        "plain": "The research computer's internet drops out at random. Right now, if it is asleep, no trading happens on any machine — even though the two machines that actually trade are perfectly healthy. That is the wrong way round, and it is exactly how a completely broken component sat unnoticed for weeks."
+        "plain": "The research computer's internet drops out at random. Right now, if it is asleep, no trading happens on any machine \u2014 even though the two machines that actually trade are perfectly healthy. That is the wrong way round, and it is exactly how a completely broken component sat unnoticed for weeks."
       },
       "decision": {
-        "technical": "System 1 becomes offline-only: it trains, validates and publishes a versioned checksummed bundle, with no uptime requirement and no runtime role during market hours. System 2 performs live inference from that bundle — syncing it, running the regime labeller and strategy implementations against live candles, producing scored signals, and submitting them to System 3 for approval. System 3's responsibilities are unchanged; only the publisher on its inbound topic changes.",
-        "plain": "The research lab goes back to being a lab. It may be switched off for a week without anything noticing. The execution machine runs the shipped model itself and produces its own trade ideas — which still count for nothing until the risk officer approves them."
+        "technical": "System 1 becomes offline-only: it trains, validates and publishes a versioned checksummed bundle, with no uptime requirement and no runtime role during market hours. System 2 performs live inference from that bundle \u2014 syncing it, running the regime labeller and strategy implementations against live candles, producing scored signals, and submitting them to System 3 for approval. System 3's responsibilities are unchanged; only the publisher on its inbound topic changes.",
+        "plain": "The research lab goes back to being a lab. It may be switched off for a week without anything noticing. The execution machine runs the shipped model itself and produces its own trade ideas \u2014 which still count for nothing until the risk officer approves them."
       },
       "load_bearing_requirement": {
-        "technical": "The bundle must become self-sufficient for inference. Today it carries models and metadata — `hmm_model.joblib`, `regime_strategy_map.json`, `champion_model.pkl`, `champion_preprocessor.pkl`, manifests — but the strategy implementations are Python source in the System 1 repo, not serialized weights. If System 2 merely holds *a copy* of that code it can drift from the version System 1 measured, silently: the map's metrics would describe one implementation while another executes. So strategy implementations become versioned, checksummed artifacts inside the bundle, verified exactly like the model files.",
-        "plain": "The sealed box currently contains the models but not the trading rules themselves — those live as source code on the research machine. If the execution machine just keeps its own copy, the two can drift apart without anyone noticing, and the reported performance would describe a different program than the one actually trading. So the rules have to travel inside the sealed box too, with the same serial numbers and checks."
+        "technical": "The bundle must become self-sufficient for inference. Today it carries models and metadata \u2014 `hmm_model.joblib`, `regime_strategy_map.json`, `champion_model.pkl`, `champion_preprocessor.pkl`, manifests \u2014 but the strategy implementations are Python source in the System 1 repo, not serialized weights. If System 2 merely holds *a copy* of that code it can drift from the version System 1 measured, silently: the map's metrics would describe one implementation while another executes. So strategy implementations become versioned, checksummed artifacts inside the bundle, verified exactly like the model files.",
+        "plain": "The sealed box currently contains the models but not the trading rules themselves \u2014 those live as source code on the research machine. If the execution machine just keeps its own copy, the two can drift apart without anyone noticing, and the reported performance would describe a different program than the one actually trading. So the rules have to travel inside the sealed box too, with the same serial numbers and checks."
       },
       "consequences": {
         "good": [
-          "Trading survives Computer 1 being offline — the failure that started this becomes impossible.",
+          "Trading survives Computer 1 being offline \u2014 the failure that started this becomes impossible.",
           "The design matches the ratified README again.",
           "Signals are computed at the bar close where System 2 already receives live candles, not up to twenty hours later by a nightly batch on another machine.",
           "One source of truth for strategy logic, enforced by checksum rather than by convention."
         ],
         "bad": [
-          "The bundle must carry code, so System 2 executes code produced by System 1 — bundle integrity becomes a trust boundary rather than a convenience.",
+          "The bundle must carry code, so System 2 executes code produced by System 1 \u2014 bundle integrity becomes a trust boundary rather than a convenience.",
           "Determinism becomes a hard requirement rather than an aspiration, and must be tested against System 1's own outputs rather than asserted.",
-          "System 2 needs its own market data with enough history for the indicators — the regime labeller alone needs 252 D1 bars of warm-up.",
+          "System 2 needs its own market data with enough history for the indicators \u2014 the regime labeller alone needs 252 D1 bars of warm-up.",
           "Duplicate-signal hazard during transition: if both producers are ever live, System 3 receives two signals per bar from different publishers with different `signal_id`s, and idempotency keys will not catch it."
         ]
       },
       "transition": [
         {
-          "step": "Now — bridge",
+          "step": "Now \u2014 bridge",
           "text": "System 1's producer keeps running when Computer 1 happens to be up. It exists to prove the pipe end to end. It is a bridge, not the destination, and nothing should be built to depend on it."
         },
         {
@@ -65,42 +65,42 @@
           "text": "The System 1 producer is decommissioned in the same change that enables System 2 inference. They must never both publish. A hard requirement, not a sequencing preference."
         },
         {
-          "step": "Status as of 2026-09-08 — accepted, not built",
-          "text": "Both systems replied approve-with-conditions on 2026-08-22, so the decision itself is settled; status here reads `accepted` rather than `proposed` even though the ADR's own document header still (incorrectly) says PROPOSED. Nothing on the Build step has started. A blocker outside this ADR's original scope surfaced afterward and gates it: the System 1 and System 3 signal schemas are mutually incompatible today (`instrument`/`pair`, `entry`/`proposed_entry`, both `additionalProperties: false`), so every signal System 1 would produce under this design is currently rejected. Schema v2 reconciliation, with System 1 adopting System 3's field names, ships before Build resumes. Meanwhile System 1's producer keeps running as the explicit bridge — see the 'Now — bridge' step above, unchanged in intent."
+          "step": "Status as of 2026-09-08 \u2014 accepted, not built",
+          "text": "Both systems replied approve-with-conditions on 2026-08-22, so the decision itself is settled; status here reads `accepted` rather than `proposed` even though the ADR's own document header still (incorrectly) says PROPOSED. Nothing on the Build step has started. A blocker outside this ADR's original scope surfaced afterward and gates it: the System 1 and System 3 signal schemas are mutually incompatible today (`instrument`/`pair`, `entry`/`proposed_entry`, both `additionalProperties: false`), so every signal System 1 would produce under this design is currently rejected. Schema v2 reconciliation, with System 1 adopting System 3's field names, ships before Build resumes. Meanwhile System 1's producer keeps running as the explicit bridge \u2014 see the 'Now \u2014 bridge' step above, unchanged in intent."
         }
       ],
       "open_questions": [
         "Does System 2 or System 3 run the gatekeeper scoring? The champion model is in the bundle and System 2 syncs it, but 'System 3 never re-scores' argues the score must already exist on arrival. System 1's reading: System 2 scores. Confirm.",
-        "Who publishes `Scored_Signal_Queue` after cutover? System 1's reading: it becomes System 2 → System 3, topology otherwise unchanged. Confirm the topic and subscription names survive.",
+        "Who publishes `Scored_Signal_Queue` after cutover? System 1's reading: it becomes System 2 \u2192 System 3, topology otherwise unchanged. Confirm the topic and subscription names survive.",
         "Does System 2 have candle history sufficient for a 252-bar D1 warm-up, and does its price data agree with System 1's? Two independent OANDA ingests can disagree, and a regime label from a different price series is a different label.",
-        "Is executing System-1-authored code acceptable to System 2's security posture? If so, what does it want — a signed manifest, a pinned dependency set, a sandbox?",
-        "Does System 3 need anything in the signal envelope to change now that its publisher would be System 2 — provenance, bundle id, or a producer identity field?"
+        "Is executing System-1-authored code acceptable to System 2's security posture? If so, what does it want \u2014 a signed manifest, a pinned dependency set, a sandbox?",
+        "Does System 3 need anything in the signal envelope to change now that its publisher would be System 2 \u2014 provenance, bundle id, or a producer identity field?"
       ],
       "reviews": [
         {
           "system": "system-2",
           "verdict": "approve_with_conditions",
           "date": "2026-08-22",
-          "reasons": "The argument is right and matches what we can see: System 1 has published three messages to `scored_signal_queue` in twenty-five days, all of them our own test, so the current topology has already produced exactly the outage the ADR predicts. Moving inference here is correct in principle and System 2 already runs the hardest part of it — verified artifact sync and live HMM inference against OANDA candles, both working today. Four conditions, all of which are work on our side and none of which are objections to the decision. **One:** the transport must be proven before it carries more responsibility. Today System 2 is bound to the wrong queue file and has consumed nothing since 2026-08-20; making it the publisher of every signal on a pipe that has never delivered a message would move the single point of failure rather than remove it. **Two:** the bundle must be signed, not merely checksummed — a SHA256 list proves integrity, not authorship, and anything that can write the bucket can write a matching manifest. **Three:** strategy code from the bundle executes in a separate least-privilege process with no broker credential in its environment; the process holding the OANDA key must never be the process running code it did not ship with. **Four:** a determinism test against System 1's own outputs runs in CI and gates the cutover, because 'deterministic' becomes a load-bearing claim the moment two machines can compute the same signal. We also want the cutover step to be a single change that starts our producer and stops System 1's, as the ADR already requires — not a sequencing preference on our side either.",
+          "reasons": "The argument is right and matches what we can see: System 1 has published three messages to `scored_signal_queue` in twenty-five days, all of them our own test, so the current topology has already produced exactly the outage the ADR predicts. Moving inference here is correct in principle and System 2 already runs the hardest part of it \u2014 verified artifact sync and live HMM inference against OANDA candles, both working today. Four conditions, all of which are work on our side and none of which are objections to the decision. **One:** the transport must be proven before it carries more responsibility. Today System 2 is bound to the wrong queue file and has consumed nothing since 2026-08-20; making it the publisher of every signal on a pipe that has never delivered a message would move the single point of failure rather than remove it. **Two:** the bundle must be signed, not merely checksummed \u2014 a SHA256 list proves integrity, not authorship, and anything that can write the bucket can write a matching manifest. **Three:** strategy code from the bundle executes in a separate least-privilege process with no broker credential in its environment; the process holding the OANDA key must never be the process running code it did not ship with. **Four:** a determinism test against System 1's own outputs runs in CI and gates the cutover, because 'deterministic' becomes a load-bearing claim the moment two machines can compute the same signal. We also want the cutover step to be a single change that starts our producer and stops System 1's, as the ADR already requires \u2014 not a sequencing preference on our side either.",
           "answers": [
-            "System 2 would have to, and it does not today. It syncs `champion_model.pkl` and `champion_preprocessor.pkl` as part of the bundle and never loads them; the only model it runs is the HMM regime labeller in `artifact_sync/live_regime.py`. `/status` reports `gatekeeper: unavailable — no approval-rate provider wired`, which is honest rather than a false all-clear. Since System 3 must not re-score, the score has to exist on arrival, so scoring is ours — and it is new code, not a configuration change. Confirmed, with that caveat.",
-            "Not ours to answer in full — System 3's row answers it. What we can confirm from our side: the names do not survive. `Scored_Signal_Queue` does not exist in project `scalable-brain`; the provisioned topic is `scored_signal_queue` with subscription `scored_signal_queue_sub`. System 2 does not consume that topic in either topology, so this is a change between System 2 and System 3 only.",
-            "Warm-up: yes, trivially, but not from a store — we keep no local candle history at all. `OandaCandleSource` fetches on demand via the OANDA v20 candles endpoint, `REGIME_CANDLE_LOOKBACK` defaults to 120 bars, and 252 D1 bars is a config change well inside OANDA's per-request limit. Price agreement: **unverified, and we will not claim it.** We read mid candles (`price=M`), completed bars only; System 1's ingest is recorded as MBA. Nobody has compared a bar. We have opened a task to reconcile bar-for-bar against System 1's feature store before cutover, because a regime label computed from a different price series is a different label and the ADR's whole value rests on the two agreeing.",
-            "Acceptable, with the three controls above made explicit. The trust boundary we care about is authorship, not corruption: today's manifest proves the file is the file that was uploaded, and proves nothing about who uploaded it. So we want (a) a **signed manifest** — signature over the artifact list, verified before any code is executed, key distributed out of band; (b) a **pinned and hashed dependency set** shipped with the bundle, because strategy code that imports a floating dependency is not the artifact that was measured; (c) a **sandbox** in the practical sense — the strategy process runs as a separate least-privilege unit with no broker credential, no write access to the model cache, and no ability to reach the queue directly, handing signals back over a local interface. We are not asking for containers or seccomp profiles; we are asking that the process that can move money never be the process that runs code it did not ship with.",
-            "Not ours to answer — System 3's row answers this."
+            "System 2 would have to, and it does not today. It syncs `champion_model.pkl` and `champion_preprocessor.pkl` as part of the bundle and never loads them; the only model it runs is the HMM regime labeller in `artifact_sync/live_regime.py`. `/status` reports `gatekeeper: unavailable \u2014 no approval-rate provider wired`, which is honest rather than a false all-clear. Since System 3 must not re-score, the score has to exist on arrival, so scoring is ours \u2014 and it is new code, not a configuration change. Confirmed, with that caveat.",
+            "Not ours to answer in full \u2014 System 3's row answers it. What we can confirm from our side: the names do not survive. `Scored_Signal_Queue` does not exist in project `scalable-brain`; the provisioned topic is `scored_signal_queue` with subscription `scored_signal_queue_sub`. System 2 does not consume that topic in either topology, so this is a change between System 2 and System 3 only.",
+            "Warm-up: yes, trivially, but not from a store \u2014 we keep no local candle history at all. `OandaCandleSource` fetches on demand via the OANDA v20 candles endpoint, `REGIME_CANDLE_LOOKBACK` defaults to 120 bars, and 252 D1 bars is a config change well inside OANDA's per-request limit. Price agreement: **unverified, and we will not claim it.** We read mid candles (`price=M`), completed bars only; System 1's ingest is recorded as MBA. Nobody has compared a bar. We have opened a task to reconcile bar-for-bar against System 1's feature store before cutover, because a regime label computed from a different price series is a different label and the ADR's whole value rests on the two agreeing.",
+            "Acceptable, with the three controls above made explicit. The trust boundary we care about is authorship, not corruption: today's manifest proves the file is the file that was uploaded, and proves nothing about who uploaded it. So we want (a) a **signed manifest** \u2014 signature over the artifact list, verified before any code is executed, key distributed out of band; (b) a **pinned and hashed dependency set** shipped with the bundle, because strategy code that imports a floating dependency is not the artifact that was measured; (c) a **sandbox** in the practical sense \u2014 the strategy process runs as a separate least-privilege unit with no broker credential, no write access to the model cache, and no ability to reach the queue directly, handing signals back over a local interface. We are not asking for containers or seccomp profiles; we are asking that the process that can move money never be the process that runs code it did not ship with.",
+            "Not ours to answer \u2014 System 3's row answers this."
           ]
         },
         {
           "system": "system-3",
           "verdict": "approve_with_conditions",
           "date": "2026-08-22",
-          "reasons": "Approve. Nothing in the ADR changes what this system does: it consumes a `ScoredSignal`, runs it through thirteen layers and publishes an `ApprovedOrder`, and it is indifferent to which machine produced the signal. The gate is built and exercised — 4,153 real decisions logged, 627 of 627 tests passing — so this is a judgement against the implementation, not the document. Three conditions. **One:** the envelope must change first, and it must change whether or not this ADR proceeds. `ScoredSignal.schema.json` is `additionalProperties: false`, so a signal carrying any new field is dead-lettered before it reaches layer `P`; adding a producer identity after System 2 starts publishing would break the pipe at exactly the wrong moment. **Two:** the transition's duplicate-signal hazard is real and the ADR's own wording is too soft about it. Our idempotency is `ams_decision_log.signal_id UNIQUE`, so two publishers emitting different `signal_id`s for the same bar produce two decisions and, if both approve, two orders. A producer identity field does not fix that by itself — we would need to reject any signal whose producer is not the single configured expected producer, which is why we want that field to be **required**, not optional. **Three:** nothing cuts over until System 2's queue binding is repaired and one message has been observed travelling the whole path, because today an approval published from here reaches a queue System 2 is not reading.",
+          "reasons": "Approve. Nothing in the ADR changes what this system does: it consumes a `ScoredSignal`, runs it through thirteen layers and publishes an `ApprovedOrder`, and it is indifferent to which machine produced the signal. The gate is built and exercised \u2014 4,153 real decisions logged, 627 of 627 tests passing \u2014 so this is a judgement against the implementation, not the document. Three conditions. **One:** the envelope must change first, and it must change whether or not this ADR proceeds. `ScoredSignal.schema.json` is `additionalProperties: false`, so a signal carrying any new field is dead-lettered before it reaches layer `P`; adding a producer identity after System 2 starts publishing would break the pipe at exactly the wrong moment. **Two:** the transition's duplicate-signal hazard is real and the ADR's own wording is too soft about it. Our idempotency is `ams_decision_log.signal_id UNIQUE`, so two publishers emitting different `signal_id`s for the same bar produce two decisions and, if both approve, two orders. A producer identity field does not fix that by itself \u2014 we would need to reject any signal whose producer is not the single configured expected producer, which is why we want that field to be **required**, not optional. **Three:** nothing cuts over until System 2's queue binding is repaired and one message has been observed travelling the whole path, because today an approval published from here reaches a queue System 2 is not reading.",
           "answers": [
-            "System 2 must. This system never re-scores a signal and will not start — the principle is not decorative, it is the reason there is exactly one place to look when a decision is wrong. Layer `P` already treats scoring metadata as provenance to branch on rather than a number to recompute: `qualified` takes full size, `designated` takes half and is logged `REDUCED`, and anything else, **including an absent value**, is rejected as `unknown_selection_basis`. `model_score` and `threshold_applied` accept `null` — a refusal to score is the absence of evidence, not evidence against, and we record `provenance.scored: false` rather than coercing a null to 0.0.",
-            "The topology survives; the names do not, and one of them never existed. The topic is `scored_signal_queue` and the subscription is `scored_signal_queue_sub`, both lowercase — `Scored_Signal_Queue` has never existed in project `scalable-brain`. Today we consume it through `s3-signal-relay.service`, which pulls the Pub/Sub subscription and writes to the local topic `scored-signals.ams`; after a full cutover the relay is deleted and `SCORED_SIGNAL_SUB=scored_signal_queue_sub` is set directly. Whether System 1 or System 2 publishes changes nothing on our side beyond the producer check described in our conditions.",
+            "System 2 must. This system never re-scores a signal and will not start \u2014 the principle is not decorative, it is the reason there is exactly one place to look when a decision is wrong. Layer `P` already treats scoring metadata as provenance to branch on rather than a number to recompute: `qualified` takes full size, `designated` takes half and is logged `REDUCED`, and anything else, **including an absent value**, is rejected as `unknown_selection_basis`. `model_score` and `threshold_applied` accept `null` \u2014 a refusal to score is the absence of evidence, not evidence against, and we record `provenance.scored: false` rather than coercing a null to 0.0.",
+            "The topology survives; the names do not, and one of them never existed. The topic is `scored_signal_queue` and the subscription is `scored_signal_queue_sub`, both lowercase \u2014 `Scored_Signal_Queue` has never existed in project `scalable-brain`. Today we consume it through `s3-signal-relay.service`, which pulls the Pub/Sub subscription and writes to the local topic `scored-signals.ams`; after a full cutover the relay is deleted and `SCORED_SIGNAL_SUB=scored_signal_queue_sub` is set directly. Whether System 1 or System 2 publishes changes nothing on our side beyond the producer check described in our conditions.",
             "Not ours to answer.",
             "Not ours to answer.",
-            "**Yes — and the change is needed regardless of this ADR.** Three fields. (1) `producer` — a required string identifying the publishing system. Required rather than optional, because during transition the safe posture is to reject a signal from an unexpected producer outright, and an optional field cannot do that. (2) `bundle_id` (or `model_set_id`) — the artifact set the signal was computed from, so a decision can be replayed against the model that produced it; without it, a signal scored on a bundle we never saw is indistinguishable from one scored on the current bundle. (3) `drill` — a boolean, because G-008 is currently impossible: our contract is `additionalProperties: false` and a signal carrying `\"drill\": true` is dead-lettered at the relay, which by design never acks an invalid message, so System 1 would publish and simply never hear anything. `ApprovedOrder.schema.json` is `additionalProperties: false` too, so the flag needs adding at both ends or the drill dies at our egress instead of our ingress. We will make these changes on our side and publish the updated contracts to `gs://scalable-brain-artifacts/contracts/v1/`; System 1 does not need to design them, only to agree the names."
+            "**Yes \u2014 and the change is needed regardless of this ADR.** Three fields. (1) `producer` \u2014 a required string identifying the publishing system. Required rather than optional, because during transition the safe posture is to reject a signal from an unexpected producer outright, and an optional field cannot do that. (2) `bundle_id` (or `model_set_id`) \u2014 the artifact set the signal was computed from, so a decision can be replayed against the model that produced it; without it, a signal scored on a bundle we never saw is indistinguishable from one scored on the current bundle. (3) `drill` \u2014 a boolean, because G-008 is currently impossible: our contract is `additionalProperties: false` and a signal carrying `\"drill\": true` is dead-lettered at the relay, which by design never acks an invalid message, so System 1 would publish and simply never hear anything. `ApprovedOrder.schema.json` is `additionalProperties: false` too, so the flag needs adding at both ends or the drill dies at our egress instead of our ingress. We will make these changes on our side and publish the updated contracts to `gs://scalable-brain-artifacts/contracts/v1/`; System 1 does not need to design them, only to agree the names."
           ]
         }
       ]
@@ -120,7 +120,7 @@
         "plain": "Requiring five years of out-of-sample history meant nothing ever qualified, so the rest of the machinery could never be tested with a real strategy flowing through it."
       },
       "decision": {
-        "technical": "Owner decision: lower the gate to 12 months. Three cells subsequently qualified — on 5, 13 and 20 trades — because `vet.py` has no minimum trade-count gate.",
+        "technical": "Owner decision: lower the gate to 12 months. Three cells subsequently qualified \u2014 on 5, 13 and 20 trades \u2014 because `vet.py` has no minimum trade-count gate.",
         "plain": "The owner deliberately shortened the required track record from five years to one. Three strategies passed as a result, on five, thirteen and twenty trades respectively."
       },
       "consequences": {
@@ -129,9 +129,9 @@
           "The decision is recorded explicitly rather than discovered later in a config diff."
         ],
         "bad": [
-          "Profit factors of 6.8–13.6 and drawdowns of 0.02%–1% on samples this thin are small-sample artefacts, not established edges.",
+          "Profit factors of 6.8\u201313.6 and drawdowns of 0.02%\u20131% on samples this thin are small-sample artefacts, not established edges.",
           "It exposed a second, older gap: there has never been a minimum trade-count gate at all.",
-          "This is a knowingly accepted risk on a practice account — explicitly *not* a reason for Systems 2 or 3 to refuse orders, since sizing is System 3's call."
+          "This is a knowingly accepted risk on a practice account \u2014 explicitly *not* a reason for Systems 2 or 3 to refuse orders, since sizing is System 3's call."
         ]
       },
       "transition": [
@@ -153,27 +153,27 @@
       "requires_approval_from": [],
       "source": "task/2026-September-week2/regime-multi-timeframe/WORK-ORDER-03.md; audit/reports/work_order_02_review.md",
       "problem": {
-        "technical": "The HMM regime label the system was designed around (`regime_causal`) is NULL on the newest rows, so nothing live can route on it — the system had already drifted onto a structural label (ADX + rolling ATR% z-score, `regime_structural`) without that being an acknowledged design decision. When that label was measured properly across every timeframe the system trades (H1/H4/D1), the resulting map nearly emptied and the ML gatekeeper refused to retrain on it, which the initial build summary read as proof the structural label has no predictive value and should not ship.",
-        "plain": "The market-condition detector the system was meant to use goes blank on recent data, so it had quietly switched to a backup method without anyone deciding that on purpose. When that backup method was finally tested properly across every timeframe, almost nothing qualified to trade and a safety check on the machine-learning model refused to retrain — which looked, at first glance, like the backup method was worthless."
+        "technical": "The HMM regime label the system was designed around (`regime_causal`) is NULL on the newest rows, so nothing live can route on it \u2014 the system had already drifted onto a structural label (ADX + rolling ATR% z-score, `regime_structural`) without that being an acknowledged design decision. When that label was measured properly across every timeframe the system trades (H1/H4/D1), the resulting map nearly emptied and the ML gatekeeper refused to retrain on it, which the initial build summary read as proof the structural label has no predictive value and should not ship.",
+        "plain": "The market-condition detector the system was meant to use goes blank on recent data, so it had quietly switched to a backup method without anyone deciding that on purpose. When that backup method was finally tested properly across every timeframe, almost nothing qualified to trade and a safety check on the machine-learning model refused to retrain \u2014 which looked, at first glance, like the backup method was worthless."
       },
       "argument": {
-        "technical": "A same-day adversarial review found three of the four load-bearing claims behind that reading false or overstated. (1) The gatekeeper refusal fires identically, slightly worse, on the *currently live* champion (95.5% degenerate cells vs. 95.1% for the new candidate) — it is a pre-existing gatekeeper defect, not evidence against the structural label. (2) The map comparison changed two variables at once — the label and the evaluation engine — and the 60% drop in trade population came from the engine filter, not the label; no conclusion about the label survives that confound. (3) 'Purely diurnal seasonality' overstates a real but partial defect: H1/H4 volatility is scored against an all-hours-of-the-day baseline, so quiet overnight bars are structurally mislabelled Ranging and active-session bars High-Vol — measured at a 47.2 percentage-point spread by hour, affecting the High-Vol/Ranging split only (roughly 20-30% of bars), not the trending labels.",
+        "technical": "A same-day adversarial review found three of the four load-bearing claims behind that reading false or overstated. (1) The gatekeeper refusal fires identically, slightly worse, on the *currently live* champion (95.5% degenerate cells vs. 95.1% for the new candidate) \u2014 it is a pre-existing gatekeeper defect, not evidence against the structural label. (2) The map comparison changed two variables at once \u2014 the label and the evaluation engine \u2014 and the 60% drop in trade population came from the engine filter, not the label; no conclusion about the label survives that confound. (3) 'Purely diurnal seasonality' overstates a real but partial defect: H1/H4 volatility is scored against an all-hours-of-the-day baseline, so quiet overnight bars are structurally mislabelled Ranging and active-session bars High-Vol \u2014 measured at a 47.2 percentage-point spread by hour, affecting the High-Vol/Ranging split only (roughly 20-30% of bars), not the trending labels.",
         "plain": "A second, more careful look the same day found the pessimistic conclusion didn't hold up. The safety-check refuses on the model already in use today, too, for a reason that predates and has nothing to do with this change. The before-and-after comparison changed two things at once, so it couldn't actually isolate what the label change did. And the seasonality problem, while real, only affects the volatility measurement, not the trend measurement, and for a clearly identifiable, fixable reason: it compares 3am to a full-day average instead of to other 3ams."
       },
       "decision": {
-        "technical": "Keep the structural regime label. Fix the diurnal-seasonality defect by computing the volatility z-score within time-of-day slot rather than pooled across the day — already validated to remove 93% of the spread, using the same 252-observations-per-slot window the design already had, with no new constants. Re-run attribution holding the evaluation engine constant so the label's own effect is finally isolable. The gatekeeper's degeneracy is explicitly carved out as a separate, pre-existing problem (Work Order 04) and is not a reason to abandon this work — nor is it grounds to relax the guard that caught it.",
+        "technical": "Keep the structural regime label. Fix the diurnal-seasonality defect by computing the volatility z-score within time-of-day slot rather than pooled across the day \u2014 already validated to remove 93% of the spread, using the same 252-observations-per-slot window the design already had, with no new constants. Re-run attribution holding the evaluation engine constant so the label's own effect is finally isolable. The gatekeeper's degeneracy is explicitly carved out as a separate, pre-existing problem (Work Order 04) and is not a reason to abandon this work \u2014 nor is it grounds to relax the guard that caught it.",
         "plain": "Fix the specific, identified problem rather than discard the whole approach. Measure the fix properly this time, changing one thing at a time. Treat the machine-learning model's refusal to retrain as its own separate problem to solve, not as a verdict on the market-condition detector."
       },
       "consequences": {
         "good": [
           "The engineering already done in Work Order 02 (per-granularity parameterisation, the joins, single-sourcing `LABELLER_VERSION`, a real pip-scaling fix) is kept rather than thrown away.",
-          "The system stays deliberately not-trading rather than trading on a label known to be partially contaminated — the freeze is respected until owner sign-off.",
+          "The system stays deliberately not-trading rather than trading on a label known to be partially contaminated \u2014 the freeze is respected until owner sign-off.",
           "Separates two genuinely different problems (a seasonality defect and a pre-existing ML degeneracy) that had been collapsed into one wrong conclusion."
         ],
         "bad": [
-          "Trading stays paused for the duration of Work Order 03 — an unquantified number of days.",
-          "The gatekeeper degeneracy (Work Order 04) is real, affects the live champion today, and is not fixed by any of this — the gate remains meaningfully uninformative even in shadow mode until Phase 2 lands.",
-          "The only currently-qualifying cell under the new label rests on 10 trades — thin, and explicitly not to be judged until re-measured after the seasonality fix."
+          "Trading stays paused for the duration of Work Order 03 \u2014 an unquantified number of days.",
+          "The gatekeeper degeneracy (Work Order 04) is real, affects the live champion today, and is not fixed by any of this \u2014 the gate remains meaningfully uninformative even in shadow mode until Phase 2 lands.",
+          "The only currently-qualifying cell under the new label rests on 10 trades \u2014 thin, and explicitly not to be judged until re-measured after the seasonality fix."
         ]
       },
       "transition": [
@@ -183,7 +183,7 @@
         },
         {
           "step": "Gate",
-          "text": "Owner sign-off required before `vet --live` and publish — the freeze is not the builder's to lift."
+          "text": "Owner sign-off required before `vet --live` and publish \u2014 the freeze is not the builder's to lift."
         },
         {
           "step": "Parallel, not blocking",
@@ -191,12 +191,12 @@
         }
       ],
       "open_questions": [
-        "Does the re-measured map, held to the same engine, actually qualify more than the single 10-trade cell — and does it survive Work Order 05's holdout check once that runs?"
+        "Does the re-measured map, held to the same engine, actually qualify more than the single 10-trade cell \u2014 and does it survive Work Order 05's holdout check once that runs?"
       ]
     },
     {
       "id": "DEC-2026-09-11",
-      "title": "Re-enable signal emission — the halt's own precondition had been met",
+      "title": "Re-enable signal emission \u2014 the halt's own precondition had been met",
       "status": "accepted",
       "date": "2026-09-11",
       "systems": [
@@ -205,33 +205,33 @@
       "requires_approval_from": [],
       "source": "issues/September-Week-2/2026-09-11.md; task/2026-September-week2/emit-a-signal/WORK-ORDER-06.md",
       "problem": {
-        "technical": "For six days the producer ran hourly, reported healthy, and published nothing. Four causes were investigated and discarded in turn — an unbounded Pub/Sub publish, a stalled bar-watcher cursor, the ML gatekeeper's degeneracy, the holdout contamination. The actual cause was `DISABLE_LEGACY_SIGNALS=true`, a deliberate halt set 2026-09-05 whose note gated re-enabling on 'a vetting run that clears the rebuilt gate'. That run completed 2026-09-09. The flag stayed on because two independent reviews reported the live map as empty; it held six cells, selected and executed on the same `regime_structural` label. The ledger is unambiguous: seven signals on 2026-09-10 carry `wire_action=suppressed`.",
-        "plain": "The system looked broken for six days. It wasn't — a safety switch had been turned off on purpose, and the condition for turning it back on had already been met two days earlier. Nobody noticed because two separate reviews wrongly reported that there were no strategies left to trade. There were eight. Meanwhile the machine was quietly building real trade signals and throwing them in the bin."
+        "technical": "For six days the producer ran hourly, reported healthy, and published nothing. Four causes were investigated and discarded in turn \u2014 an unbounded Pub/Sub publish, a stalled bar-watcher cursor, the ML gatekeeper's degeneracy, the holdout contamination. The actual cause was `DISABLE_LEGACY_SIGNALS=true`, a deliberate halt set 2026-09-05 whose note gated re-enabling on 'a vetting run that clears the rebuilt gate'. That run completed 2026-09-09. The flag stayed on because two independent reviews reported the live map as empty; it held six cells, selected and executed on the same `regime_structural` label. The ledger is unambiguous: seven signals on 2026-09-10 carry `wire_action=suppressed`.",
+        "plain": "The system looked broken for six days. It wasn't \u2014 a safety switch had been turned off on purpose, and the condition for turning it back on had already been met two days earlier. Nobody noticed because two separate reviews wrongly reported that there were no strategies left to trade. There were eight. Meanwhile the machine was quietly building real trade signals and throwing them in the bin."
       },
       "argument": {
         "technical": "The halt was written against a specific artifact: a map generated 2026-08-24, selected on HMM causal labels and executed against structural ones at 19-36% agreement. That map no longer exists. The replacement is `structural-v2.1.0`, selected and routed on the same label, with `source_label` matching `ROUTING_SOURCE_LABEL`. The mismatch the halt was written to prevent is structurally impossible under the current artifact, so the halt's stated condition is satisfied and its continued application is stale rather than protective. Three latent defects were cleared before flipping: the bar-watcher's cursor never advanced on a quiet run (unbounded backlog growth); an uncommitted watcher change would have treated ~10,000 historical bars as newly closed; and the Pub/Sub publish had no timeout.",
-        "plain": "The switch was guarding against one specific problem, and that problem has been fixed — the strategy selection and the live trading now use the same definition of market conditions, which is exactly what was wrong before. Before flipping it back on, three separate faults were found and fixed, including one that would have flooded the system with thousands of out-of-date signals the moment it restarted."
+        "plain": "The switch was guarding against one specific problem, and that problem has been fixed \u2014 the strategy selection and the live trading now use the same definition of market conditions, which is exactly what was wrong before. Before flipping it back on, three separate faults were found and fixed, including one that would have flooded the system with thousands of out-of-date signals the moment it restarted."
       },
       "decision": {
-        "technical": "Re-enable emission. Withdraw the `xard_ma_cross_daily_open@H1@High-Vol` designation, which re-measured at PF 0.86 / Sharpe -0.38 once the strategy's pip-scaling defect was fixed — a designation overrides the gates, not arithmetic. Restore the HMM's walk-forward folds by replacing a hardcoded 2021 feature start with a fixed 2005 anchor; combined with the holdout clamp it had left 15.1 months against a 36-month minimum train, producing zero folds and a self-scored 1.000 accuracy at every granularity. Do NOT retrain the ML gatekeeper in the same window: dropping `strategy_id` raises at scorer load time and would take the producer down on startup.",
-        "plain": "Turn the signals back on. Drop one strategy that was found to lose money once its own bug was fixed. Fix the market-condition model, which had silently stopped validating itself properly — the tell was that it finished in 80 seconds instead of 35 minutes. Leave the machine-learning gatekeeper alone for now, because changing it would crash the live signal path."
+        "technical": "Re-enable emission. Withdraw the `xard_ma_cross_daily_open@H1@High-Vol` designation, which re-measured at PF 0.86 / Sharpe -0.38 once the strategy's pip-scaling defect was fixed \u2014 a designation overrides the gates, not arithmetic. Restore the HMM's walk-forward folds by replacing a hardcoded 2021 feature start with a fixed 2005 anchor; combined with the holdout clamp it had left 15.1 months against a 36-month minimum train, producing zero folds and a self-scored 1.000 accuracy at every granularity. Do NOT retrain the ML gatekeeper in the same window: dropping `strategy_id` raises at scorer load time and would take the producer down on startup.",
+        "plain": "Turn the signals back on. Drop one strategy that was found to lose money once its own bug was fixed. Fix the market-condition model, which had silently stopped validating itself properly \u2014 the tell was that it finished in 80 seconds instead of 35 minutes. Leave the machine-learning gatekeeper alone for now, because changing it would crash the live signal path."
       },
       "load_bearing_requirement": {
-        "technical": "Selection and routing must remain on the same regime label. If `attribute.SELECTION_SOURCE_LABEL` and `map_contract.ROUTING_SOURCE_LABEL` ever diverge again, every cell in the map becomes a claim about conditions that never fire it — the 2026-08-24 defect — and emission must halt rather than continue. The admissibility check in `map_contract` enforces this by refusing any map whose `source_label` does not match.",
+        "technical": "Selection and routing must remain on the same regime label. If `attribute.SELECTION_SOURCE_LABEL` and `map_contract.ROUTING_SOURCE_LABEL` ever diverge again, every cell in the map becomes a claim about conditions that never fire it \u2014 the 2026-08-24 defect \u2014 and emission must halt rather than continue. The admissibility check in `map_contract` enforces this by refusing any map whose `source_label` does not match.",
         "plain": "The rules for picking strategies and the rules for deciding when to trade them must use the same definition of market conditions. When they drifted apart before, the system was trading strategies under conditions they had never been tested in. If that ever happens again the system must stop, not carry on."
       },
       "consequences": {
         "good": [
           "Emission restored after six days, with the cause documented rather than worked around.",
-          "Three latent defects cleared on the way — an unbounded watcher backlog, a change that would have flooded the wire with stale bars, and an untimed Pub/Sub publish.",
-          "The HMM validates honestly again: 0 → 28 walk-forward folds per granularity, and causal labels are properly warm-up-masked instead of covering every bar.",
+          "Three latent defects cleared on the way \u2014 an unbounded watcher backlog, a change that would have flooded the wire with stale bars, and an untimed Pub/Sub publish.",
+          "The HMM validates honestly again: 0 \u2192 28 walk-forward folds per granularity, and causal labels are properly warm-up-masked instead of covering every bar.",
           "No negative-expectancy cell remains in the map."
         ],
         "bad": [
-          "Emission will be sparse. Four of five instruments sit in `Trending-Down`, where no strategy qualified — every vetting run logs `STARVATION`.",
+          "Emission will be sparse. Four of five instruments sit in `Trending-Down`, where no strategy qualified \u2014 every vetting run logs `STARVATION`.",
           "The ML gatekeeper is unchanged and still discriminates on strategy identity rather than market state; its shadow statistics remain uninterpretable.",
           "`holdout_accuracy` still reports 1.000, so the `regime_accuracy_ok` promotion gate is not a real check.",
-          "The published HMM artifact collapses two states onto `Ranging` and emits no `Trending-Up`. It is inert — nothing on the decision path reads it — but it is wrong and it ships."
+          "The published HMM artifact collapses two states onto `Ranging` and emits no `Trending-Up`. It is inert \u2014 nothing on the decision path reads it \u2014 but it is wrong and it ships."
         ]
       },
       "transition": [
@@ -241,7 +241,7 @@
         },
         {
           "step": "Next",
-          "text": "Run `serialize` then `publish_model_set` — the 8-cell map is built locally but the backend still serves the 6-cell bundle, because `publish_model_set` only pairs existing sub-pointers."
+          "text": "Run `serialize` then `publish_model_set` \u2014 the 8-cell map is built locally but the backend still serves the 6-cell bundle, because `publish_model_set` only pairs existing sub-pointers."
         },
         {
           "step": "Then",
@@ -253,6 +253,132 @@
         "What replaces `regime_accuracy_ok` once it is admitted that a self-scored 1.000 is not a check?"
       ],
       "reviews": []
+    },
+    {
+      "id": "DEC-2026-10-08",
+      "title": "Full cutover from GCP to Computer 4 native Windows",
+      "status": "accepted",
+      "date": "2026-10-08",
+      "systems": [
+        "system-1",
+        "system-2",
+        "system-3"
+      ],
+      "requires_approval_from": [
+        "system-1",
+        "system-2",
+        "system-3"
+      ],
+      "source": "task/2026-October-week1/migration-to-computer-4/PLAN.md",
+      "problem": {
+        "technical": "Scalable Brain was split across 3 disparate hosts and GCP (Cloud Run, 5 Pub/Sub topics, Cloud Storage, VM trading-1). Communication latency, network flakiness, cloud costs, and divergence across 11 Git branches plagued operations. VM trading-1 held the only copy of ams.state, uncommitted.",
+        "plain": "The system was spread across three separate computers and Google Cloud. Internet hiccups, cloud bills, and files living in different places made it fragile and hard to run safely."
+      },
+      "argument": {
+        "technical": "Consolidating all three systems onto Computer 4 (high-spec native Windows PC with RTX 5070 GPU, local PostgreSQL 16, separate virtualenvs venv-s1/s2/s3, local atomic queue IPC) eliminates cloud hops, guarantees deterministic IPC, and stops ongoing GCP hosting charges.",
+        "plain": "Putting all three parts on one powerful new machine eliminates the cloud entirely, makes communication instant and reliable, and saves money."
+      },
+      "decision": {
+        "technical": "Migrate all three systems to native Windows 11 on Computer 4. Drop TimescaleDB in favor of plain PostgreSQL 16. Implement atomic POSIX rename primitives in platform.atomic. Teardown all GCP resources and delete the scalable-brain project.",
+        "plain": "Move everything onto Computer 4, run a clean local database, fix Windows file locking with an atomic helper, and shut down the cloud account completely."
+      },
+      "load_bearing_requirement": {
+        "technical": "Zero-difference database migration (21.7M rows verified), strict service isolation via three separate virtualenvs, and atomic file replace with FILE_SHARE_DELETE to eliminate Windows file-lock race conditions.",
+        "plain": "Every single price row must transfer without loss, virtual environments must stay separated, and Windows must not crash when two programs touch the same file."
+      },
+      "consequences": {
+        "good": [
+          "Zero cloud dependency; GCP project shut down 2026-10-16.",
+          "Zero-difference database migration (21,712,916 rows matched).",
+          "Local inter-process communication latency dropped to microseconds.",
+          "Atomic file replacements pass 390,000 writes with 0 retries and 0 lost writes."
+        ],
+        "bad": [
+          "Single point of failure on Computer 4 hardware (mitigated by nightly automated encrypted backups).",
+          "Windows NTFS mandatory locking requires strict adherence to platform.atomic helper."
+        ]
+      }
+    },
+    {
+      "id": "ADR-002",
+      "title": "Consolidated single-host architecture & direct Contract v2",
+      "status": "accepted",
+      "date": "2026-10-15",
+      "systems": [
+        "system-1",
+        "system-2",
+        "system-3"
+      ],
+      "requires_approval_from": [
+        "system-2",
+        "system-3"
+      ],
+      "source": "task/2026-October-week2/resume-trading/PLAN.md",
+      "problem": {
+        "technical": "ADR-001 planned for System 2 to execute bundled strategy code on a remote machine. With all systems consolidated on Computer 4, running live inference inside System 2 would introduce unnecessary complexity and new order-path code right before go-live.",
+        "plain": "The old plan was built for separate computers. Now that all programs live on one machine, having the execution engine take over strategy calculation would just add risky new code."
+      },
+      "argument": {
+        "technical": "System 1's producer is already functional and tested. Having S1 emit System 3's schema directly (Contract v2) eliminates the intermediary relay process entirely, ensuring determinism while preserving System 3's risk vetting role.",
+        "plain": "Let the signal generator talk directly to the risk gate using a clean, agreed data format, removing middleman translation scripts."
+      },
+      "decision": {
+        "technical": "System 1 producer stays the signal source, emitting Contract v2 directly to System 3 Guardian. Enforce strict versioning with deploy.ps1 gate between dev worktree and prod detached HEAD.",
+        "plain": "Keep System 1 generating signals, send them directly to Guardian, and only allow code deployments that pass 100% of the test suite."
+      },
+      "load_bearing_requirement": {
+        "technical": "Contract conformance gate (contracts/run_conformance.ps1) must pass on every deploy, verifying that S1's real output passes S3's real validator.",
+        "plain": "Every software update must run a real test order through the validator before being allowed into production."
+      },
+      "consequences": {
+        "good": [
+          "Order path is simplified by removing the cloud relay process.",
+          "Guaranteed determinism between training and live inference.",
+          "Strict deploy gate prevents untested commits from reaching production."
+        ],
+        "bad": [
+          "System 1 producer must remain running during market hours on Computer 4."
+        ]
+      }
+    },
+    {
+      "id": "DEC-2026-10-18",
+      "title": "Quantitative Research Standard v2: Pivot to Macro Premia & Committees",
+      "status": "accepted",
+      "date": "2026-10-18",
+      "systems": [
+        "system-1"
+      ],
+      "requires_approval_from": [
+        "system-1"
+      ],
+      "source": "lab/edge-research/PLAN-2026-10-18.md",
+      "problem": {
+        "technical": "Empirical testing proves single-pair technical indicator rules (the legacy 67 strategies) do not survive retail bid/ask spreads and financing drag (measured 1.1%/yr markup). Deflated Sharpe testing at scale reveals false discoveries from data snooping.",
+        "plain": "Classic chart indicators on single currency pairs lose money once you pay real trading fees and spread costs. Optimizing them is just curve-fitting noise."
+      },
+      "argument": {
+        "technical": "Real institutional currency edge derives from slow macroeconomic premia (yield curve slope, central bank policy divergence, real exchange rate value) and forced structural flows (month-end, quarter-end, COT positioning) across diversified baskets, combined at equal risk.",
+        "plain": "True edge comes from economic fundamentals and big institutional money flows across entire currency baskets, combining multiple modest ideas rather than hunting for one magic indicator."
+      },
+      "decision": {
+        "technical": "Cease all optimization on legacy single-pair indicators. Pivot research to macro premia, cross-sectional baskets, and the Weak-Voters Committee (H-20261019-04). Introduce point-in-time data collectors (FRED, BIS, CFTC, official yields) and an append-only trial ledger to enforce Deflated Sharpe standards.",
+        "plain": "Stop working on the old technical indicators. Focus research on economic premia and basket committees with strict, honest backtests that include all fees."
+      },
+      "load_bearing_requirement": {
+        "technical": "In-sample testing window fixed to 2007-2022; 2023+ reserved for a single one-shot out-of-sample evaluation. Every registered card block is frozen by sha256 and recorded in the trial ledger.",
+        "plain": "Never touch data from 2023 onward during development, and lock every trading idea before testing so you cannot quietly change the rules after seeing results."
+      },
+      "consequences": {
+        "good": [
+          "Eliminates wasted effort on dead single-pair technical indicators.",
+          "Weak-Voters Committee (H-20261019-04) achieved PROMISING tier under realistic friction.",
+          "Trial ledger mathematically protects against p-hacking."
+        ],
+        "bad": [
+          "Requires ongoing collection and maintenance of macro data sources (FRED, BIS, CFTC)."
+        ]
+      }
     }
   ]
 }
