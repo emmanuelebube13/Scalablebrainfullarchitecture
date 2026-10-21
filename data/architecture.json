@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "as_of": "2026-09-08",
+  "as_of": "2026-10-20",
   "layout": {
     "column_width": 252,
     "row_height": 74,
@@ -16,9 +16,9 @@
     },
     {
       "id": "s1",
-      "title": "System 1 — The Brain",
+      "title": "System 1 \u2014 The Brain",
       "system": "system-1",
-      "subtitle": "Computer 1 · intermittent"
+      "subtitle": "Computer 1 \u00b7 intermittent"
     },
     {
       "id": "bus-a",
@@ -28,9 +28,9 @@
     },
     {
       "id": "s3",
-      "title": "System 3 — The Guardian",
+      "title": "System 3 \u2014 The Guardian",
       "system": "system-3",
-      "subtitle": "Computer 3 · always on"
+      "subtitle": "Computer 3 \u00b7 always on"
     },
     {
       "id": "bus-b",
@@ -40,9 +40,9 @@
     },
     {
       "id": "s2",
-      "title": "System 2 — The Hand",
+      "title": "System 2 \u2014 The Hand",
       "system": "system-2",
-      "subtitle": "Computer 2 · market hours"
+      "subtitle": "Computer 2 \u00b7 market hours"
     },
     {
       "id": "edge",
@@ -59,7 +59,7 @@
       "kind": "source",
       "status": "live",
       "detail": {
-        "technical": "REST practice endpoint. MBA candles — mid, bid and ask in a single request — across H1, H4 and D1.",
+        "technical": "REST practice endpoint. MBA candles \u2014 mid, bid and ask in a single request \u2014 across H1, H4 and D1.",
         "plain": "The broker's price history feed. Where every number in the system originally comes from."
       }
     },
@@ -79,7 +79,7 @@
       "id": "s1-ingest",
       "column": "s1",
       "row": 0,
-      "label": "MODEL-001 · Ingest",
+      "label": "MODEL-001 \u00b7 Ingest",
       "kind": "process",
       "status": "live",
       "detail": {
@@ -91,7 +91,7 @@
       "id": "s1-features",
       "column": "s1",
       "row": 1,
-      "label": "MODEL-002 · Feature store",
+      "label": "MODEL-002 \u00b7 Feature store",
       "kind": "process",
       "status": "live",
       "detail": {
@@ -103,23 +103,23 @@
       "id": "s1-regime",
       "column": "s1",
       "row": 2,
-      "label": "MODEL-003 · Regimes",
+      "label": "MODEL-003 \u00b7 Regimes",
       "kind": "process",
       "status": "live",
       "detail": {
-        "technical": "Two labels exist, and only one is currently usable live. The HMM's `regime_causal` (4-state Gaussian, D1/H4/H1, K-Means fallback below 0.70, kappa ≥ 0.83) is the originally-designed label but is NULL on the newest rows, so nothing live routes on it. The system runs live on `regime_structural` (ADX + rolling ATR% z-score) from `regime/build_structural.py` — now (R2, 2026-09-05) the single place the label is computed, writing full history from a fixed anchor date into `fact_regime_structural`; every consumer reads that table rather than recomputing. As of Work Order 03 (active) the label is being re-derived with a per-time-of-day-slot volatility baseline to remove a diurnal-seasonality defect that mislabelled ~20-30% of H1/H4 bars.",
-        "plain": "Labels every moment of history as trending up, trending down, sideways or violent. The originally-designed detector goes blank on recent data, so a backup detector — measuring trend strength and how choppy prices are — is what actually drives live decisions today. That backup detector is mid-repair: it was comparing volatility at 3am to an average built from all hours of the day, which made quiet nights and busy afternoons look like different market regimes when the market itself hadn't changed."
+        "technical": "Two labels exist, and only one is currently usable live. The HMM's `regime_causal` (4-state Gaussian, D1/H4/H1, K-Means fallback below 0.70, kappa \u2265 0.83) is the originally-designed label but is NULL on the newest rows, so nothing live routes on it. The system runs live on `regime_structural` (ADX + rolling ATR% z-score) from `regime/build_structural.py` \u2014 now (R2, 2026-09-05) the single place the label is computed, writing full history from a fixed anchor date into `fact_regime_structural`; every consumer reads that table rather than recomputing. As of Work Order 03 (active) the label is being re-derived with a per-time-of-day-slot volatility baseline to remove a diurnal-seasonality defect that mislabelled ~20-30% of H1/H4 bars.",
+        "plain": "Labels every moment of history as trending up, trending down, sideways or violent. The originally-designed detector goes blank on recent data, so a backup detector \u2014 measuring trend strength and how choppy prices are \u2014 is what actually drives live decisions today. That backup detector is mid-repair: it was comparing volatility at 3am to an average built from all hours of the day, which made quiet nights and busy afternoons look like different market regimes when the market itself hadn't changed."
       }
     },
     {
       "id": "s1-outcomes",
       "column": "s1",
       "row": 3,
-      "label": "Backtest → outcomes",
+      "label": "Backtest \u2192 outcomes",
       "kind": "process",
       "status": "live",
       "detail": {
-        "technical": "`layer0/persist_trade_outcomes.py` runs each strategy on its declared `primary_granularity` and writes `fact_trade_outcomes` (55,756 rows). Destructive DELETE-then-rebuild — snapshot first.",
+        "technical": "`layer0/persist_trade_outcomes.py` runs each strategy on its declared `primary_granularity` and writes `fact_trade_outcomes` (55,756 rows). Destructive DELETE-then-rebuild \u2014 snapshot first.",
         "plain": "Replays every trading rule across all of history and writes down every trade it would have taken."
       }
     },
@@ -127,7 +127,7 @@
       "id": "s1-attrib",
       "column": "s1",
       "row": 4,
-      "label": "MODEL-004 · Attribution",
+      "label": "MODEL-004 \u00b7 Attribution",
       "kind": "process",
       "status": "live",
       "detail": {
@@ -139,35 +139,35 @@
       "id": "s1-vet",
       "column": "s1",
       "row": 5,
-      "label": "MODEL-005 · Vetting",
+      "label": "MODEL-005 \u00b7 Vetting",
       "kind": "process",
       "status": "degraded",
       "detail": {
-        "technical": "PF ≥ 1.5, Sharpe ≥ 0.8, MaxDD ≤ 25%, WinRate ≥ 40%, Recovery ≥ 3.0, **OOS ≥ 12mo** (lowered from 60 by owner decision 2026-08-21). `INTEGRITY_DISQUALIFIED` checked first, separately. **No minimum trade-count gate** — which is how 5-, 13- and 20-trade cells qualified. **The map's output is now under contract** (R1, `vetting/map_contract.py`, 2026-09-05): a published map states the label it was selected under, carries a 7-day expiry, and is inadmissible if its stated label disagrees with what the live path is actually routing on — every defect fails closed, never permissively. The live map expired **2026-08-24** and has not been replaced (Work Order 03, active, is fixing a diurnal-seasonality defect in the label before re-publishing), so **the system is not currently trading** — the contract working as designed, not a new failure.",
-        "plain": "The examiner. Six pass marks plus a blacklist for rules whose track record is known to be fiction. One mark was deliberately relaxed in August, and there has never been a rule about how many trades the evidence must rest on. A newer safety rule now also expires the examiner's report card after a week — and the current one has expired, so the system has stopped trading on it rather than keep using stale results."
+        "technical": "PF \u2265 1.5, Sharpe \u2265 0.8, MaxDD \u2264 25%, WinRate \u2265 40%, Recovery \u2265 3.0, **OOS \u2265 12mo** (lowered from 60 by owner decision 2026-08-21). `INTEGRITY_DISQUALIFIED` checked first, separately. **No minimum trade-count gate** \u2014 which is how 5-, 13- and 20-trade cells qualified. **The map's output is now under contract** (R1, `vetting/map_contract.py`, 2026-09-05): a published map states the label it was selected under, carries a 7-day expiry, and is inadmissible if its stated label disagrees with what the live path is actually routing on \u2014 every defect fails closed, never permissively. The live map expired **2026-08-24** and has not been replaced (Work Order 03, active, is fixing a diurnal-seasonality defect in the label before re-publishing), so **the system is not currently trading** \u2014 the contract working as designed, not a new failure.",
+        "plain": "The examiner. Six pass marks plus a blacklist for rules whose track record is known to be fiction. One mark was deliberately relaxed in August, and there has never been a rule about how many trades the evidence must rest on. A newer safety rule now also expires the examiner's report card after a week \u2014 and the current one has expired, so the system has stopped trading on it rather than keep using stale results."
       }
     },
     {
       "id": "s1-gate",
       "column": "s1",
       "row": 6,
-      "label": "MODEL-006 · Gatekeeper (shadow)",
+      "label": "MODEL-006 \u00b7 Gatekeeper (shadow)",
       "kind": "process",
       "status": "degraded",
       "detail": {
-        "technical": "XGBoost on causal-regime features, expanding-window walk-forward, per-regime thresholds, bootstrap-significant OOS uplift required. **It scores live but does not gate**: `Scorer` never loads its own manifest, so the calibrated cutoffs (0.60–0.80) are never read at inference and the caller stamps a hardcoded 0.5. Enforcing them would refuse 14 of 15 live map cells, so the gate runs in shadow — verdict recorded, never applied. FIX-S1-018. **Deeper finding (Work Order 04 Phase 1, 2026-09-08):** the deployed champion is 95.5% degenerate on (strategy × regime) cells — `strategy_id` carries 96.78% of gain importance, the regime feature 0.21%. It discriminates on which strategy fired, not on market state, and predates this month's regime-label work. Retraining is currently refused by the same guard (`MAX_DEGENERATE_CELL_SHARE`), correctly. Fix (Phase 2) is blocked on the regime label settling.",
-        "plain": "Trains the referee that vetoes individual trades. The referee does watch every live signal and forms an opinion — but nobody is currently listening to it. Its verdicts are written down so we can measure what obeying them would cost, which turns out to be about 93% of all signals. A closer look found the referee itself has a deeper problem: it isn't really reading the market's mood at all, it has memorised which strategy is speaking and answers based on that. The safety check that would catch a broken retrain is refusing to let a new version through until that's fixed."
+        "technical": "XGBoost on causal-regime features, expanding-window walk-forward, per-regime thresholds, bootstrap-significant OOS uplift required. **It scores live but does not gate**: `Scorer` never loads its own manifest, so the calibrated cutoffs (0.60\u20130.80) are never read at inference and the caller stamps a hardcoded 0.5. Enforcing them would refuse 14 of 15 live map cells, so the gate runs in shadow \u2014 verdict recorded, never applied. FIX-S1-018. **Deeper finding (Work Order 04 Phase 1, 2026-09-08):** the deployed champion is 95.5% degenerate on (strategy \u00d7 regime) cells \u2014 `strategy_id` carries 96.78% of gain importance, the regime feature 0.21%. It discriminates on which strategy fired, not on market state, and predates this month's regime-label work. Retraining is currently refused by the same guard (`MAX_DEGENERATE_CELL_SHARE`), correctly. Fix (Phase 2) is blocked on the regime label settling.",
+        "plain": "Trains the referee that vetoes individual trades. The referee does watch every live signal and forms an opinion \u2014 but nobody is currently listening to it. Its verdicts are written down so we can measure what obeying them would cost, which turns out to be about 93% of all signals. A closer look found the referee itself has a deeper problem: it isn't really reading the market's mood at all, it has memorised which strategy is speaking and answers based on that. The safety check that would catch a broken retrain is refusing to let a new version through until that's fixed."
       }
     },
     {
       "id": "s1-pub",
       "column": "s1",
       "row": 7,
-      "label": "MODEL-007 · Publish",
+      "label": "MODEL-007 \u00b7 Publish",
       "kind": "process",
       "status": "live",
       "detail": {
-        "technical": "Immutable versioned prefix → secret scan → SHA256 round-trip verify → **then** atomic `latest.json` flip. Superseded pointer archived to `previous.json`.",
+        "technical": "Immutable versioned prefix \u2192 secret scan \u2192 SHA256 round-trip verify \u2192 **then** atomic `latest.json` flip. Superseded pointer archived to `previous.json`.",
         "plain": "Seals the box, re-checks the seal after shipping, and only then updates the sign saying which box is current."
       }
     },
@@ -175,12 +175,12 @@
       "id": "s1-queue",
       "column": "s1",
       "row": 8,
-      "label": "MODEL-008 · Signal producer",
+      "label": "MODEL-008 \u00b7 Signal producer",
       "kind": "process",
       "status": "degraded",
       "detail": {
-        "technical": "`src/signals/` + `queue_producer/producer.py`. Schema-validated, idempotent by `message_id`, backpressure + DLQ. Repaired 2026-08-22 (FIX-S1-016) after never having emitted a message. `QUEUE_PROVIDER=pubsub`. **Cadence fixed 2026-08-2x**: hourly cron, 24 runs/day — no longer the once-a-night bottleneck. Proven end to end 2026-09-03: 9 signals published, acked and decided at System 3, 3 became real OANDA orders — all three lost (-70.19 / -10.77 / -83.56 CAD) and tripped System 3's circuit breaker, still open (`reset_at` null) as of 2026-09-03. **Currently quiet**: last emission 2026-09-04T21:15Z, before `map_contract.py`'s admissibility check (R1, 2026-09-05) began refusing on the expired live map — see the vetting node. **ADR-001 (accepted 2026-08-22, not built) would eventually remove this component entirely; blocked on schema v2 reconciliation.**",
-        "plain": "Posts each scored trade idea to a real cloud postbox. Until 2026-08-22 it had never successfully posted anything at all. The once-a-night bottleneck is fixed — it now runs every hour — and a real end-to-end run produced three actual trades. It has gone quiet since 2026-09-04, not because it broke again, but because a newer safety check now refuses to post using an out-of-date rulebook, and the rulebook is out of date."
+        "technical": "`src/signals/` + `queue_producer/producer.py`. Schema-validated, idempotent by `message_id`, backpressure + DLQ. Repaired 2026-08-22 (FIX-S1-016) after never having emitted a message. `QUEUE_PROVIDER=pubsub`. **Cadence fixed 2026-08-2x**: hourly cron, 24 runs/day \u2014 no longer the once-a-night bottleneck. Proven end to end 2026-09-03: 9 signals published, acked and decided at System 3, 3 became real OANDA orders \u2014 all three lost (-70.19 / -10.77 / -83.56 CAD) and tripped System 3's circuit breaker, still open (`reset_at` null) as of 2026-09-03. **Currently quiet**: last emission 2026-09-04T21:15Z, before `map_contract.py`'s admissibility check (R1, 2026-09-05) began refusing on the expired live map \u2014 see the vetting node. **ADR-001 (accepted 2026-08-22, not built) would eventually remove this component entirely; blocked on schema v2 reconciliation.**",
+        "plain": "Posts each scored trade idea to a real cloud postbox. Until 2026-08-22 it had never successfully posted anything at all. The once-a-night bottleneck is fixed \u2014 it now runs every hour \u2014 and a real end-to-end run produced three actual trades. It has gone quiet since 2026-09-04, not because it broke again, but because a newer safety check now refuses to post using an out-of-date rulebook, and the rulebook is out of date."
       }
     },
     {
@@ -191,7 +191,7 @@
       "kind": "store",
       "status": "live",
       "detail": {
-        "technical": "One durable NDJSON row per candidate at every gatekeeper exit — scored, unscored, or dropped for a corrupt feature — fsync'd before the message is published. Pairs `model_score` with `threshold_calibrated` and a `shadow_verdict`, and `gatekeeper_model_sha256` with `bundle_id`. Uploaded hourly to `telemetry/signals/` as immutable per-run objects.",
+        "technical": "One durable NDJSON row per candidate at every gatekeeper exit \u2014 scored, unscored, or dropped for a corrupt feature \u2014 fsync'd before the message is published. Pairs `model_score` with `threshold_calibrated` and a `shadow_verdict`, and `gatekeeper_model_sha256` with `bundle_id`. Uploaded hourly to `telemetry/signals/` as immutable per-run objects.",
         "plain": "The logbook. Before a signal is sent anywhere, one line is written down recording what the referee scored it, what the cut-off would have been, and whether it went out. Dropped candidates used to vanish entirely; now they leave a row."
       }
     },
@@ -199,12 +199,12 @@
       "id": "s1-orch",
       "column": "s1",
       "row": 9.6,
-      "label": "MODEL-009 · Orchestrator",
+      "label": "MODEL-009 \u00b7 Orchestrator",
       "kind": "control",
       "status": "live",
       "detail": {
-        "technical": "Triggers: Sunday 00:00 UTC, low Sharpe, circuit breaker. Single-flight lock, cooldown, gated pipeline, atomic promote only if gates pass **and** it beats the incumbent read from the storage backend. The single governed writer of the champion bundle. **Re-enabled 2026-09-03** after a hold Computer 2 had requested; `MODEL_SET_AUTOPUBLISH` stays unset, so a governed run still cannot flip the top-level pointer System 2 reads without a human step. Currently **cannot retrain the gatekeeper at all** — the per-cell degeneracy guard correctly refuses (see the Gatekeeper node); this does not block trading on its own, since a new System 1 bundle can still pair with the existing gatekeeper pointer.",
-        "plain": "The foreman. Decides when to retrain, refuses to run two at once, and only swaps the live model if the new one is genuinely better. It was switched back on this month after being paused at another system's request. Right now it cannot produce a new referee model at all — a safety check correctly keeps refusing the result — but that alone doesn't stop trading, because a fresh set of trading rules can still ship paired with the referee model already in use."
+        "technical": "Triggers: Sunday 00:00 UTC, low Sharpe, circuit breaker. Single-flight lock, cooldown, gated pipeline, atomic promote only if gates pass **and** it beats the incumbent read from the storage backend. The single governed writer of the champion bundle. **Re-enabled 2026-09-03** after a hold Computer 2 had requested; `MODEL_SET_AUTOPUBLISH` stays unset, so a governed run still cannot flip the top-level pointer System 2 reads without a human step. Currently **cannot retrain the gatekeeper at all** \u2014 the per-cell degeneracy guard correctly refuses (see the Gatekeeper node); this does not block trading on its own, since a new System 1 bundle can still pair with the existing gatekeeper pointer.",
+        "plain": "The foreman. Decides when to retrain, refuses to run two at once, and only swaps the live model if the new one is genuinely better. It was switched back on this month after being paused at another system's request. Right now it cannot produce a new referee model at all \u2014 a safety check correctly keeps refusing the result \u2014 but that alone doesn't stop trading, because a fresh set of trading rules can still ship paired with the referee model already in use."
       }
     },
     {
@@ -227,8 +227,8 @@
       "kind": "queue",
       "status": "live",
       "detail": {
-        "technical": "Pub/Sub topic, S1 → S3. System 1's service account is still **publisher-only** and cannot list topics or subscriptions itself, but the other side is no longer unconfirmed: System 3's 2026-09-03 written reply confirms 9 of 9 signals published this run were acked and decided, 3 became real OANDA orders (all three lost, tripping System 3's circuit breaker — still open). Proven end to end, not merely published into.",
-        "plain": "The pipe carrying trade ideas to the risk officer. This used to be a one-sided claim — letters going in, nobody able to see if they were collected. That has since been confirmed in writing from the other end: they were collected, decided on, and three became real trades — which then lost money, as three real trades sometimes will, and tripped a safety breaker that is still tripped."
+        "technical": "Pub/Sub topic, S1 \u2192 S3. System 1's service account is still **publisher-only** and cannot list topics or subscriptions itself, but the other side is no longer unconfirmed: System 3's 2026-09-03 written reply confirms 9 of 9 signals published this run were acked and decided, 3 became real OANDA orders (all three lost, tripping System 3's circuit breaker \u2014 still open). Proven end to end, not merely published into.",
+        "plain": "The pipe carrying trade ideas to the risk officer. This used to be a one-sided claim \u2014 letters going in, nobody able to see if they were collected. That has since been confirmed in writing from the other end: they were collected, decided on, and three became real trades \u2014 which then lost money, as three real trades sometimes will, and tripped a safety breaker that is still tripped."
       }
     },
     {
@@ -247,12 +247,12 @@
       "id": "s3-gate",
       "column": "s3",
       "row": 6,
-      "label": "Decision gate — P·Q·A·S·B–J",
+      "label": "Decision gate \u2014 P\u00b7Q\u00b7A\u00b7S\u00b7B\u2013J",
       "kind": "process",
       "status": "live",
       "detail": {
-        "technical": "Thirteen sequential short-circuiting layers, not ten: `P` provenance, `Q` quarantine, `A` state, `S` account-truth freshness, `B`–`G`, sizing, `H` Friday-cutoff duration, `I` calendar, `J` final sanity and assembly. Pure functions over pre-resolved scalars in `gate/layers.py`. 4,153 decisions logged, 0.75 ms mean latency, 421 ms max.",
-        "plain": "The line of checkpoints a trade idea has to walk past. It is built, it is running, and it has already turned down four thousand ideas — one thousandth of a second each."
+        "technical": "Thirteen sequential short-circuiting layers, not ten: `P` provenance, `Q` quarantine, `A` state, `S` account-truth freshness, `B`\u2013`G`, sizing, `H` Friday-cutoff duration, `I` calendar, `J` final sanity and assembly. Pure functions over pre-resolved scalars in `gate/layers.py`. 4,153 decisions logged, 0.75 ms mean latency, 421 ms max.",
+        "plain": "The line of checkpoints a trade idea has to walk past. It is built, it is running, and it has already turned down four thousand ideas \u2014 one thousandth of a second each."
       }
     },
     {
@@ -263,7 +263,7 @@
       "kind": "control",
       "status": "live",
       "detail": {
-        "technical": "DEMO → ACTIVE → CAUTION → PAUSED → CIRCUIT_BROKEN → RECOVERY, persisted in `ams_account_state` and written before any approval is published. Currently RECOVERY at stage `paper`, 4.85% below an 88,294.53 equity peak.",
+        "technical": "DEMO \u2192 ACTIVE \u2192 CAUTION \u2192 PAUSED \u2192 CIRCUIT_BROKEN \u2192 RECOVERY, persisted in `ams_account_state` and written before any approval is published. Currently RECOVERY at stage `paper`, 4.85% below an 88,294.53 equity peak.",
         "plain": "The account's mood, written to disk before anything acts on it. Right now it is in recovery at the smallest size, which is why almost everything gets refused at the first checkpoint."
       }
     },
@@ -275,7 +275,7 @@
       "kind": "store",
       "status": "live",
       "detail": {
-        "technical": "`DB_PROVIDER=sqlite`, `DB_PATH=state/db/ams.db`. **Not PostgreSQL** — the design called for a local Postgres on a dedicated Computer 3 and neither exists. Postgres is supported via `DB_PROVIDER=postgres` plus `DB_DSN` and has never been provisioned. SQLite has carried 4,153 decisions without loss.",
+        "technical": "`DB_PROVIDER=sqlite`, `DB_PATH=state/db/ams.db`. **Not PostgreSQL** \u2014 the design called for a local Postgres on a dedicated Computer 3 and neither exists. Postgres is supported via `DB_PROVIDER=postgres` plus `DB_DSN` and has never been provisioned. SQLite has carried 4,153 decisions without loss.",
         "plain": "The risk officer's memory. It was supposed to be a proper database on its own machine; it is actually a single file on a shared one. It has not lost anything, but it is not what was designed."
       }
     },
@@ -287,7 +287,7 @@
       "kind": "queue",
       "status": "degraded",
       "detail": {
-        "technical": "Pub/Sub topic, S3 → S2, carrying approved and already-sized orders. Existence and subscription names are unverified — System 1 is blind to this link and System 3 has been asked to name it in writing.",
+        "technical": "Pub/Sub topic, S3 \u2192 S2, carrying approved and already-sized orders. Existence and subscription names are unverified \u2014 System 1 is blind to this link and System 3 has been asked to name it in writing.",
         "plain": "The pipe carrying finished instructions to the hands. Nobody has yet confirmed in writing that it exists or who is listening to it."
       }
     },
@@ -299,7 +299,7 @@
       "kind": "queue",
       "status": "degraded",
       "detail": {
-        "technical": "Pub/Sub topic, S2 → S3: fills, partial fills, rejections and closes. Unverified, same blindness as the outbound link.",
+        "technical": "Pub/Sub topic, S2 \u2192 S3: fills, partial fills, rejections and closes. Unverified, same blindness as the outbound link.",
         "plain": "The pipe reporting back what actually happened at the broker. Also unconfirmed."
       }
     },
@@ -323,8 +323,8 @@
       "kind": "process",
       "status": "degraded",
       "detail": {
-        "technical": "Forward-only HMM inference with causal persistence smoothing, 16 instrument/granularity cells. **Degraded:** `load_bundle` returns early while a bundle is cached and nothing forces a reload, so inference is pinned to whichever set was active at process start — currently `2026-08-17T09-28-46Z-d593220a`, two swaps behind `active`. `/status` reports the downloader's id, so the divergence is invisible there.",
-        "plain": "Works out what kind of market it is right now, and does it well — but it picked up its rulebook when it started and has never checked for a newer one, so it is five days out of date and the status screen shows the new number rather than the one in use."
+        "technical": "Forward-only HMM inference with causal persistence smoothing, 16 instrument/granularity cells. **Degraded:** `load_bundle` returns early while a bundle is cached and nothing forces a reload, so inference is pinned to whichever set was active at process start \u2014 currently `2026-08-17T09-28-46Z-d593220a`, two swaps behind `active`. `/status` reports the downloader's id, so the divergence is invisible there.",
+        "plain": "Works out what kind of market it is right now, and does it well \u2014 but it picked up its rulebook when it started and has never checked for a newer one, so it is five days out of date and the status screen shows the new number rather than the one in use."
       }
     },
     {
@@ -335,7 +335,7 @@
       "kind": "process",
       "status": "live",
       "detail": {
-        "technical": "FastAPI on :8002 — `/status`, `/health`, `/regime`, `/signal`. Read-only. `gatekeeper` reports `unavailable — no approval-rate provider wired` rather than a false all-clear, and `/signal` returns `removed`: local signal production was deleted on 2026-08-15.",
+        "technical": "FastAPI on :8002 \u2014 `/status`, `/health`, `/regime`, `/signal`. Read-only. `gatekeeper` reports `unavailable \u2014 no approval-rate provider wired` rather than a false all-clear, and `/signal` returns `removed`: local signal production was deleted on 2026-08-15.",
         "plain": "The screen you look at. You cannot trade from it. Where it has no real number it says so rather than showing a comforting one."
       }
     },
@@ -343,7 +343,7 @@
       "id": "s2-consumer",
       "column": "s2",
       "row": 6,
-      "label": "Order consumer — ams-outbound.executor",
+      "label": "Order consumer \u2014 ams-outbound.executor",
       "kind": "process",
       "status": "blocked",
       "detail": {
@@ -355,7 +355,7 @@
       "id": "s2-broker",
       "column": "s2",
       "row": 7.2,
-      "label": "OANDA adapter — SHADOW",
+      "label": "OANDA adapter \u2014 SHADOW",
       "kind": "process",
       "status": "blocked",
       "detail": {
@@ -403,23 +403,23 @@
       "id": "s3-relay",
       "column": "s3",
       "row": 5.2,
-      "label": "Pub/Sub → local relay",
+      "label": "Pub/Sub \u2192 local relay",
       "kind": "process",
       "status": "live",
       "detail": {
         "technical": "`s3-signal-relay.service` runs `scripts/pubsub_signal_relay.py`: pulls `scored_signal_queue_sub`, validates against `contracts/v1/ScoredSignal.schema.json`, writes to the local topic `scored-signals.ams`, and acks **only after** the local write succeeds. Up since 2026-08-17; 13,020 pull requests in the last 24 hours. It exists because `build_queue()` returns one backend for every topic, so moving System 3 to Pub/Sub wholesale would also move its outbound leg somewhere nothing downstream reads.",
-        "plain": "The one thing actually standing at the cloud mailbox. It collects post, checks it is well-formed, files it locally, and only then signs for it — so a crash means the letter is redelivered rather than lost."
+        "plain": "The one thing actually standing at the cloud mailbox. It collects post, checks it is well-formed, files it locally, and only then signs for it \u2014 so a crash means the letter is redelivered rather than lost."
       }
     },
     {
       "id": "s2-bridge",
       "column": "s2",
       "row": 5.2,
-      "label": "S2↔S3 bridge + snapshot relay",
+      "label": "S2\u2194S3 bridge + snapshot relay",
       "kind": "process",
       "status": "live",
       "detail": {
-        "technical": "`s2s3-bridge.service`. Translates System 3's `ApprovedOrder` shape onto the wire shape System 2's EXEC-004 consumer validates, and System 2's enveloped fill confirmations onto System 3's flat `FillEvent`. Untranslatable-but-valid traffic is parked on `bridge.unrouted`; anything carrying a broker outcome is dead-lettered instead, never parked. It also publishes the AccountSnapshot every ~60 s, because System 2's built EXEC tasks contain no snapshot producer — reading System 2's credential, so System 3 never sees the broker key.",
+        "technical": "`s2s3-bridge.service`. Translates System 3's `ApprovedOrder` shape onto the wire shape System 2's EXEC-004 consumer validates, and System 2's enveloped fill confirmations onto System 3's flat `FillEvent`. Untranslatable-but-valid traffic is parked on `bridge.unrouted`; anything carrying a broker outcome is dead-lettered instead, never parked. It also publishes the AccountSnapshot every ~60 s, because System 2's built EXEC tasks contain no snapshot producer \u2014 reading System 2's credential, so System 3 never sees the broker key.",
         "plain": "A translator between two finished systems that were built to slightly different specifications. It also does one job neither of them does: telling the risk officer what the account is worth, every minute."
       }
     }
@@ -549,7 +549,7 @@
       "id": "e-pub-gcs",
       "from": "s1-pub",
       "to": "gcs",
-      "label": "verify → pointer flip last",
+      "label": "verify \u2192 pointer flip last",
       "kind": "artifact",
       "status": "live"
     },
@@ -565,7 +565,7 @@
       "id": "e-gcs-s2",
       "from": "gcs",
       "to": "s2-sync",
-      "label": "latest.json poll, 300 s — verified 2026-08-21",
+      "label": "latest.json poll, 300 s \u2014 verified 2026-08-21",
       "kind": "artifact",
       "status": "live"
     },
@@ -581,7 +581,7 @@
       "id": "e-signal-s3",
       "from": "q-signal",
       "to": "s3-relay",
-      "label": "scored_signal_queue_sub — proven 2026-09-03: 9/9 received, decided, 3 became orders",
+      "label": "scored_signal_queue_sub \u2014 proven 2026-09-03: 9/9 received, decided, 3 became orders",
       "kind": "message",
       "status": "live"
     },
@@ -605,7 +605,7 @@
       "id": "e-gate-out",
       "from": "s3-gate",
       "to": "q-out",
-      "label": "approved + sized order → ams-outbound",
+      "label": "approved + sized order \u2192 ams-outbound",
       "kind": "order",
       "status": "live"
     },
@@ -621,7 +621,7 @@
       "id": "e-out-s2",
       "from": "s2-bridge",
       "to": "s2-consumer",
-      "label": "ams-outbound.executor — 5,587 stranded, S2 on the wrong file",
+      "label": "ams-outbound.executor \u2014 5,587 stranded, S2 on the wrong file",
       "kind": "order",
       "status": "blocked"
     },
@@ -629,7 +629,7 @@
       "id": "e-sync-regime",
       "from": "s2-sync",
       "to": "s2-regime",
-      "label": "verified cache — never re-read after a swap",
+      "label": "verified cache \u2014 never re-read after a swap",
       "kind": "artifact",
       "status": "degraded"
     },
@@ -645,7 +645,7 @@
       "id": "e-consumer-broker",
       "from": "s2-consumer",
       "to": "s2-broker",
-      "label": "validated intent — no production traffic yet",
+      "label": "validated intent \u2014 no production traffic yet",
       "kind": "order",
       "status": "degraded"
     },
@@ -653,7 +653,7 @@
       "id": "e-broker-market",
       "from": "s2-broker",
       "to": "market",
-      "label": "SHADOW — constructed, never submitted (D-004 pending)",
+      "label": "SHADOW \u2014 constructed, never submitted (D-004 pending)",
       "kind": "order",
       "status": "blocked"
     },
@@ -661,7 +661,7 @@
       "id": "e-market-broker",
       "from": "market",
       "to": "s2-broker",
-      "label": "fills, rejections — none in SHADOW",
+      "label": "fills, rejections \u2014 none in SHADOW",
       "kind": "data",
       "status": "degraded"
     },
@@ -693,7 +693,7 @@
       "id": "e-broker-in",
       "from": "s2-broker",
       "to": "q-in",
-      "label": "fill confirmation → ams-inbound — no fills yet",
+      "label": "fill confirmation \u2192 ams-inbound \u2014 no fills yet",
       "kind": "message",
       "status": "degraded"
     },
@@ -701,7 +701,7 @@
       "id": "e-in-state",
       "from": "q-in",
       "to": "s3-state",
-      "label": "AccountSnapshot + fills — 2,601 reconciled",
+      "label": "AccountSnapshot + fills \u2014 2,601 reconciled",
       "kind": "message",
       "status": "live"
     },
@@ -709,7 +709,7 @@
       "id": "e-journal-orch",
       "from": "s3-journal",
       "to": "s1-orch",
-      "label": "decay verdicts — built locally, not exported",
+      "label": "decay verdicts \u2014 built locally, not exported",
       "kind": "control",
       "status": "planned"
     },
@@ -725,7 +725,7 @@
       "id": "e-journal-op",
       "from": "s3-journal",
       "to": "operator",
-      "label": "Telegram only — SMTP unconfigured",
+      "label": "Telegram only \u2014 SMTP unconfigured",
       "kind": "data",
       "status": "degraded"
     },
@@ -735,7 +735,7 @@
       "to": "s3-gate",
       "kind": "message",
       "status": "live",
-      "label": "scored-signals.ams — ack after local write"
+      "label": "scored-signals.ams \u2014 ack after local write"
     },
     {
       "id": "e-out-bridge",
@@ -743,7 +743,7 @@
       "to": "s2-bridge",
       "kind": "order",
       "status": "live",
-      "label": "ams-outbound → translate"
+      "label": "ams-outbound \u2192 translate"
     },
     {
       "id": "e-bridge-in",
@@ -773,7 +773,7 @@
   "flows": [
     {
       "id": "research",
-      "name": "Price history → sealed model",
+      "name": "Price history \u2192 sealed model",
       "edges": [
         "e-price",
         "e-prices-feat",
@@ -793,7 +793,7 @@
     },
     {
       "id": "signal",
-      "name": "Signal → risk gate → broker",
+      "name": "Signal \u2192 risk gate \u2192 broker",
       "edges": [
         "e-gate-queue",
         "e-queue-ledger",
@@ -806,12 +806,12 @@
         "e-consumer-broker",
         "e-broker-market"
       ],
-      "technical": "The live path. Every candidate is scored, written to the Gate-1 ledger **before** anything is published, and then crossed to System 3, evaluated against the ten-layer gate with account state as context, and — if approved — sized once and published as an order System 2 executes verbatim. Note what is NOT on this path: System 1's own gatekeeper threshold. It scores and records a verdict, but does not veto, so today every scorable signal reaches System 3 regardless of that score.",
-      "plain": "How a trade idea becomes a real trade. Before anything is sent, the idea is written into a logbook along with what System 1's referee thought of it. Then it has to survive ten checkpoints on another machine, get an amount attached exactly once, and be carried out without alteration. The first referee's opinion is currently recorded but not enforced — it stops nothing."
+      "technical": "The live path. Every candidate is scored, written to the Gate-1 ledger **before** anything is published, and then crossed to System 3, evaluated against the ten-layer gate with account state as context, and \u2014 if approved \u2014 sized once and published as an order System 2 executes verbatim. Note what is NOT on this path: System 1's own gatekeeper threshold. It scores and records a verdict, but does not veto, so today every scorable signal reaches System 3 regardless of that score.",
+      "plain": "How a trade idea becomes a real trade. Before anything is sent, the idea is written into a logbook along with what System 1's referee thought of it. Then it has to survive ten checkpoints on another machine, get an amount attached exactly once, and be carried out without alteration. The first referee's opinion is currently recorded but not enforced \u2014 it stops nothing."
     },
     {
       "id": "feedback",
-      "name": "Fill → account state → retrain",
+      "name": "Fill \u2192 account state \u2192 retrain",
       "edges": [
         "e-market-broker",
         "e-broker-in",
@@ -820,8 +820,8 @@
         "e-state-journal",
         "e-journal-orch"
       ],
-      "technical": "The only feedback path from live results into model building. Fills reconcile the account state machine against reality; the decay auditor detects sustained divergence from backtested expectation and raises a retrain trigger. Deliberately narrow — nothing else about live trading influences research.",
-      "plain": "The loop that closes. What actually happened at the broker is reported back, the account's running tally is updated, and if a strategy stops working in real life the research lab is told to think again. This is the only thread from reality back into the models — kept thin on purpose, so the research cannot start chasing recent luck."
+      "technical": "The only feedback path from live results into model building. Fills reconcile the account state machine against reality; the decay auditor detects sustained divergence from backtested expectation and raises a retrain trigger. Deliberately narrow \u2014 nothing else about live trading influences research.",
+      "plain": "The loop that closes. What actually happened at the broker is reported back, the account's running tally is updated, and if a strategy stops working in real life the research lab is told to think again. This is the only thread from reality back into the models \u2014 kept thin on purpose, so the research cannot start chasing recent luck."
     },
     {
       "id": "artifacts",
@@ -837,14 +837,14 @@
     },
     {
       "id": "adr001",
-      "name": "ADR-001 — the proposed change",
+      "name": "ADR-001 \u2014 the proposed change",
       "edges": [
         "e-gcs-s2",
         "e-sync-regime",
         "e-consumer-broker",
         "e-broker-market"
       ],
-      "technical": "Under ADR-001 the highlighted path replaces the signal producer: System 2 syncs a bundle that carries the strategy code, runs inference locally at bar close, and submits its own scored signals to System 3. System 1 keeps only the artifact hop and loses every live responsibility. **ACCEPTED 2026-08-22** — both Systems 2 and 3 replied approve-with-conditions. **Not built.** Gated on reconciling the System 1 / System 3 signal-schema incompatibility (mutually exclusive field names, both `additionalProperties: false`) before the Build step can start.",
+      "technical": "Under ADR-001 the highlighted path replaces the signal producer: System 2 syncs a bundle that carries the strategy code, runs inference locally at bar close, and submits its own scored signals to System 3. System 1 keeps only the artifact hop and loses every live responsibility. **ACCEPTED 2026-08-22** \u2014 both Systems 2 and 3 replied approve-with-conditions. **Not built.** Gated on reconciling the System 1 / System 3 signal-schema incompatibility (mutually exclusive field names, both `additionalProperties: false`) before the Build step can start.",
       "plain": "The change already agreed on but not yet built. Instead of the research machine posting trade ideas each night, the execution machine would run the shipped model itself, the moment each bar closes. Both other machines said yes, with conditions. The research machine is still doing the job today because a smaller, unrelated compatibility problem between two message formats has to be fixed first."
     }
   ],
