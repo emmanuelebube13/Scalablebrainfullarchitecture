@@ -1,0 +1,333 @@
+{
+  "schema_version": "1.0",
+  "week": "2026-W44",
+  "task_folder": "2026-October-week4",
+  "start": "2026-10-26",
+  "end": "2026-10-31",
+  "as_of": "2026-10-25",
+  "goal": "Decide what December live trading will run on: put the surviving edge leads to the test, wire FinBERT and an LLM gate in **shadow only**, and list what Systems 1, 2 and 3 must change before real money.",
+  "context": [
+    "22 parameter searches: 0 PASS. Combined book Sharpe −1.86 — single-pair technical rules are exhausted.",
+    "NAV ≈ 80.3k against 100k paid in. The gatekeeper is miscalibrated (Brier 0.348 vs a 0.230 base rate).",
+    "Leads still standing: vol_managed_carry, post_fomc_drift, weak_voters_committee, month-end (H-04), value (H-09), and the inside_bar_continuation NEAR.",
+    "FinBERT can run today: `venv-s1` already has torch and transformers; only the model weights need downloading. No venv has an LLM SDK, but plain HTTP calls need no install."
+  ],
+  "fixed_dates": [
+    {
+      "date": "2026-10-27",
+      "text": "FOMC meeting begins (two-day meeting; confirm on the Fed calendar)"
+    },
+    {
+      "date": "2026-10-28",
+      "text": "FOMC decision, 14:00 New York"
+    },
+    {
+      "date": "2026-10-29",
+      "text": "One-off forced retrain at 20:05 local — owner must be logged in"
+    },
+    {
+      "date": "2026-10-30",
+      "text": "Current model map expires 11:24 UTC · month-end"
+    },
+    {
+      "date": "2026-10-31",
+      "text": "Weekly research job 10:00 · US clocks change Sun 1 Nov (Europe changed 25 Oct)"
+    }
+  ],
+  "days": [
+    {
+      "date": "2026-10-26",
+      "theme": "Baseline and guardrails",
+      "goal": "Start the week with a true picture of the system and a December readiness register.",
+      "plan": "Health check first, then write down what live-ready means per system — as work items, not evidence thresholds. When to go live stays the owner's call.",
+      "tasks": [
+        {
+          "id": "W44-MON-1",
+          "system": "ops",
+          "status": "todo",
+          "title": "Health check: `keep_designations.log`, S1 signal flow, trade journal sync, Performance view figures"
+        },
+        {
+          "id": "W44-MON-2",
+          "system": "system-1",
+          "status": "todo",
+          "title": "Verify the rollover rule and session logic (New York time) through the EU/US clock-offset week"
+        },
+        {
+          "id": "W44-MON-3",
+          "system": "system-1",
+          "status": "todo",
+          "title": "Fix the research harness's missing stop-distance floor (a 2.2e-16 stop produced −2e12 R)"
+        },
+        {
+          "id": "W44-MON-4",
+          "system": "ops",
+          "status": "todo",
+          "title": "Write `DECEMBER-READINESS.md`: one section each for S1, S2, S3, dashboard and operations"
+        },
+        {
+          "id": "W44-MON-5",
+          "system": "system-1",
+          "status": "todo",
+          "title": "Freeze this week's edge shortlist and assign card ids"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-27",
+      "theme": "Edge — work the live leads",
+      "goal": "Every surviving lead leaves the day with a forward-test plan or a KILL.",
+      "plan": "Pre-registered cards only. No new technical-indicator searches — that avenue is exhausted.",
+      "tasks": [
+        {
+          "id": "W44-TUE-1",
+          "system": "system-1",
+          "status": "todo",
+          "title": "Review the SHADOW forward records for carry, post-FOMC drift and the committee"
+        },
+        {
+          "id": "W44-TUE-2",
+          "system": "system-1",
+          "status": "todo",
+          "title": "Register inside_bar_continuation as a fresh pre-registered test, not a candidate"
+        },
+        {
+          "id": "W44-TUE-3",
+          "system": "system-1",
+          "status": "todo",
+          "title": "Prepare the month-end card (H-04) to observe Friday's month-end"
+        },
+        {
+          "id": "W44-TUE-4",
+          "system": "system-1",
+          "status": "todo",
+          "title": "Pre-register exactly what post_fomc_drift should do after Wednesday's decision"
+        },
+        {
+          "id": "W44-TUE-5",
+          "system": "system-1",
+          "status": "todo",
+          "title": "Brief: \"making an edge\" — a diversified book of weak signals, and what it can realistically show by December"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-28",
+      "theme": "FinBERT on central-bank text (FOMC day)",
+      "goal": "A working FinBERT pipeline scoring central-bank statements into `ext.doc_score`.",
+      "plan": "The research report found FinBERT fails on headlines but may work on central-bank text, so only central-bank text goes in. Research only — no path to a trade.",
+      "tasks": [
+        {
+          "id": "W44-WED-1",
+          "system": "system-1",
+          "status": "todo",
+          "title": "Download the FinBERT weights and run it from `venv-s1` (no pip installs)"
+        },
+        {
+          "id": "W44-WED-2",
+          "system": "system-1",
+          "status": "todo",
+          "title": "Collect past FOMC statements (free, from the Fed) and score them: hawk/dove plus probabilities"
+        },
+        {
+          "id": "W44-WED-3",
+          "system": "system-1",
+          "status": "todo",
+          "title": "Score today's statement within minutes of its release"
+        },
+        {
+          "id": "W44-WED-4",
+          "system": "system-1",
+          "status": "todo",
+          "title": "Hypothesis card: central-bank tone → pair drift; backtest on 2007–2022 only"
+        },
+        {
+          "id": "W44-WED-5",
+          "system": "system-1",
+          "status": "todo",
+          "title": "Decide whether the ECB and BoE come next"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-29",
+      "theme": "LLM gate design and the gatekeeper decision",
+      "goal": "An approved design for a veto-only LLM gate that runs in shadow.",
+      "plan": "Treat it exactly like the gatekeeper: every signal gets a logged verdict (approve, veto, reason), verdicts are measured against outcomes, and it is never switched on until the data shows it helps.",
+      "tasks": [
+        {
+          "id": "W44-THU-1",
+          "system": "system-3",
+          "status": "todo",
+          "title": "Decide where the gate sits — recommended: a shadow layer in S3, after Guardian approval and before S2 submits"
+        },
+        {
+          "id": "W44-THU-2",
+          "system": "system-3",
+          "status": "todo",
+          "title": "Define the gate's inputs: the signal, FinBERT tone, the calendar, open positions"
+        },
+        {
+          "id": "W44-THU-3",
+          "system": "system-3",
+          "status": "todo",
+          "title": "Fix the prompt as a contract; set the cost and latency budget; decide fail-open vs fail-closed"
+        },
+        {
+          "id": "W44-THU-4",
+          "system": "system-1",
+          "status": "todo",
+          "title": "Gatekeeper decision (O-16/O-31): retire, retrain, or let the LLM gate replace it"
+        },
+        {
+          "id": "W44-THU-5",
+          "system": "ops",
+          "status": "todo",
+          "title": "Evening: owner logged in for the 20:05 forced retrain; check designations restored and map published; delete the one-off task"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-30",
+      "theme": "Rules and architecture review for live",
+      "goal": "Every blocker in the readiness register has an owner and a date.",
+      "plan": "Walk the demo-to-live path line by line and turn every gap into a dated item.",
+      "tasks": [
+        {
+          "id": "W44-FRI-1",
+          "system": "ops",
+          "status": "todo",
+          "title": "Confirm the 11:24 UTC map expiry passed cleanly; watch the month-end observation"
+        },
+        {
+          "id": "W44-FRI-2",
+          "system": "ops",
+          "status": "todo",
+          "title": "Walk through `06-DEMO-TO-LIVE.md` line by line"
+        },
+        {
+          "id": "W44-FRI-3",
+          "system": "ops",
+          "status": "todo",
+          "title": "Commit or settle the ~84 uncommitted changes in the prod umbrella — live should not run on uncommitted code"
+        },
+        {
+          "id": "W44-FRI-4",
+          "system": "ops",
+          "status": "todo",
+          "title": "Move logon-only scheduled tasks to S4U (needs an elevated shell) so they survive without a logon"
+        },
+        {
+          "id": "W44-FRI-5",
+          "system": "system-2",
+          "status": "todo",
+          "title": "S2: verify model-set signatures before use"
+        },
+        {
+          "id": "W44-FRI-6",
+          "system": "system-1",
+          "status": "todo",
+          "title": "Fix `publish_gatekeeper --dry-run`, which really publishes"
+        },
+        {
+          "id": "W44-FRI-7",
+          "system": "system-2",
+          "status": "todo",
+          "title": "Rotate the practice token (it was pasted in chat); generate the OANDA live token"
+        },
+        {
+          "id": "W44-FRI-8",
+          "system": "system-3",
+          "status": "todo",
+          "title": "Review the live risk configuration — the 1000-trade caps on the WIP branch stay unmerged"
+        },
+        {
+          "id": "W44-FRI-9",
+          "system": "system-1",
+          "status": "todo",
+          "title": "Optional: permanent `vet.DESIGNATED` fix via dev and the deploy gate"
+        }
+      ]
+    },
+    {
+      "date": "2026-10-31",
+      "theme": "Review and decide",
+      "goal": "A scorecard for the week and the plan for week 1 of November.",
+      "plan": "Close the week honestly: what got done, what moved, what the evidence said.",
+      "tasks": [
+        {
+          "id": "W44-SAT-1",
+          "system": "system-1",
+          "status": "todo",
+          "title": "Check the output of the 10:00 weekly research job"
+        },
+        {
+          "id": "W44-SAT-2",
+          "system": "ops",
+          "status": "todo",
+          "title": "Record the edge verdicts, the FinBERT result and whether the LLM gate design is approved"
+        },
+        {
+          "id": "W44-SAT-3",
+          "system": "ops",
+          "status": "todo",
+          "title": "Update `task/OPEN.md`"
+        },
+        {
+          "id": "W44-SAT-4",
+          "system": "ops",
+          "status": "todo",
+          "title": "Weekly backup copy to Computer 1"
+        },
+        {
+          "id": "W44-SAT-5",
+          "system": "ops",
+          "status": "todo",
+          "title": "Prepare for the US clock change (1 Nov) and the Sunday retrain; draft the 2026-W45 plan"
+        }
+      ]
+    }
+  ],
+  "decisions": [
+    {
+      "id": "W44-D1",
+      "question": "How is the LLM gate paid for? The standing rule is no paid APIs until the system is profitable.",
+      "options": "(a) a local open model on the RTX 5070 — free, weaker; (b) the Claude API with a small fixed monthly cap — an exception to the rule.",
+      "recommendation": "Design the gate so either works; start with (a).",
+      "status": "open"
+    },
+    {
+      "id": "W44-D2",
+      "question": "Three strategies count a bar limit meant for H1 on D1 candles (weekly_day_reversal, engulfing_broken_level, pinbar_key_level). Fix them, or leave as coded?",
+      "status": "open"
+    },
+    {
+      "id": "W44-D3",
+      "question": "Refactor Precision Swing (designated live) so its settings can be searched?",
+      "status": "open"
+    },
+    {
+      "id": "W44-D4",
+      "question": "Add Buddy's ADX/EMA14 variant to the named copy's search space?",
+      "status": "open"
+    }
+  ],
+  "path_to_december": [
+    {
+      "week": "2026-W45",
+      "target": "Edge cards forward-testing; FinBERT scores flowing daily"
+    },
+    {
+      "week": "2026-W46",
+      "target": "LLM gate running in shadow on every signal"
+    },
+    {
+      "week": "2026-W47",
+      "target": "Readiness register cleared"
+    },
+    {
+      "week": "2026-W48",
+      "target": "Owner decides on live, with the evidence laid out"
+    }
+  ]
+}

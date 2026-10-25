@@ -185,6 +185,7 @@ const NAV_GROUPS = [
   {
     label: 'State',
     items: [
+      ['week.html',       'This week', 'week'],
       ['goals.html',      'Goals',     'goals'],
       ['operations.html', 'Ops',       'operations'],
       ['runbook.html',    'Runbook',   'runbook'],

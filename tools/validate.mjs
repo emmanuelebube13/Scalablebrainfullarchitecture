@@ -269,6 +269,32 @@ if (decisions) {
   }
 }
 
+/* ---- week plans ----
+ * data/week-plans/index.json lists every weekly plan. Each plan is checked
+ * against its schema, its days must fall inside start..end, task ids must be
+ * unique, and a task's `system` must be a registered system or "ops".
+ */
+const weekIndex = await readJSON('data/week-plans/index.json');
+let weekPlanCount = 0;
+for (const entry of weekIndex?.weeks ?? []) {
+  const plan = await readJSON(entry.file);
+  if (!plan) continue;
+  weekPlanCount++;
+  validate(plan, schemas['week-plan'], 'week-plan', entry.file);
+  if (plan.week !== entry.week) err(entry.file, `week "${plan.week}" does not match index entry "${entry.week}"`);
+  const ids = new Set();
+  for (const d of plan.days ?? []) {
+    if (d.date < plan.start || d.date > plan.end) err(entry.file, `day ${d.date} is outside ${plan.start}..${plan.end}`);
+    for (const t of d.tasks ?? []) {
+      if (ids.has(t.id)) err(entry.file, `duplicate task id "${t.id}"`);
+      ids.add(t.id);
+      if (t.system && t.system !== 'ops' && !systemIds.has(t.system)) {
+        err(entry.file, `task "${t.id}" references unknown system "${t.system}"`);
+      }
+    }
+  }
+}
+
 /* ---- report ---- */
 for (const w of warnings) console.warn(`  warn  ${w}`);
 for (const e of errors) console.error(`  ERROR ${e}`);
@@ -276,7 +302,7 @@ for (const e of errors) console.error(`  ERROR ${e}`);
 console.log(
   `\n${systems.length} systems · ${architecture?.nodes.length ?? 0} nodes · ${architecture?.edges.length ?? 0} edges · ` +
   `${architecture?.flows.length ?? 0} flows · ${goals?.goals.length ?? 0} goals · ${goals?.tasks.length ?? 0} tasks · ` +
-  `${decisions?.decisions.length ?? 0} decisions · ${vision?.phases.length ?? 0} vision phases`
+  `${decisions?.decisions.length ?? 0} decisions · ${vision?.phases.length ?? 0} vision phases · ${weekPlanCount} week plans`
 );
 console.log(errors.length ? `\nFAILED — ${errors.length} error(s), ${warnings.length} warning(s)` : `\nOK — ${warnings.length} warning(s)`);
 
