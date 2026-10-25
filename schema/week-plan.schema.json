@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Weekly plan — a goal, a plan and tasks for each day",
+  "type": "object",
+  "required": ["schema_version", "week", "start", "end", "goal", "days"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "week": { "type": "string", "pattern": "^\\d{4}-W\\d{2}$" },
+    "task_folder": { "type": "string" },
+    "start": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "end": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "as_of": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "goal": { "type": "string" },
+    "context": { "type": "array", "items": { "type": "string" } },
+    "fixed_dates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["date", "text"],
+        "properties": {
+          "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+          "text": { "type": "string" }
+        }
+      }
+    },
+    "days": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["date", "theme", "goal", "plan", "tasks"],
+        "properties": {
+          "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+          "theme": { "type": "string" },
+          "goal": { "type": "string" },
+          "plan": { "type": "string" },
+          "review": { "type": "string" },
+          "tasks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "status", "title"],
+              "properties": {
+                "id": { "type": "string" },
+                "system": { "type": "string" },
+                "status": { "type": "string", "enum": ["todo", "done", "blocked", "moved"] },
+                "title": { "type": "string" },
+                "note": { "type": "string" },
+                "done_at": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "question", "status"],
+        "properties": {
+          "id": { "type": "string" },
+          "question": { "type": "string" },
+          "options": { "type": "string" },
+          "recommendation": { "type": "string" },
+          "status": { "type": "string", "enum": ["open", "decided"] },
+          "answer": { "type": "string" }
+        }
+      }
+    },
+    "path_to_december": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["week", "target"],
+        "properties": {
+          "week": { "type": "string" },
+          "target": { "type": "string" }
+        }
+      }
+    }
+  }
+}

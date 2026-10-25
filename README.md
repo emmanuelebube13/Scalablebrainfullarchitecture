@@ -35,6 +35,7 @@ data/                         The content layer — the only thing you normally 
 ├── decisions.json            Architecture decision records, including open ones
 ├── goals.json                Milestones, goals, dependency matrix, task tracker
 ├── vision.json               Mandate, risk ladder, profit target, phases, identity & habits
+├── week-plans/              Weekly plan per ISO week (goal, plan, tasks per day) + index.json
 └── systems/system-N.json     One file per subsystem, all sharing one schema
 
 schema/                       JSON Schema for each content file
@@ -46,6 +47,7 @@ vision.html                   Vision & planning — mandate, phases, identity & 
 architecture.html             Unified interactive map + decision records
 system.html?id=system-N       Subsystem page — one page serves every system
 goals.html                    Goals, milestones, dependency matrix, tasks
+week.html                     This week — tick tasks done; each tick commits via the GitHub API
 contribute.html               How to edit the data layer
 
 assets/css/main.css           The whole stylesheet
