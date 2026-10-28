@@ -72,8 +72,9 @@
         {
           "id": "W44-MON-5",
           "system": "system-1",
-          "status": "todo",
-          "title": "Freeze this week's edge shortlist and assign card ids"
+          "status": "done",
+          "title": "Freeze this week's edge shortlist and assign card ids",
+          "done_at": "2026-10-28"
         }
       ]
     },
