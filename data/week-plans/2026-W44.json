@@ -51,8 +51,9 @@
         {
           "id": "W44-MON-2",
           "system": "system-1",
-          "status": "todo",
-          "title": "Verify the rollover rule and session logic (New York time) through the EU/US clock-offset week"
+          "status": "done",
+          "title": "Verify the rollover rule and session logic (New York time) through the EU/US clock-offset week",
+          "done_at": "2026-10-28"
         },
         {
           "id": "W44-MON-3",
