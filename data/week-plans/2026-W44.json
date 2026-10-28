@@ -87,9 +87,8 @@
         {
           "id": "W44-TUE-1",
           "system": "system-1",
-          "status": "done",
-          "title": "Review the SHADOW forward records for carry, post-FOMC drift and the committee",
-          "done_at": "2026-10-28"
+          "status": "todo",
+          "title": "Review the SHADOW forward records for carry, post-FOMC drift and the committee"
         },
         {
           "id": "W44-TUE-2",
