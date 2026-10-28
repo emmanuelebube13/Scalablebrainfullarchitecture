@@ -44,8 +44,9 @@
         {
           "id": "W44-MON-1",
           "system": "ops",
-          "status": "todo",
-          "title": "Health check: `keep_designations.log`, S1 signal flow, trade journal sync, Performance view figures"
+          "status": "done",
+          "title": "Health check: `keep_designations.log`, S1 signal flow, trade journal sync, Performance view figures",
+          "done_at": "2026-10-28"
         },
         {
           "id": "W44-MON-2",
