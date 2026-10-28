@@ -58,8 +58,9 @@
         {
           "id": "W44-MON-3",
           "system": "system-1",
-          "status": "todo",
-          "title": "Fix the research harness's missing stop-distance floor (a 2.2e-16 stop produced −2e12 R)"
+          "status": "done",
+          "title": "Fix the research harness's missing stop-distance floor (a 2.2e-16 stop produced −2e12 R)",
+          "done_at": "2026-10-28"
         },
         {
           "id": "W44-MON-4",
