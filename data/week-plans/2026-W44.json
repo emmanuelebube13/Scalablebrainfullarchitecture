@@ -65,8 +65,9 @@
         {
           "id": "W44-MON-4",
           "system": "ops",
-          "status": "todo",
-          "title": "Write `DECEMBER-READINESS.md`: one section each for S1, S2, S3, dashboard and operations"
+          "status": "done",
+          "title": "Write `DECEMBER-READINESS.md`: one section each for S1, S2, S3, dashboard and operations",
+          "done_at": "2026-10-28"
         },
         {
           "id": "W44-MON-5",
