@@ -173,23 +173,47 @@ function applyTheme(theme) {
  */
 const NAV_GROUPS = [
   {
-    label: 'Reference',
+    label: 'Architecture',
     items: [
-      ['index.html',                'Overview',    'overview'],
-      ['vision.html',               'Vision',      'vision'],
-      ['architecture.html',         'Map',         'unified'],
-      ['system.html?id=system-1',   'Systems',     'systems'],
-      ['edge-exploration.html',     'Edge',        'edge'],
+      ['index.html',                'Overview',          'overview'],
+      ['architecture.html',         'Map & ADRs',        'unified'],
+      ['system.html?id=system-1',   'Subsystems (S1-S3)','systems'],
+      ['system-tree.html',          'System Tree Guide', 'system-tree'],
+      ['vision.html',               'Vision & Roadmap',  'vision'],
     ],
   },
   {
-    label: 'State',
+    label: 'Strategies',
     items: [
-      ['week.html',       'This week', 'week'],
-      ['goals.html',      'Goals',     'goals'],
-      ['operations.html', 'Ops',       'operations'],
-      ['runbook.html',    'Runbook',   'runbook'],
-      ['telegram.html',   'Telegram',  'telegram'],
+      ['strategies.html',           '67-Strategy Catalog','strategies'],
+      ['research.html',             'Research & Kelly',  'research'],
+      ['macro-finbert.html',        'FinBERT Macro NLP', 'finbert'],
+      ['edge-exploration.html',     'Edge Exploration',  'edge'],
+    ],
+  },
+  {
+    label: 'Data & ERD',
+    items: [
+      ['data-dictionary.html',      'Data Dictionary v2', 'data-dictionary'],
+      ['erd.html',                  'Interactive ERD',   'erd'],
+      ['audit-remarks.html',        'Forensic Audit',    'audit'],
+    ],
+  },
+  {
+    label: 'Operations',
+    items: [
+      ['market-sessions.html',      'Forex Sessions',    'sessions'],
+      ['week.html',                 'Weekly Plan',       'week'],
+      ['goals.html',                'Goals & Tasks',     'goals'],
+      ['operations.html',           'Telemetry & Health','operations'],
+      ['runbook.html',              'Master Runbook',    'runbook'],
+      ['telegram.html',             'Telegram Alerts',   'telegram'],
+    ],
+  },
+  {
+    label: 'Archive',
+    items: [
+      ['archive.html',              'Historical Library','archive'],
     ],
   },
 ];
@@ -212,16 +236,26 @@ export function mountChrome(activeKey) {
         },
           el('span', { class: 'nav-toggle-bars', 'aria-hidden': 'true' })),
         el('nav', { id: 'primary-nav', class: 'nav', 'aria-label': 'Primary' },
-          NAV_GROUPS.map((group) =>
-            el('div', { class: 'nav-group' },
+          NAV_GROUPS.map((group) => {
+            const hasActive = group.items.some(([_, __, key]) => key === activeKey);
+            return el('div', { class: `nav-group ${hasActive ? 'has-active' : ''}` },
               el('span', { class: 'nav-group-label', text: group.label }),
-              group.items.map(([href, label, key]) =>
-                el('a', {
-                  href,
-                  class: key === activeKey ? 'active' : '',
-                }, label))
-            )
-          ),
+              el('button', {
+                type: 'button',
+                class: 'nav-group-btn',
+                'aria-expanded': 'false',
+                text: `${group.label} ▾`
+              }),
+              el('div', { class: 'nav-group-dropdown' },
+                group.items.map(([href, label, key]) =>
+                  el('a', {
+                    href,
+                    class: key === activeKey ? 'active' : '',
+                  }, label)
+                )
+              )
+            );
+          }),
           /* Search trigger — opens the search overlay */
           el('button', {
             id: 'search-trigger', class: 'search-trigger', type: 'button',

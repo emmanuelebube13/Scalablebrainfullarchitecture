@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forex Market Hours & Guardian Time Rules — Scalable Brain</title>
+<meta name="description" content="Live UTC Forex session clock, liquidity overlaps, and System 3 Guardian operational time gating (Friday 20:55 UTC freeze, Sunday open buffer).">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/css/main.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕒</text></svg>">
+<style>
+.clock-banner {
+  background: var(--bg-surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 20px 24px; margin: 24px 0;
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;
+}
+.utc-time-display {
+  font-family: var(--mono); font-size: 2.2rem; font-weight: 700; color: var(--accent);
+  letter-spacing: -0.02em;
+}
+.session-cards-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 28px;
+}
+.session-card {
+  background: var(--bg-surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 18px 20px; transition: border-color 0.2s ease;
+}
+.session-card.open { border-color: var(--good); }
+.session-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.session-bar {
+  height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; margin-top: 8px;
+}
+.session-bar-fill { height: 100%; background: var(--good); }
+
+.time-rules-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin: 20px 0;
+}
+.time-rule-card {
+  background: var(--bg-surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 20px; border-left: 4px solid var(--accent);
+}
+</style>
+</head>
+<body>
+<header id="site-header"></header>
+
+<main class="wrap">
+  <div class="page-head" style="margin-top: 24px;">
+    <span class="eyebrow">Market Operations & Temporal Gating</span>
+    <h1 style="margin: 8px 0 12px 0;">Forex Sessions & Guardian Time Rules</h1>
+    <p class="lead" style="max-width: 860px; color: var(--text-dim); line-height: 1.6;">
+      Live real-time GMT/UTC session tracker, interbank liquidity overlaps, and the automated temporal risk enforcement executed by System 3 AMS Guardian on Computer 4.
+    </p>
+  </div>
+
+  <!-- Live Clock Banner -->
+  <div class="clock-banner">
+    <div>
+      <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-faint); font-family: var(--mono); letter-spacing: 0.05em;">
+        Coordinated Universal Time (UTC / GMT)
+      </div>
+      <div class="utc-time-display" id="live-utc-clock">00:00:00 UTC</div>
+      <div id="live-utc-date" style="font-size: 0.88rem; color: var(--text-dim); margin-top: 2px;">Loading date...</div>
+    </div>
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+      <div class="nlp-metric-box" style="padding: 10px 16px;">
+        <div style="font-size: 0.72rem; color: var(--text-faint); font-family: var(--mono);">SYSTEM 3 GATE STATE</div>
+        <div id="guardian-gate-status" style="font-family: var(--mono); font-weight: 700; color: var(--good); margin-top: 2px;">ACTIVE · NORMAL</div>
+      </div>
+      <div class="nlp-metric-box" style="padding: 10px 16px;">
+        <div style="font-size: 0.72rem; color: var(--text-faint); font-family: var(--mono);">ACTIVE SESSIONS</div>
+        <div id="active-sessions-count" style="font-family: var(--mono); font-weight: 700; color: var(--accent); margin-top: 2px;">2 / 4 Open</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4 Major Sessions Grid -->
+  <div class="session-cards-grid">
+    <div class="session-card" id="card-sydney">
+      <div class="session-header">
+        <h3 style="margin: 0; font-size: 1.1rem;">Sydney (Pacific)</h3>
+        <span class="badge" id="badge-sydney">Closed</span>
+      </div>
+      <div style="font-family: var(--mono); font-size: 0.82rem; color: var(--text-dim);">21:00 – 06:00 UTC</div>
+      <div class="session-bar"><div class="session-bar-fill" id="bar-sydney" style="width: 0%;"></div></div>
+      <div style="font-size: 0.8rem; color: var(--text-faint); margin-top: 10px;">Primary Pairs: AUD_USD, NZD_USD, AUD_JPY</div>
+    </div>
+
+    <div class="session-card" id="card-tokyo">
+      <div class="session-header">
+        <h3 style="margin: 0; font-size: 1.1rem;">Tokyo (Asian)</h3>
+        <span class="badge" id="badge-tokyo">Closed</span>
+      </div>
+      <div style="font-family: var(--mono); font-size: 0.82rem; color: var(--text-dim);">00:00 – 09:00 UTC</div>
+      <div class="session-bar"><div class="session-bar-fill" id="bar-tokyo" style="width: 0%;"></div></div>
+      <div style="font-size: 0.8rem; color: var(--text-faint); margin-top: 10px;">Primary Pairs: USD_JPY, EUR_JPY, AUD_JPY</div>
+    </div>
+
+    <div class="session-card" id="card-london">
+      <div class="session-header">
+        <h3 style="margin: 0; font-size: 1.1rem;">London (European)</h3>
+        <span class="badge" id="badge-london">Closed</span>
+      </div>
+      <div style="font-family: var(--mono); font-size: 0.82rem; color: var(--text-dim);">07:00 – 16:00 UTC</div>
+      <div class="session-bar"><div class="session-bar-fill" id="bar-london" style="width: 0%;"></div></div>
+      <div style="font-size: 0.8rem; color: var(--text-faint); margin-top: 10px;">Primary Pairs: EUR_USD, GBP_USD, EUR_GBP</div>
+    </div>
+
+    <div class="session-card" id="card-newyork">
+      <div class="session-header">
+        <h3 style="margin: 0; font-size: 1.1rem;">New York (American)</h3>
+        <span class="badge" id="badge-newyork">Closed</span>
+      </div>
+      <div style="font-family: var(--mono); font-size: 0.82rem; color: var(--text-dim);">12:00 – 21:00 UTC</div>
+      <div class="session-bar"><div class="session-bar-fill" id="bar-newyork" style="width: 0%;"></div></div>
+      <div style="font-size: 0.8rem; color: var(--text-faint); margin-top: 10px;">Primary Pairs: EUR_USD, USD_CAD, USD_CHF</div>
+    </div>
+  </div>
+
+  <!-- System 3 Guardian Temporal Rules -->
+  <section style="margin-top: 16px;">
+    <h2 style="font-size: 1.35rem; margin: 0 0 8px 0;">System 3 Guardian Temporal Risk Rules</h2>
+    <p style="color: var(--text-dim); font-size: 0.88rem; margin: 0;">Automated temporal checks enforced during Stage T of the AMS risk pipeline.</p>
+
+    <div class="time-rules-grid">
+      <div class="time-rule-card" style="border-left-color: var(--bad);">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <h3 style="font-size: 1.05rem; margin: 0 0 6px 0;">Friday Weekend Close Cutoff</h3>
+          <span class="badge tone-bad">Mandatory Freeze</span>
+        </div>
+        <div style="font-family: var(--mono); font-size: 0.85rem; color: var(--bad); font-weight: 700; margin-bottom: 8px;">
+          Friday 20:55 UTC (Market Closes 21:00 UTC)
+        </div>
+        <p style="font-size: 0.86rem; color: var(--text-dim); line-height: 1.5; margin: 0;">
+          All new order submissions are strictly rejected 5 minutes before the weekend close. Prevents holding unhedged breakout entries exposed to unforeseen weekend geopolitical gap risk. Existing swing positions with stops in place are permitted to carry over based on strategy parameters.
+        </p>
+      </div>
+
+      <div class="time-rule-card" style="border-left-color: var(--warn);">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <h3 style="font-size: 1.05rem; margin: 0 0 6px 0;">Sunday Open Spread Buffer</h3>
+          <span class="badge tone-warn">Stabilization Window</span>
+        </div>
+        <div style="font-family: var(--mono); font-size: 0.85rem; color: var(--warn); font-weight: 700; margin-bottom: 8px;">
+          Sunday 21:00 – 22:15 UTC (75-minute quarantine)
+        </div>
+        <p style="font-size: 0.86rem; color: var(--text-dim); line-height: 1.5; margin: 0;">
+          When broker liquidity pools re-open on Sunday, interbank spreads routinely widen by 10x to 25x. The Guardian holds all System 1 candidate signals in queue until 22:15 UTC when average spreads contract below the maximum permissible threshold (1.8 pips for EUR_USD).
+        </p>
+      </div>
+
+      <div class="time-rule-card" style="border-left-color: var(--info);">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <h3 style="font-size: 1.05rem; margin: 0 0 6px 0;">Daily Rollover Financing Shield</h3>
+          <span class="badge tone-info">Overnight Rollover</span>
+        </div>
+        <div style="font-family: var(--mono); font-size: 0.85rem; color: var(--info); font-weight: 700; margin-bottom: 8px;">
+          Daily 21:00 – 21:15 UTC (Swap Window)
+        </div>
+        <p style="font-size: 0.86rem; color: var(--text-dim); line-height: 1.5; margin: 0;">
+          Broker daily rollover swap rates are calculated at 5:00 PM EST (21:00 UTC). To avoid getting filled at artificial spread spikes, signal evaluations are paused for 15 minutes while financing charges are journaled into <code>fact_live_trades</code>.
+        </p>
+      </div>
+
+      <div class="time-rule-card" style="border-left-color: var(--good);">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <h3 style="font-size: 1.05rem; margin: 0 0 6px 0;">London / New York Liquidity Overlap</h3>
+          <span class="badge tone-good">Prime Execution</span>
+        </div>
+        <div style="font-family: var(--mono); font-size: 0.85rem; color: var(--good); font-weight: 700; margin-bottom: 8px;">
+          Daily 12:00 – 16:00 UTC (4-Hour Peak Window)
+        </div>
+        <p style="font-size: 0.86rem; color: var(--text-dim); line-height: 1.5; margin: 0;">
+          Represents approximately 70% of global daily forex turnover. Spreads reach institutional minimums (0.1–0.4 pips). System 1 Trend-Following and Momentum strategies (e.g. <code>precision_swing</code>, <code>bb_midline_break</code>) execute with full Kelly authorization.
+        </p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer id="site-footer"></footer>
+
+<script type="module">
+  import { mountChrome } from './assets/js/core.js';
+  mountChrome('sessions');
+
+  const SESSIONS = [
+    { id: 'sydney', start: 21, end: 6 },
+    { id: 'tokyo', start: 0, end: 9 },
+    { id: 'london', start: 7, end: 16 },
+    { id: 'newyork', start: 12, end: 21 }
+  ];
+
+  function updateClock() {
+    const now = new Date();
+    const utcHours = now.getUTCHours();
+    const utcMins = now.getUTCMinutes();
+    const utcSecs = now.getUTCSeconds();
+    const utcDay = now.getUTCDay(); // 0 is Sunday, 5 is Friday
+
+    const pad = (n) => String(n).padStart(2, '0');
+    document.getElementById('live-utc-clock').textContent = `${pad(utcHours)}:${pad(utcMins)}:${pad(utcSecs)} UTC`;
+    document.getElementById('live-utc-date').textContent = now.toUTCString().split(' ').slice(0, 4).join(' ');
+
+    const currentMinuteOfDay = utcHours * 60 + utcMins;
+    let openCount = 0;
+
+    SESSIONS.forEach(sess => {
+      let isOpen = false;
+      let progress = 0;
+      const startMin = sess.start * 60;
+      const endMin = sess.end * 60;
+
+      if (startMin > endMin) {
+        // Over midnight
+        if (currentMinuteOfDay >= startMin || currentMinuteOfDay < endMin) {
+          isOpen = true;
+          const totalMin = (24 * 60 - startMin) + endMin;
+          const elapsed = currentMinuteOfDay >= startMin ? (currentMinuteOfDay - startMin) : (24 * 60 - startMin + currentMinuteOfDay);
+          progress = Math.min(100, Math.max(0, (elapsed / totalMin) * 100));
+        }
+      } else {
+        if (currentMinuteOfDay >= startMin && currentMinuteOfDay < endMin) {
+          isOpen = true;
+          progress = ((currentMinuteOfDay - startMin) / (endMin - startMin)) * 100;
+        }
+      }
+
+      const card = document.getElementById(`card-${sess.id}`);
+      const badge = document.getElementById(`badge-${sess.id}`);
+      const bar = document.getElementById(`bar-${sess.id}`);
+
+      if (isOpen) {
+        openCount++;
+        card.classList.add('open');
+        badge.className = 'badge tone-good';
+        badge.textContent = 'Open';
+        bar.style.width = `${progress}%`;
+      } else {
+        card.classList.remove('open');
+        badge.className = 'badge tone-muted';
+        badge.textContent = 'Closed';
+        bar.style.width = '0%';
+      }
+    });
+
+    document.getElementById('active-sessions-count').textContent = `${openCount} / 4 Open`;
+
+    // System 3 Guardian Gate Status
+    const gateStatus = document.getElementById('guardian-gate-status');
+    if (utcDay === 5 && (utcHours > 20 || (utcHours === 20 && utcMins >= 55))) {
+      gateStatus.textContent = 'FROZEN (Friday Cutoff)';
+      gateStatus.style.color = 'var(--bad)';
+    } else if (utcDay === 0 && (utcHours < 22 || (utcHours === 22 && utcMins < 15))) {
+      gateStatus.textContent = 'BUFFER (Sunday Open Quarantine)';
+      gateStatus.style.color = 'var(--warn)';
+    } else if (utcHours === 21 && utcMins < 15) {
+      gateStatus.textContent = 'PAUSED (Rollover Window)';
+      gateStatus.style.color = 'var(--info)';
+    } else {
+      gateStatus.textContent = 'ACTIVE · NORMAL';
+      gateStatus.style.color = 'var(--good)';
+    }
+  }
+
+  setInterval(updateClock, 1000);
+  updateClock();
+</script>
+</body>
+</html>

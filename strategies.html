@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Strategy Catalogue · 67 Quantitative Strategies — Scalable Brain</title>
+<meta name="description" content="Complete interactive catalogue and research lab for all 67 quantitative trading strategies in Scalable Brain System 1.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/css/main.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+<style>
+/* Page-specific high-density styles */
+.strat-controls {
+  position: sticky; top: 56px; z-index: 40;
+  background: var(--bg-sunken); backdrop-filter: blur(12px);
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  padding: 14px 18px; margin: 24px 0 28px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+}
+.strat-filter-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+.strat-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip-btn {
+  font-family: var(--mono); font-size: 0.74rem; font-weight: 560;
+  padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border);
+  background: var(--bg-surface); color: var(--text-dim); cursor: pointer; transition: 0.15s ease;
+}
+.chip-btn:hover { border-color: var(--border-strong); color: var(--text); }
+.chip-btn.active { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+
+.strat-search-box {
+  display: flex; align-items: center; gap: 8px; background: var(--bg-surface);
+  border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 12px;
+  min-width: 240px; flex: 1 1 240px; max-width: 380px;
+}
+.strat-search-input {
+  border: 0; background: transparent; font-family: inherit; font-size: 0.86rem; color: var(--text);
+  outline: none; width: 100%;
+}
+
+.strat-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+@media (min-width: 1024px) {
+  .strat-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.strat-card {
+  background: var(--bg-surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 18px 20px; transition: border-color 0.2s, box-shadow 0.2s;
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.strat-card:hover { border-color: var(--border-strong); box-shadow: 0 4px 18px rgba(0,0,0,0.05); }
+.strat-card.is-qualified { border-left: 4px solid var(--good); }
+
+.badge-qualified {
+  background: rgba(16, 185, 129, 0.12); color: var(--good); border: 1px solid rgba(16, 185, 129, 0.3);
+  font-family: var(--mono); font-size: 0.68rem; font-weight: 600; padding: 2px 7px; border-radius: 4px;
+}
+.badge-disqualified {
+  background: var(--bg-sunken); color: var(--text-faint); border: 1px solid var(--border);
+  font-family: var(--mono); font-size: 0.68rem; font-weight: 600; padding: 2px 7px; border-radius: 4px;
+}
+
+.strat-body { margin-top: 10px; font-size: 0.9rem; color: var(--text-dim); line-height: 1.5; }
+.strat-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 12px; }
+.tag-indicator {
+  font-family: var(--mono); font-size: 0.7rem; background: var(--bg-raised);
+  border: 1px solid var(--border); border-radius: 3px; padding: 2px 6px; color: var(--text-dim);
+}
+
+.strat-details-pane {
+  margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border);
+  font-size: 0.86rem; color: var(--text);
+}
+.details-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.8rem; font-family: var(--mono); }
+.details-table th, .details-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; }
+.details-table th { color: var(--text-faint); text-transform: uppercase; font-size: 0.68rem; }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header id="site-header"></header>
+
+<main id="main">
+  <section class="hero">
+    <div class="wrap">
+      <div class="eyebrow">System 1 · Strategy Research Lab</div>
+      <h1>Strategy Catalogue &amp; Research Lab</h1>
+      <p class="lede">
+        Complete reference for all <strong>67 quantitative trading strategies</strong> engineered in Scalable Brain.
+        Each strategy defines formal indicators, entry triggers, protective stop-loss rules, multi-timeframe dependencies,
+        and walk-forward out-of-sample vetting results across distinct market regimes.
+      </p>
+
+      <div class="stat-tiles" id="strat-tallies">
+        <div class="stat-tile"><span class="stat-k" id="tally-total">67</span><span class="stat-l">Catalogued Strategies</span></div>
+        <div class="stat-tile"><span class="stat-k" id="tally-qualified" style="color:var(--good)">7</span><span class="stat-l">Live Qualified Cells</span></div>
+        <div class="stat-tile"><span class="stat-k" id="tally-granularities">H1 · H4 · D1</span><span class="stat-l">Timeframe Horizons</span></div>
+        <div class="stat-tile"><span class="stat-k" id="tally-gates">Fixed OOS Gates</span><span class="stat-l">PF &ge; 1.5 · Sharpe &ge; 0.8 · DD &le; 25%</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <!-- Sticky Low-Scroll Controls -->
+    <div class="strat-controls" id="strat-controls">
+      <div class="strat-filter-row">
+        <div class="strat-chips" id="family-filters">
+          <span style="font-size:0.75rem; color:var(--text-faint); font-family:var(--mono); margin-right:4px;">FAMILY:</span>
+          <!-- Dynamic Chips Added in JS -->
+        </div>
+
+        <div class="strat-search-box">
+          <span style="opacity:0.6;">🔍</span>
+          <input type="text" id="strat-search" class="strat-search-input" placeholder="Search strategy, indicator, or rule…">
+        </div>
+      </div>
+
+      <div class="strat-filter-row" style="margin-top: 10px; pt-2; border-top: 1px solid var(--border);">
+        <div class="strat-chips" id="granularity-filters">
+          <span style="font-size:0.75rem; color:var(--text-faint); font-family:var(--mono); margin-right:4px;">TIMEFRAME:</span>
+          <button class="chip-btn active" data-gran="all">All</button>
+          <button class="chip-btn" data-gran="H1">H1 (Hourly)</button>
+          <button class="chip-btn" data-gran="H4">H4 (4-Hour)</button>
+          <button class="chip-btn" data-gran="D1">D1 (Daily)</button>
+          <span style="margin: 0 4px; color:var(--border);">|</span>
+          <button class="chip-btn" id="filter-qualified-only" data-qual="true">Qualified Only (7)</button>
+        </div>
+
+        <div style="display:flex; gap:8px;">
+          <button class="chip-btn" id="btn-toggle-all">Expand All Details</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Strategy Count Display -->
+    <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; font-family:var(--mono); font-size:0.78rem; color:var(--text-faint);">
+      <span id="filtered-count">Showing 67 strategies</span>
+      <span>System 1 Engine Release 2026-10-29</span>
+    </div>
+
+    <!-- Strategy Card Container -->
+    <div class="strat-grid" id="strategies-container">
+      <div style="padding:40px; text-align:center; color:var(--text-faint); font-family:var(--mono);">Loading strategy catalogue…</div>
+    </div>
+  </div>
+</main>
+
+<footer id="site-footer"></footer>
+
+<script type="module" src="assets/js/strategies.js"></script>
+</body>
+</html>

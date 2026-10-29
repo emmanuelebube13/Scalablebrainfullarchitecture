@@ -95,14 +95,18 @@ try {
     }
 
     /* ---- next ---- */
-    main.append(section('Where to go next', 'This site, in six places', null,
-      el('div', { class: 'grid grid-4' },
-        link('vision.html', 'Vision & planning', 'What the money is for, the five phases, and the habits the plan requires.'),
-        link('architecture.html', 'Unified map', 'Every component and every handoff, with traceable flows.'),
-        link('system.html?id=system-1', 'Subsystem pages', 'Ingestion, logic, contracts and gaps for each system.'),
-        link('goals.html', 'Goals & tasks', 'The milestone ladder, dependency matrix and weekly work.'),
-        link('contribute.html', 'Editing the data', 'How agents and humans change this content through Git.'),
-        link('runbook.html', 'Master Runbook', 'Operational procedures, maintenance scripts, and troubleshooting.'))
+    main.append(section('Deep-dive reading & research hubs', 'Complete system architecture at a glance',
+      'Engineered for long-session reading and quantitative inspection across mobile, laptop, and desktop viewports.',
+      el('div', { class: 'grid grid-3' },
+        link('strategies.html', '67-Strategy Catalogue', 'Complete quantitative strategy pool with timeframe filters, indicators, win rates, and regime qualifications.'),
+        link('data-dictionary.html', 'Data Dictionary v2', 'Detailed table schemas, column types, primary keys, and storage footprints across ams.db, system2.db, and Postgres.'),
+        link('erd.html', 'Interactive ERD & Lineage', 'Visual schema canvas with pan/zoom, directed relationship flows, and entity details inspector.'),
+        link('system-tree.html', 'System Tree & Playbook', 'Complete directory guide for Computer 4, high-risk points of failure, and emergency readjustment playbooks.'),
+        link('research.html', 'Quantitative Research & Kelly', 'Mathematical formulations for meta-labeling, fractional Kelly sizing with negative-edge zeroing, and HMM regimes.'),
+        link('macro-finbert.html', 'FinBERT Macro Sentiment', 'ProsusAI/FinBERT transfer learning, Shannon entropy dispersion, statement chunking, and calendar risk gating.'),
+        link('market-sessions.html', 'Forex Sessions & Clock', 'Live UTC session clock, liquidity overlaps, and Guardian Friday 20:55 UTC entry freeze rules.'),
+        link('architecture.html', 'Unified System Map', 'Interactive architectural map connecting System 1, System 2, and System 3 with ADR decisions.'),
+        link('archive.html', 'Historical Archive Library', 'Archived executive reports (5 PDFs) and frontend education v1 prototypes preserved for audit.'))
     ));
   }
 } catch (err) {

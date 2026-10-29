@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quantitative Principles & Research Framework — Scalable Brain</title>
+<meta name="description" content="Core quantitative research methodologies, meta-labeling, fractional Kelly sizing, HMM regime transitions, and walk-forward validation.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/css/main.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
+<style>
+.research-card {
+  background: var(--bg-surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 24px; margin-bottom: 24px;
+}
+.math-box {
+  background: var(--bg-sunken); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 14px 18px; margin: 12px 0; font-family: var(--mono);
+}
+</style>
+</head>
+<body>
+<header id="site-header"></header>
+
+<main class="wrap">
+  <div class="page-head" style="margin-top: 24px;">
+    <span class="eyebrow">Quantitative Methodology & Theory</span>
+    <h1 style="margin: 8px 0 12px 0;">Quantitative Principles & Research Notes</h1>
+    <p class="lead" style="max-width: 860px; color: var(--text-dim); line-height: 1.6;">
+      Mathematical frameworks, statistical formulations, and empirical methodologies governing edge discovery, meta-labeling, position sizing, and regime qualification in Scalable Brain.
+    </p>
+  </div>
+
+  <!-- 1. Philosophy -->
+  <div class="research-card">
+    <span class="badge tone-accent" style="margin-bottom: 8px;">Guiding Axiom</span>
+    <h2 style="font-size: 1.3rem; margin: 8px 0 12px 0;">1. Deterministic Mathematical Edges vs. Black-Box Prophecy</h2>
+    <p style="font-size: 0.88rem; color: var(--text-dim); line-height: 1.6;">
+      Scalable Brain is built on one fundamental quantitative principle: <strong>algorithmic trading systems must encode deterministic structural edges, not end-to-end black-box predictions</strong>. Machine learning is a tool for context qualification and sizing calibration, not for forecasting tomorrow's price.
+    </p>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 14px;">
+      <div style="background: var(--bg-sunken); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+        <h4 style="margin: 0 0 6px 0; color: var(--bad);">Why Price Forecasting Fails</h4>
+        <p style="font-size: 0.84rem; color: var(--text-dim); margin: 0; line-height: 1.5;">
+          Direct price prediction (e.g. LSTM predicting next close) is overwhelmed by non-stationarity, regime shifts, and low signal-to-noise ratios in financial time series. It invariably overfits noise.
+        </p>
+      </div>
+      <div style="background: var(--bg-sunken); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+        <h4 style="margin: 0 0 6px 0; color: var(--good);">The Structural Edge Approach</h4>
+        <p style="font-size: 0.84rem; color: var(--text-dim); margin: 0; line-height: 1.5;">
+          Encode structural market phenomena (liquidity sweeps, volatility expansion, mean-reversion at support/resistance). ML models only decide <em>when</em> that specific phenomenon exhibits a statistical probability of success.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Meta-Labeling -->
+  <div class="research-card">
+    <span class="badge tone-good" style="margin-bottom: 8px;">Marcos López de Prado Methodology</span>
+    <h2 style="font-size: 1.3rem; margin: 8px 0 12px 0;">2. Meta-Labeling & Triple Barrier Method</h2>
+    <p style="font-size: 0.88rem; color: var(--text-dim); line-height: 1.6;">
+      Following de Prado's <em>Advances in Financial Machine Learning</em>, System 1 decouples trade direction from trade execution confidence:
+    </p>
+
+    <div class="math-box">
+      <strong>Primary Model (Rule-Based Strategy):</strong> Generates Direction \(D \in \{-1, +1\}\) with fixed Triple Barriers (Upper Take-Profit \(TP\), Lower Stop-Loss \(SL\), and Time Horizon \(T\)).<br><br>
+      <strong>Secondary Model (XGBoost Meta-Labeler):</strong> Predicts Binary Outcome \(Y \in \{0, 1\}\):<br>
+      \(Y = 1 \iff\) Upper barrier \(TP\) is touched before \(SL\) or \(T\).<br>
+      \(P(Y=1 \mid X)\) yields model confidence score \(\in [0.0, 1.0]\).
+    </div>
+
+    <p style="font-size: 0.86rem; color: var(--text-dim); line-height: 1.5;">
+      If \(P(Y=1) < 0.55\), the candidate signal is filtered out at the factory stage, protecting capital from low-conviction market chops.
+    </p>
+  </div>
+
+  <!-- 3. Fractional Kelly Sizing -->
+  <div class="research-card">
+    <span class="badge tone-warn" style="margin-bottom: 8px;">Capital Preservation & Growth</span>
+    <h2 style="font-size: 1.3rem; margin: 8px 0 12px 0;">3. Fractional Kelly Criterion with Negative-Edge Clamping</h2>
+    <p style="font-size: 0.88rem; color: var(--text-dim); line-height: 1.6;">
+      System 3 Guardian scales position units dynamically using the continuous Kelly formula calibrated by out-of-sample win rates and payoff ratios:
+    </p>
+
+    <div class="math-box">
+      \(f^* = \frac{p \cdot b - (1 - p)}{b}\)<br><br>
+      Where:<br>
+      &bull; \(p\) = Calibrated win probability from S1 meta-labeler and Bayesian historical update.<br>
+      &bull; \(b\) = Payoff ratio \(\frac{\text{Average Win } R}{\text{Average Loss } R}\).<br>
+      &bull; \(c = 0.25\) (Quarter-Kelly multiplier to eliminate catastrophic gambler's ruin).<br>
+      &bull; <strong>Negative-Edge Clamp:</strong> If \(p \cdot b - (1 - p) \le 0\), then \(f^* = 0\) (Immediate rejection).
+    </div>
+  </div>
+
+  <!-- 4. Regime Detection -->
+  <div class="research-card">
+    <span class="badge tone-info" style="margin-bottom: 8px;">Market Dynamics</span>
+    <h2 style="font-size: 1.3rem; margin: 8px 0 12px 0;">4. Hidden Markov Model (HMM) Structural Regimes</h2>
+    <p style="font-size: 0.88rem; color: var(--text-dim); line-height: 1.6;">
+      Markets alternate between non-stationary states. System 1 fits a Gaussian HMM on normalized logarithmic returns and realized volatility to label 4 distinct market regimes:
+    </p>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-top: 12px;">
+      <div style="background: var(--bg-sunken); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+        <strong style="color: var(--good);">1. Bullish Momentum</strong>
+        <p style="font-size: 0.8rem; color: var(--text-dim); margin: 4px 0 0 0;">Positive drift, low-to-moderate volatility. Favors Trend-Following (<code>precision_swing</code>).</p>
+      </div>
+      <div style="background: var(--bg-sunken); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+        <strong style="color: var(--bad);">2. Bearish Momentum</strong>
+        <p style="font-size: 0.8rem; color: var(--text-dim); margin: 4px 0 0 0;">Negative drift, elevated volatility. Short trend continuations.</p>
+      </div>
+      <div style="background: var(--bg-sunken); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+        <strong style="color: var(--info);">3. Mean-Reverting Range</strong>
+        <p style="font-size: 0.8rem; color: var(--text-dim); margin: 4px 0 0 0;">Zero drift, low volatility. Favors Mean-Reversion (<code>bb_midline_break</code>, <code>rsi_stoch_confluence</code>).</p>
+      </div>
+      <div style="background: var(--bg-sunken); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+        <strong style="color: var(--warn);">4. High Volatility Chop</strong>
+        <p style="font-size: 0.8rem; color: var(--text-dim); margin: 4px 0 0 0;">Erratic drift, extreme variance. Guardian halts trend entries; activates volatility breakouts only.</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer id="site-footer"></footer>
+
+<script type="module">
+  import { mountChrome } from './assets/js/core.js';
+  mountChrome('research');
+</script>
+</body>
+</html>

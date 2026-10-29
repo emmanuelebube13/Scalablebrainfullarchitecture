@@ -1,0 +1,1542 @@
+{
+  "version": "2026-10-29",
+  "stores": {
+    "system3_ams": {
+      "title": "System 3: AMS Guardian (ams.db)",
+      "description": "Master risk gate ledger and live protective state",
+      "tables": [
+        {
+          "name": "ams_decision_log",
+          "store": "System 3 (ams.db SQLite)",
+          "category": "Risk & Guardian",
+          "rows": 104,
+          "primary_key": [
+            "id"
+          ],
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "nullable": true,
+              "pk": true,
+              "default": null
+            },
+            {
+              "name": "signal_id",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "received_at",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "decided_at",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": "CURRENT_TIMESTAMP"
+            },
+            {
+              "name": "latency_ms",
+              "type": "INTEGER",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "outcome",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "rejected_at_layer",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "reasons",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": "'[]'"
+            },
+            {
+              "name": "input_snapshot",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": "'{}'"
+            },
+            {
+              "name": "approved_units",
+              "type": "NUMERIC",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "risk_amount_acct_ccy",
+              "type": "NUMERIC",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            }
+          ]
+        },
+        {
+          "name": "ams_open_positions",
+          "store": "System 3 (ams.db SQLite)",
+          "category": "Risk & Guardian",
+          "rows": 9,
+          "primary_key": [
+            "broker_trade_id"
+          ],
+          "columns": [
+            {
+              "name": "broker_trade_id",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": true,
+              "default": null
+            },
+            {
+              "name": "account_id",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "pair",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "direction",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "units",
+              "type": "NUMERIC",
+              "nullable": false,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "entry_price",
+              "type": "NUMERIC",
+              "nullable": false,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "sl",
+              "type": "NUMERIC",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "tp",
+              "type": "NUMERIC",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "risk_amount",
+              "type": "NUMERIC",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            },
+            {
+              "name": "opened_at",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "unrealized_pnl",
+              "type": "NUMERIC",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            },
+            {
+              "name": "last_snapshot_at",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "internal_trade_id",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "financing",
+              "type": "NUMERIC",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            }
+          ]
+        },
+        {
+          "name": "ams_account_state",
+          "store": "System 3 (ams.db SQLite)",
+          "category": "Risk & Guardian",
+          "rows": 1,
+          "primary_key": [
+            "account_id"
+          ],
+          "columns": [
+            {
+              "name": "account_id",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": true,
+              "default": null
+            },
+            {
+              "name": "mode",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": "'demo'"
+            },
+            {
+              "name": "state",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": "'PAUSED'"
+            },
+            {
+              "name": "balance",
+              "type": "NUMERIC",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            },
+            {
+              "name": "equity",
+              "type": "NUMERIC",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            },
+            {
+              "name": "peak_equity",
+              "type": "NUMERIC",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            },
+            {
+              "name": "drawdown_pct",
+              "type": "NUMERIC",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            },
+            {
+              "name": "daily_pnl",
+              "type": "NUMERIC",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            },
+            {
+              "name": "weekly_pnl",
+              "type": "NUMERIC",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            },
+            {
+              "name": "consecutive_losses",
+              "type": "INTEGER",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            },
+            {
+              "name": "open_risk_pct",
+              "type": "NUMERIC",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            },
+            {
+              "name": "margin_used_pct",
+              "type": "NUMERIC",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            },
+            {
+              "name": "stage",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": "'paper'"
+            },
+            {
+              "name": "updated_at",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": "CURRENT_TIMESTAMP"
+            },
+            {
+              "name": "resume_state",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "account_ccy",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            }
+          ]
+        },
+        {
+          "name": "ams_circuit_breaker_log",
+          "store": "System 3 (ams.db SQLite)",
+          "category": "Risk & Guardian",
+          "rows": 0,
+          "primary_key": [
+            "id"
+          ],
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "nullable": true,
+              "pk": true,
+              "default": null
+            },
+            {
+              "name": "breaker_name",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "fired_at",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": "CURRENT_TIMESTAMP"
+            },
+            {
+              "name": "trigger_values",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": "'{}'"
+            },
+            {
+              "name": "action_taken",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "reset_at",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "reset_by",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            }
+          ]
+        },
+        {
+          "name": "trade_journal",
+          "store": "System 3 (ams.db SQLite)",
+          "category": "Risk & Guardian",
+          "rows": 19,
+          "primary_key": [
+            "id"
+          ],
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "nullable": true,
+              "pk": true,
+              "default": null
+            },
+            {
+              "name": "signal_id",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "broker_order_id",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "pair",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "strategy_id",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "regime_at_entry",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "direction",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "units",
+              "type": "NUMERIC",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "entry_price",
+              "type": "NUMERIC",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "entry_time",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "exit_price",
+              "type": "NUMERIC",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "exit_time",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "risk_amount",
+              "type": "NUMERIC",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "realized_pnl",
+              "type": "NUMERIC",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "slippage_pips",
+              "type": "NUMERIC",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "exit_reason",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "balance_at_entry",
+              "type": "NUMERIC",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "drawdown_at_entry",
+              "type": "NUMERIC",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "streak_at_entry",
+              "type": "INTEGER",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "created_at",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": "CURRENT_TIMESTAMP"
+            },
+            {
+              "name": "granularity",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "broker_trade_id",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            }
+          ]
+        },
+        {
+          "name": "ams_market_prices",
+          "store": "System 3 (ams.db SQLite)",
+          "category": "Risk & Guardian",
+          "rows": 11,
+          "primary_key": [
+            "pair"
+          ],
+          "columns": [
+            {
+              "name": "pair",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": true,
+              "default": null
+            },
+            {
+              "name": "price",
+              "type": "NUMERIC",
+              "nullable": false,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "as_of",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "updated_at",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": "CURRENT_TIMESTAMP"
+            }
+          ]
+        },
+        {
+          "name": "equity_curve",
+          "store": "System 3 (ams.db SQLite)",
+          "category": "Risk & Guardian",
+          "rows": 29,
+          "primary_key": [
+            "id"
+          ],
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "nullable": true,
+              "pk": true,
+              "default": null
+            },
+            {
+              "name": "ts",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": "CURRENT_TIMESTAMP"
+            },
+            {
+              "name": "balance",
+              "type": "NUMERIC",
+              "nullable": false,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "equity",
+              "type": "NUMERIC",
+              "nullable": false,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "drawdown_pct",
+              "type": "NUMERIC",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            }
+          ]
+        },
+        {
+          "name": "daily_summary",
+          "store": "System 3 (ams.db SQLite)",
+          "category": "Risk & Guardian",
+          "rows": 15,
+          "primary_key": [
+            "day"
+          ],
+          "columns": [
+            {
+              "name": "day",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": true,
+              "default": null
+            },
+            {
+              "name": "pnl",
+              "type": "NUMERIC",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            },
+            {
+              "name": "trades",
+              "type": "INTEGER",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            },
+            {
+              "name": "wins",
+              "type": "INTEGER",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            },
+            {
+              "name": "losses",
+              "type": "INTEGER",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            },
+            {
+              "name": "win_rate",
+              "type": "NUMERIC",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            },
+            {
+              "name": "max_dd_intraday",
+              "type": "NUMERIC",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            },
+            {
+              "name": "breakers_fired",
+              "type": "INTEGER",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            },
+            {
+              "name": "sharpe_30d",
+              "type": "NUMERIC",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            },
+            {
+              "name": "calmar_30d",
+              "type": "NUMERIC",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            },
+            {
+              "name": "profit_factor",
+              "type": "NUMERIC",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            },
+            {
+              "name": "expectancy_per_trade",
+              "type": "NUMERIC",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            },
+            {
+              "name": "avg_hold_hours",
+              "type": "NUMERIC",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            },
+            {
+              "name": "avg_slippage_pips",
+              "type": "NUMERIC",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            }
+          ]
+        },
+        {
+          "name": "notify_outbox",
+          "store": "System 3 (ams.db SQLite)",
+          "category": "Risk & Guardian",
+          "rows": 173,
+          "primary_key": [
+            "id"
+          ],
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER",
+              "nullable": true,
+              "pk": true,
+              "default": null
+            },
+            {
+              "name": "dedup_key",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "event",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "urgency",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "channels",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": "'[]'"
+            },
+            {
+              "name": "delivered_channels",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": "'[]'"
+            },
+            {
+              "name": "payload",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": "'{}'"
+            },
+            {
+              "name": "subject",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": "''"
+            },
+            {
+              "name": "body",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": "''"
+            },
+            {
+              "name": "email_html",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": "''"
+            },
+            {
+              "name": "status",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": "'pending'"
+            },
+            {
+              "name": "attempts",
+              "type": "INTEGER",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            },
+            {
+              "name": "max_attempts",
+              "type": "INTEGER",
+              "nullable": false,
+              "pk": false,
+              "default": "8"
+            },
+            {
+              "name": "next_attempt_at",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "requires_ack",
+              "type": "INTEGER",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            },
+            {
+              "name": "acked_at",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "acked_by",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "resends",
+              "type": "INTEGER",
+              "nullable": false,
+              "pk": false,
+              "default": "0"
+            },
+            {
+              "name": "last_resent_at",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "created_at",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": "CURRENT_TIMESTAMP"
+            },
+            {
+              "name": "sent_at",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            }
+          ]
+        },
+        {
+          "name": "ams_runtime_flags",
+          "store": "System 3 (ams.db SQLite)",
+          "category": "Risk & Guardian",
+          "rows": 10,
+          "primary_key": [
+            "name"
+          ],
+          "columns": [
+            {
+              "name": "name",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": true,
+              "default": null
+            },
+            {
+              "name": "value",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "updated_at",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": "CURRENT_TIMESTAMP"
+            }
+          ]
+        },
+        {
+          "name": "ams_order_watch",
+          "store": "System 3 (ams.db SQLite)",
+          "category": "Risk & Guardian",
+          "rows": 22,
+          "primary_key": [
+            "order_request_id"
+          ],
+          "columns": [
+            {
+              "name": "order_request_id",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": true,
+              "default": null
+            },
+            {
+              "name": "signal_id",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "pair",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "units",
+              "type": "NUMERIC",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "decision_outcome",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "published_at",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "expires_at",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "status",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": "'pending'"
+            },
+            {
+              "name": "resolved_at",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "resolution_detail",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "flagged_at",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            }
+          ]
+        }
+      ]
+    },
+    "system2_execution": {
+      "title": "System 2: Execution Bridge (system2.db)",
+      "description": "Order routing and broker trade fill records",
+      "tables": [
+        {
+          "name": "Fact_Live_Trades",
+          "store": "System 2 (system2.db SQLite)",
+          "category": "Execution & Orders",
+          "rows": 22,
+          "primary_key": [
+            "Order_ID"
+          ],
+          "columns": [
+            {
+              "name": "Order_ID",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": true,
+              "default": null
+            },
+            {
+              "name": "Correlation_ID",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "Instrument",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "Side",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "Units",
+              "type": "INTEGER",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "Created_At",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "Broker_Order_ID",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "Broker_Trade_ID",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "Fill_Price",
+              "type": "REAL",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "Fill_Time",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "Requested_Price",
+              "type": "REAL",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "Slippage_Pips",
+              "type": "REAL",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "Realized_Status",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "Filled_Units",
+              "type": "INTEGER",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "Stop_Loss_Price",
+              "type": "REAL",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "Take_Profit_Price",
+              "type": "REAL",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "Model_Threshold",
+              "type": "REAL",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "Model_Set_ID",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "Regime_Label",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "Correlation_Score",
+              "type": "REAL",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "Correlation_Passed",
+              "type": "INTEGER",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "Reject_Reason",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            },
+            {
+              "name": "Updated_At",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": false,
+              "default": null
+            }
+          ]
+        },
+        {
+          "name": "schema_migrations",
+          "store": "System 2 (system2.db SQLite)",
+          "category": "Execution & Orders",
+          "rows": 1,
+          "primary_key": [
+            "name"
+          ],
+          "columns": [
+            {
+              "name": "name",
+              "type": "TEXT",
+              "nullable": true,
+              "pk": true,
+              "default": null
+            },
+            {
+              "name": "applied_at",
+              "type": "TEXT",
+              "nullable": false,
+              "pk": false,
+              "default": null
+            }
+          ]
+        }
+      ]
+    },
+    "telemetry_timescale": {
+      "title": "Telemetry Server & Ledger (Postgres / TimescaleDB)",
+      "description": "Historical analytics, trade journal, and continuous audit",
+      "tables": [
+        {
+          "name": "fact_live_trades",
+          "store": "Layer 4 / Postgres scalable_brain",
+          "category": "Forensics & Reporting",
+          "rows": 22,
+          "primary_key": [
+            "order_id"
+          ],
+          "columns": [
+            {
+              "name": "order_id",
+              "type": "VARCHAR(64)",
+              "nullable": false,
+              "pk": true,
+              "description": "Unique order identifier"
+            },
+            {
+              "name": "broker_order_id",
+              "type": "VARCHAR(64)",
+              "nullable": true,
+              "pk": false,
+              "description": "OANDA broker order identifier"
+            },
+            {
+              "name": "broker_trade_id",
+              "type": "VARCHAR(64)",
+              "nullable": true,
+              "pk": false,
+              "description": "OANDA broker filled trade identifier"
+            },
+            {
+              "name": "instrument",
+              "type": "VARCHAR(16)",
+              "nullable": false,
+              "pk": false,
+              "description": "Currency pair (e.g. EUR_USD)"
+            },
+            {
+              "name": "side",
+              "type": "VARCHAR(8)",
+              "nullable": false,
+              "pk": false,
+              "description": "Direction (LONG or SHORT)"
+            },
+            {
+              "name": "units",
+              "type": "INTEGER",
+              "nullable": false,
+              "pk": false,
+              "description": "Approved execution size"
+            },
+            {
+              "name": "fill_price",
+              "type": "NUMERIC(12,5)",
+              "nullable": true,
+              "pk": false,
+              "description": "Executed fill price"
+            },
+            {
+              "name": "stop_loss_price",
+              "type": "NUMERIC(12,5)",
+              "nullable": true,
+              "pk": false,
+              "description": "Initial stop-loss price bracket"
+            },
+            {
+              "name": "take_profit_price",
+              "type": "NUMERIC(12,5)",
+              "nullable": true,
+              "pk": false,
+              "description": "Take-profit price bracket"
+            },
+            {
+              "name": "slippage_pips",
+              "type": "NUMERIC(8,2)",
+              "nullable": true,
+              "pk": false,
+              "description": "Difference between requested and filled price in pips"
+            },
+            {
+              "name": "realized_status",
+              "type": "VARCHAR(16)",
+              "nullable": true,
+              "pk": false,
+              "description": "Status (OPEN, CLOSED, CANCELLED)"
+            },
+            {
+              "name": "net_pnl",
+              "type": "NUMERIC(12,2)",
+              "nullable": true,
+              "pk": false,
+              "description": "Realized net profit/loss in CAD"
+            },
+            {
+              "name": "strategy_id",
+              "type": "INTEGER",
+              "nullable": true,
+              "pk": false,
+              "description": "Foreign key to dim_strategy catalog"
+            },
+            {
+              "name": "signal_id",
+              "type": "VARCHAR(64)",
+              "nullable": true,
+              "pk": false,
+              "description": "System 1 originating signal identifier"
+            },
+            {
+              "name": "timestamp",
+              "type": "TIMESTAMPTZ",
+              "nullable": false,
+              "pk": false,
+              "description": "Order creation timestamp"
+            }
+          ]
+        },
+        {
+          "name": "dim_strategy",
+          "store": "Layer 4 / Postgres scalable_brain",
+          "category": "Reference Dimension",
+          "rows": 67,
+          "primary_key": [
+            "strategy_id"
+          ],
+          "columns": [
+            {
+              "name": "strategy_id",
+              "type": "INTEGER",
+              "nullable": false,
+              "pk": true,
+              "description": "Strategy integer ID"
+            },
+            {
+              "name": "strategy_name",
+              "type": "VARCHAR(64)",
+              "nullable": false,
+              "pk": false,
+              "description": "Canonical strategy name (e.g. precision_swing)"
+            },
+            {
+              "name": "family",
+              "type": "VARCHAR(32)",
+              "nullable": true,
+              "pk": false,
+              "description": "Strategy family (trend, mean-reversion, breakout)"
+            },
+            {
+              "name": "is_active",
+              "type": "BOOLEAN",
+              "nullable": false,
+              "pk": false,
+              "description": "Active deployment flag"
+            }
+          ]
+        },
+        {
+          "name": "s1_scored_signals_log",
+          "store": "System 1 / Postgres scalable_brain",
+          "category": "Quant Emission",
+          "rows": 1250,
+          "primary_key": [
+            "signal_id"
+          ],
+          "columns": [
+            {
+              "name": "signal_id",
+              "type": "UUID",
+              "nullable": false,
+              "pk": true,
+              "description": "Globally unique signal UUID"
+            },
+            {
+              "name": "produced_at",
+              "type": "TIMESTAMPTZ",
+              "nullable": false,
+              "pk": false,
+              "description": "Signal generation timestamp"
+            },
+            {
+              "name": "pair",
+              "type": "VARCHAR(16)",
+              "nullable": false,
+              "pk": false,
+              "description": "Currency pair symbol"
+            },
+            {
+              "name": "direction",
+              "type": "VARCHAR(8)",
+              "nullable": false,
+              "pk": false,
+              "description": "Signal direction (long / short)"
+            },
+            {
+              "name": "strategy_id",
+              "type": "INTEGER",
+              "nullable": false,
+              "pk": false,
+              "description": "Originating strategy ID"
+            },
+            {
+              "name": "granularity",
+              "type": "VARCHAR(8)",
+              "nullable": false,
+              "pk": false,
+              "description": "Bar granularity (H1, H4, D1)"
+            },
+            {
+              "name": "regime",
+              "type": "VARCHAR(32)",
+              "nullable": false,
+              "pk": false,
+              "description": "HMM regime label at signal entry"
+            },
+            {
+              "name": "model_score",
+              "type": "NUMERIC(8,4)",
+              "nullable": false,
+              "pk": false,
+              "description": "XGBoost ML gatekeeper confidence score (0.0 to 1.0)"
+            },
+            {
+              "name": "proposed_entry",
+              "type": "NUMERIC(12,5)",
+              "nullable": false,
+              "pk": false,
+              "description": "Proposed entry price"
+            },
+            {
+              "name": "proposed_sl",
+              "type": "NUMERIC(12,5)",
+              "nullable": false,
+              "pk": false,
+              "description": "Proposed initial stop loss"
+            },
+            {
+              "name": "proposed_tp",
+              "type": "NUMERIC(12,5)",
+              "nullable": false,
+              "pk": false,
+              "description": "Proposed target profit"
+            },
+            {
+              "name": "atr",
+              "type": "NUMERIC(12,5)",
+              "nullable": false,
+              "pk": false,
+              "description": "ATR 14-period volatility metric at entry"
+            }
+          ]
+        }
+      ]
+    },
+    "artifacts": {
+      "title": "Artifacts & JSON Snapshots",
+      "description": "File-based shared contracts between microservices",
+      "payloads": [
+        {
+          "name": "latest.json",
+          "store": "C:/SB/data/artifacts/telemetry/latest.json",
+          "category": "Publisher Snapshot",
+          "cadence": "Every 30 seconds",
+          "description": "The unified live telemetry snapshot consumed by the telemetry dashboard and supervisor.",
+          "keys": [
+            "s2status",
+            "s2health",
+            "s2regime",
+            "s2signal",
+            "s3health",
+            "s3state",
+            "s3breakers",
+            "strategy",
+            "positions",
+            "decisions",
+            "reconciliation",
+            "attribution",
+            "environment"
+          ]
+        },
+        {
+          "name": "strategy_catalog.json",
+          "store": "C:/SB/data/artifacts/system1/analytics/.../strategy_catalog.json",
+          "category": "S1 Analytics Bundle",
+          "cadence": "Weekly / Retraining run",
+          "description": "Full specifications, OOS metrics, and gate results for all 67 quantitative strategies.",
+          "keys": [
+            "artifact",
+            "version",
+            "qualification_run_id",
+            "strategies"
+          ]
+        },
+        {
+          "name": "s1_health.json",
+          "store": "C:/SB/data/artifacts/telemetry/s1_health.json",
+          "category": "System 1 Status",
+          "cadence": "Every 60 seconds",
+          "description": "System 1 factory heartbeat, active champion bundle ID, and feature pipeline status.",
+          "keys": [
+            "status",
+            "as_of_utc",
+            "champion_bundle",
+            "dataset_cutoff",
+            "data_quality"
+          ]
+        }
+      ]
+    }
+  }
+}

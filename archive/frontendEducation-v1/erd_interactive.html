@@ -1,0 +1,3245 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive ERD & Data Lineage Explorer | Scalable Brain</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ==========================================================================
+           1. DESIGN TOKENS & THEME SYSTEM (WCAG AAA CONTRAST CALIBRATED)
+           ========================================================================== */
+        :root {
+            --bg-canvas: #f1f5f9;
+            --bg-surface: #ffffff;
+            --bg-elevated: #f8fafc;
+            --bg-glass: rgba(255, 255, 255, 0.88);
+            --ink-primary: #0f172a;
+            --ink-secondary: #334155;
+            --ink-muted: #64748b;
+            --border-subtle: #e2e8f0;
+            --border-strong: #cbd5e1;
+            --focus-ring: #2563eb;
+
+            /* Semantic Domain Colors */
+            --dim-bg: #eff6ff;
+            --dim-border: #93c5fd;
+            --dim-text: #1d4ed8;
+            --dim-accent: #2563eb;
+
+            --fact-bg: #ecfdf5;
+            --fact-border: #6ee7b7;
+            --fact-text: #047857;
+            --fact-accent: #059669;
+
+            --bridge-bg: #f5f3ff;
+            --bridge-border: #c4b5fd;
+            --bridge-text: #6d28d9;
+            --bridge-accent: #7c3aed;
+
+            --op-bg: #fffbeb;
+            --op-border: #fcd34d;
+            --op-text: #b45309;
+            --op-accent: #d97706;
+
+            /* Auditor Risk Colors */
+            --risk-ok-bg: #dcfce7;
+            --risk-ok-text: #15803d;
+            --risk-warn-bg: #fef3c7;
+            --risk-warn-text: #b45309;
+            --risk-crit-bg: #fee2e2;
+            --risk-crit-text: #b91c1c;
+            --risk-crit-border: #f87171;
+
+            /* SVG Reactive Variables */
+            --svg-grid: #e2e8f0;
+            --svg-node-bg: #ffffff;
+            --svg-node-shadow: rgba(15, 23, 42, 0.08);
+            --svg-pill-bg: #f8fafc;
+
+            --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+            --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+            --shadow-lg: 0 12px 32px -4px rgba(15, 23, 42, 0.14), 0 4px 12px -2px rgba(15, 23, 42, 0.06);
+            --shadow-drawer: -12px 0 40px rgba(15, 23, 42, 0.18);
+
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --max-w: 1540px;
+        }
+
+        [data-theme="dark"] {
+            --bg-canvas: #090d16;
+            --bg-surface: #111827;
+            --bg-elevated: #1e293b;
+            --bg-glass: rgba(17, 24, 39, 0.88);
+            --ink-primary: #f8fafc;
+            --ink-secondary: #cbd5e1;
+            --ink-muted: #94a3b8;
+            --border-subtle: #1e293b;
+            --border-strong: #334155;
+            --focus-ring: #38bdf8;
+
+            --dim-bg: rgba(37, 99, 235, 0.15);
+            --dim-border: rgba(96, 165, 250, 0.4);
+            --dim-text: #93c5fd;
+            --dim-accent: #3b82f6;
+
+            --fact-bg: rgba(5, 150, 105, 0.15);
+            --fact-border: rgba(52, 211, 153, 0.4);
+            --fact-text: #6ee7b7;
+            --fact-accent: #10b981;
+
+            --bridge-bg: rgba(124, 58, 237, 0.15);
+            --bridge-border: rgba(167, 139, 250, 0.4);
+            --bridge-text: #c4b5fd;
+            --bridge-accent: #8b5cf6;
+
+            --op-bg: rgba(217, 119, 6, 0.15);
+            --op-border: rgba(251, 191, 36, 0.4);
+            --op-text: #fcd34d;
+            --op-accent: #f59e0b;
+
+            --risk-ok-bg: rgba(21, 128, 61, 0.22);
+            --risk-ok-text: #86efac;
+            --risk-warn-bg: rgba(180, 83, 9, 0.25);
+            --risk-warn-text: #fde047;
+            --risk-crit-bg: rgba(185, 28, 28, 0.25);
+            --risk-crit-text: #fca5a5;
+            --risk-crit-border: #ef4444;
+
+            --svg-grid: #1e293b;
+            --svg-node-bg: #111827;
+            --svg-node-shadow: rgba(0, 0, 0, 0.5);
+            --svg-pill-bg: #0f172a;
+
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+            --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.5);
+            --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.65);
+            --shadow-drawer: -12px 0 45px rgba(0, 0, 0, 0.75);
+        }
+
+        /* ==========================================================================
+           2. BASE RESET & ACCESSIBILITY UTILITIES
+           ========================================================================== */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-canvas);
+            color: var(--ink-primary);
+            line-height: 1.55;
+            font-size: 15px;
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        :focus-visible {
+            outline: 3px solid var(--focus-ring);
+            outline-offset: 2px;
+        }
+
+        .skip-link {
+            position: absolute;
+            top: -100px;
+            left: 16px;
+            z-index: 9999;
+            background: var(--focus-ring);
+            color: #ffffff;
+            padding: 10px 18px;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            text-decoration: none;
+            box-shadow: var(--shadow-lg);
+            transition: top 0.2s ease;
+        }
+
+        .skip-link:focus {
+            top: 12px;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        code, pre, .mono {
+            font-family: "JetBrains Mono", monospace;
+        }
+
+        .container {
+            width: min(var(--max-w), calc(100% - 36px));
+            margin: 0 auto;
+        }
+
+        /* ==========================================================================
+           3. TOP NAVIGATION & COMMAND HEADER
+           ========================================================================== */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 200;
+            background: var(--bg-glass);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .topbar-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .brand-group {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-family: "Space Grotesk", sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--ink-primary);
+            text-decoration: none;
+        }
+
+        .brand-mark {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            background: linear-gradient(135deg, #2563eb, #0d9488);
+            color: #fff;
+            display: grid;
+            place-items: center;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+        }
+
+        .host-pill {
+            font-family: "JetBrains Mono", monospace;
+            font-size: 0.73rem;
+            padding: 3px 9px;
+            border-radius: 999px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-strong);
+            color: var(--ink-secondary);
+            font-weight: 600;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-links a {
+            color: var(--ink-secondary);
+            text-decoration: none;
+            font-size: 0.86rem;
+            font-weight: 600;
+            padding: 6px 11px;
+            border-radius: var(--radius-sm);
+            transition: all 0.15s ease;
+        }
+
+        .nav-links a:hover, .nav-links a.active-page {
+            color: var(--dim-accent);
+            background: var(--dim-bg);
+        }
+
+        .utility-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-util {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-strong);
+            color: var(--ink-primary);
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s ease;
+        }
+
+        .btn-util:hover {
+            border-color: var(--dim-accent);
+            background: var(--bg-elevated);
+        }
+
+        .btn-util[aria-pressed="true"] {
+            background: var(--dim-bg);
+            border-color: var(--dim-accent);
+            color: var(--dim-text);
+        }
+
+        /* ==========================================================================
+           4. COMPACT HERO & TELEMETRY RIBBON (DECLUTTERED)
+           ========================================================================== */
+        .hero-header {
+            padding: 20px 0 14px;
+        }
+
+        .hero-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        .hero-title-box h1 {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: clamp(1.45rem, 2.2vw, 1.95rem);
+            letter-spacing: -0.4px;
+            line-height: 1.2;
+            margin-bottom: 4px;
+        }
+
+        .hero-subtitle {
+            color: var(--ink-secondary);
+            font-size: 0.94rem;
+            max-width: 78ch;
+        }
+
+        .hero-Collapsible-triggers {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        /* Interactive KPI Telemetry Strip */
+        .kpi-ribbon {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .kpi-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 11px 14px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+            transition: transform 0.15s ease, border-color 0.15s ease;
+            text-align: left;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-1px);
+            border-color: var(--dim-accent);
+        }
+
+        .kpi-label {
+            font-size: 0.74rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--ink-muted);
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .kpi-value {
+            font-family: "JetBrains Mono", monospace;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--ink-primary);
+        }
+
+        .kpi-sub {
+            font-size: 0.76rem;
+            color: var(--ink-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .mini-bar {
+            height: 4px;
+            width: 100%;
+            background: var(--bg-elevated);
+            border-radius: 99px;
+            overflow: hidden;
+            margin-top: 2px;
+        }
+
+        .mini-bar-fill {
+            height: 100%;
+            border-radius: 99px;
+        }
+
+        /* Collapsible Drawers for Architecture Theory & Glossary (Saves vertical space!) */
+        .collapsible-panel {
+            display: none;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-strong);
+            border-left: 4px solid var(--dim-accent);
+            border-radius: var(--radius-md);
+            padding: 18px 20px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow-md);
+            animation: slideDown 0.2s ease-out;
+        }
+
+        .collapsible-panel.open {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pattern-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .pattern-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            font-size: 0.84rem;
+        }
+
+        .pattern-card.primary-pattern {
+            background: var(--dim-bg);
+            border-color: var(--dim-border);
+        }
+
+        .pattern-card h3 {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 0.92rem;
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .glossary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .glossary-item {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            padding: 10px 12px;
+            font-size: 0.82rem;
+        }
+
+        .glossary-term {
+            font-family: "JetBrains Mono", monospace;
+            font-weight: 700;
+            color: var(--dim-text);
+            font-size: 0.84rem;
+            margin-bottom: 2px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* ==========================================================================
+           5. UNIFIED WORKSPACE CONTROL BAR (TABS + GLOBAL SEARCH + FILTERS)
+           ========================================================================== */
+        .workspace-bar {
+            position: sticky;
+            top: 55px;
+            z-index: 150;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 10px 14px;
+            margin-bottom: 18px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .workspace-row-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .view-tabs {
+            display: flex;
+            gap: 6px;
+            background: var(--bg-elevated);
+            padding: 4px;
+            border-radius: var(--radius-sm);
+            flex-wrap: wrap;
+        }
+
+        .view-tab {
+            background: transparent;
+            border: none;
+            padding: 7px 14px;
+            border-radius: 5px;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--ink-secondary);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: all 0.15s ease;
+        }
+
+        .view-tab:hover {
+            color: var(--ink-primary);
+        }
+
+        .view-tab[aria-selected="true"] {
+            background: var(--bg-surface);
+            color: var(--dim-accent);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .tab-count {
+            font-family: "JetBrains Mono", monospace;
+            font-size: 0.72rem;
+            padding: 1px 6px;
+            border-radius: 99px;
+            background: var(--bg-elevated);
+            color: var(--ink-muted);
+        }
+
+        .filter-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            flex: 1;
+            justify-content: flex-end;
+        }
+
+        .search-wrapper {
+            position: relative;
+            min-width: 260px;
+            flex: 0 1 320px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 7px 64px 7px 32px;
+            font-size: 0.85rem;
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-sm);
+            background: var(--bg-elevated);
+            color: var(--ink-primary);
+            transition: border-color 0.15s ease, background-color 0.15s ease;
+        }
+
+        .search-input:focus {
+            background: var(--bg-surface);
+            border-color: var(--focus-ring);
+            outline: none;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.85rem;
+            color: var(--ink-muted);
+            pointer-events: none;
+        }
+
+        .search-kbd {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-family: "JetBrains Mono", monospace;
+            font-size: 0.7rem;
+            padding: 1px 6px;
+            border-radius: 4px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-strong);
+            color: var(--ink-muted);
+            pointer-events: none;
+        }
+
+        .filter-select {
+            padding: 7px 10px;
+            font-size: 0.83rem;
+            font-weight: 600;
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-sm);
+            background: var(--bg-elevated);
+            color: var(--ink-primary);
+            cursor: pointer;
+        }
+
+        /* Active Filter Status Bar */
+        .filter-status-strip {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--ink-secondary);
+            padding-top: 6px;
+            border-top: 1px solid var(--border-subtle);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .legend-pills {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* ==========================================================================
+           6. SEMANTIC BADGES & TAGS
+           ========================================================================== */
+        .type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            font-family: "Space Grotesk", sans-serif;
+        }
+
+        .type-dimension { background: var(--dim-bg); color: var(--dim-text); border: 1px solid var(--dim-border); }
+        .type-fact { background: var(--fact-bg); color: var(--fact-text); border: 1px solid var(--fact-border); }
+        .type-bridge { background: var(--bridge-bg); color: var(--bridge-text); border: 1px solid var(--bridge-border); }
+        .type-operational { background: var(--op-bg); color: var(--op-text); border: 1px solid var(--op-border); }
+
+        .risk-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 7px;
+            border-radius: 5px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            font-family: "JetBrains Mono", monospace;
+        }
+
+        .risk-ok { background: var(--risk-ok-bg); color: var(--risk-ok-text); }
+        .risk-warn { background: var(--risk-warn-bg); color: var(--risk-warn-text); }
+        .risk-crit { background: var(--risk-crit-bg); color: var(--risk-crit-text); border: 1px solid var(--risk-crit-border); }
+
+        .card-badge {
+            font-family: "JetBrains Mono", monospace;
+            font-size: 0.73rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: var(--dim-bg);
+            color: var(--dim-text);
+            border: 1px solid var(--dim-border);
+        }
+
+        /* ==========================================================================
+           7. VIEW 1: INTERACTIVE DATA FLOW DIAGRAM (DFD) PIPELINE
+           ========================================================================== */
+        .dfd-pipeline {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-bottom: 48px;
+        }
+
+        .dfd-stage {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 18px 20px;
+            box-shadow: var(--shadow-sm);
+            transition: opacity 0.2s ease;
+        }
+
+        .dfd-stage.stage-dimmed {
+            opacity: 0.35;
+        }
+
+        .dfd-stage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding-bottom: 12px;
+            margin-bottom: 14px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .dfd-stage-title-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stage-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            background: var(--dim-bg);
+            color: var(--dim-text);
+            border: 1px solid var(--dim-border);
+            font-family: "JetBrains Mono", monospace;
+            font-weight: 700;
+            font-size: 0.82rem;
+            display: grid;
+            place-items: center;
+        }
+
+        .dfd-stage-title {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .stage-summary-pill {
+            font-size: 0.76rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 99px;
+            background: var(--bg-elevated);
+            color: var(--ink-secondary);
+            border: 1px solid var(--border-strong);
+        }
+
+        .dfd-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+            gap: 14px;
+        }
+
+        .dfd-node-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: all 0.16s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 10px;
+            position: relative;
+            text-align: left;
+        }
+
+        .dfd-node-card:hover, .dfd-node-card:focus-visible {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--dim-accent);
+            background: var(--bg-surface);
+        }
+
+        .dfd-node-card.card-filtered-out {
+            opacity: 0.2;
+            pointer-events: none;
+        }
+
+        .dfd-node-card.card-selected {
+            border: 2px solid var(--focus-ring);
+            box-shadow: 0 0 0 3px var(--dim-bg);
+        }
+
+        .dfd-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .dfd-table-name {
+            font-family: "JetBrains Mono", monospace;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--ink-primary);
+            word-break: break-all;
+        }
+
+        .dfd-metrics-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            font-size: 0.78rem;
+            color: var(--ink-muted);
+            font-family: "JetBrains Mono", monospace;
+        }
+
+        .dfd-desc {
+            font-size: 0.85rem;
+            color: var(--ink-secondary);
+            line-height: 1.45;
+        }
+
+        .dfd-lineage-footer {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            padding: 7px 10px;
+            font-size: 0.78rem;
+            font-family: "JetBrains Mono", monospace;
+            color: var(--ink-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+        }
+
+        .dfd-flow-connector {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: -4px 0;
+        }
+
+        .dfd-flow-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-strong);
+            padding: 4px 14px;
+            border-radius: 99px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--dim-text);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* ==========================================================================
+           8. VIEW 2: INTERACTIVE PAN/ZOOM SVG SCHEMA GRAPH
+           ========================================================================== */
+        .graph-workspace {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            margin-bottom: 48px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .graph-toolbar {
+            padding: 10px 16px;
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .preset-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .preset-btn {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-strong);
+            color: var(--ink-secondary);
+            padding: 5px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .preset-btn:hover, .preset-btn.active {
+            background: var(--dim-bg);
+            color: var(--dim-text);
+            border-color: var(--dim-accent);
+        }
+
+        .canvas-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .zoom-btn {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-strong);
+            color: var(--ink-primary);
+            width: 30px;
+            height: 30px;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+        }
+
+        .zoom-btn:hover {
+            border-color: var(--dim-accent);
+            color: var(--dim-accent);
+        }
+
+        .svg-viewport {
+            width: 100%;
+            height: 680px;
+            overflow: hidden;
+            position: relative;
+            cursor: grab;
+            background-color: var(--bg-canvas);
+            background-image: radial-gradient(var(--svg-grid) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .svg-viewport:active {
+            cursor: grabbing;
+        }
+
+        svg.schema-svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+            user-select: none;
+        }
+
+        .svg-table-node {
+            cursor: pointer;
+            transition: opacity 0.2s ease, filter 0.2s ease;
+        }
+
+        .svg-table-node:hover, .svg-table-node:focus {
+            filter: drop-shadow(0 6px 14px rgba(37, 99, 235, 0.35));
+            outline: none;
+        }
+
+        .svg-table-node.dimmed {
+            opacity: 0.16;
+        }
+
+        .svg-table-node.pinned rect.node-frame {
+            stroke-width: 3.5px;
+            stroke: var(--focus-ring);
+        }
+
+        .svg-rel-link {
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .svg-rel-link.dimmed {
+            opacity: 0.08;
+        }
+
+        .svg-rel-link.highlighted path.rel-path {
+            stroke-width: 3.5px !important;
+            stroke-dasharray: 8 4;
+            animation: flowDash 1s linear infinite;
+        }
+
+        @keyframes flowDash {
+            to { stroke-dashoffset: -12; }
+        }
+
+        .graph-footer-bar {
+            padding: 10px 16px;
+            background: var(--bg-elevated);
+            border-top: 1px solid var(--border-subtle);
+            font-size: 0.82rem;
+            color: var(--ink-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        /* ==========================================================================
+           9. VIEW 3: INTERACTIVE ERD GRID & CARDINALITY EXPLORER
+           ========================================================================== */
+        .erd-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 16px;
+            margin-bottom: 48px;
+        }
+
+        .erd-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: all 0.16s ease;
+            cursor: pointer;
+        }
+
+        .erd-card:hover, .erd-card:focus-visible {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--dim-accent);
+        }
+
+        .erd-card-header {
+            padding: 12px 16px;
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .erd-card-title {
+            font-family: "JetBrains Mono", monospace;
+            font-size: 0.96rem;
+            font-weight: 700;
+            color: var(--ink-primary);
+        }
+
+        .erd-card-body {
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .erd-telemetry-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.78rem;
+            color: var(--ink-secondary);
+            padding-bottom: 8px;
+            border-bottom: 1px dashed var(--border-strong);
+            font-family: "JetBrains Mono", monospace;
+        }
+
+        .col-list-preview {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-family: "JetBrains Mono", monospace;
+            font-size: 0.79rem;
+        }
+
+        .col-preview-row {
+            display: grid;
+            grid-template-columns: 32px 1fr auto;
+            align-items: center;
+            gap: 6px;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        .col-preview-row.col-match {
+            background: var(--dim-bg);
+            font-weight: 700;
+        }
+
+        .key-pill {
+            font-size: 0.66rem;
+            font-weight: 700;
+            padding: 1px 4px;
+            border-radius: 3px;
+            text-align: center;
+        }
+
+        .key-pk { background: var(--op-bg); color: var(--op-text); border: 1px solid var(--op-border); }
+        .key-fk { background: var(--dim-bg); color: var(--dim-text); border: 1px solid var(--dim-border); }
+
+        .erd-rel-box {
+            margin-top: auto;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            padding: 9px 11px;
+            font-size: 0.78rem;
+        }
+
+        .erd-rel-header {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--ink-muted);
+            margin-bottom: 5px;
+        }
+
+        .erd-rel-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 3px;
+            font-family: "JetBrains Mono", monospace;
+            font-size: 0.75rem;
+            color: var(--ink-secondary);
+        }
+
+        /* ==========================================================================
+           10. VIEW 4: SORTABLE COMPREHENSIVE TABLE CATALOG
+           ========================================================================== */
+        .catalog-wrap {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            overflow-x: auto;
+            margin-bottom: 48px;
+        }
+
+        table.catalog-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.86rem;
+        }
+
+        table.catalog-table th {
+            background: var(--bg-elevated);
+            padding: 12px 14px;
+            font-family: "Space Grotesk", sans-serif;
+            font-weight: 700;
+            color: var(--ink-primary);
+            border-bottom: 2px solid var(--border-strong);
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        table.catalog-table th:hover {
+            color: var(--dim-accent);
+        }
+
+        table.catalog-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-subtle);
+            color: var(--ink-secondary);
+            vertical-align: top;
+        }
+
+        table.catalog-table tr {
+            cursor: pointer;
+            transition: background-color 0.12s ease;
+        }
+
+        table.catalog-table tbody tr:hover td {
+            background: var(--bg-elevated);
+        }
+
+        /* ==========================================================================
+           11. SLIDE-OVER INSPECTOR DRAWER (NON-BLOCKING CONTEXTUAL PANEL)
+           ========================================================================== */
+        .drawer-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(9, 13, 22, 0.45);
+            backdrop-filter: blur(2px);
+            z-index: 900;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.22s ease;
+        }
+
+        .drawer-backdrop.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .inspector-drawer {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: min(620px, 100vw);
+            background: var(--bg-surface);
+            border-left: 1px solid var(--border-strong);
+            box-shadow: var(--shadow-drawer);
+            z-index: 950;
+            transform: translateX(102%);
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .inspector-drawer.open {
+            transform: translateX(0);
+        }
+
+        .drawer-topbar {
+            padding: 14px 20px;
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .breadcrumb-trail {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            font-family: "JetBrains Mono", monospace;
+            font-size: 0.75rem;
+        }
+
+        .crumb-btn {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-strong);
+            color: var(--ink-secondary);
+            padding: 2px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: inherit;
+        }
+
+        .crumb-btn:hover {
+            border-color: var(--dim-accent);
+            color: var(--dim-accent);
+        }
+
+        .drawer-close {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-strong);
+            color: var(--ink-primary);
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+        }
+
+        .drawer-header {
+            padding: 18px 20px 12px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .drawer-tabs {
+            display: flex;
+            gap: 4px;
+            padding: 0 20px;
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .drawer-tab {
+            background: none;
+            border: none;
+            padding: 10px 12px;
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 0.84rem;
+            font-weight: 600;
+            color: var(--ink-secondary);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+
+        .drawer-tab.active {
+            color: var(--dim-accent);
+            border-bottom-color: var(--dim-accent);
+        }
+
+        .drawer-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .hop-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-strong);
+            padding: 6px 10px;
+            border-radius: var(--radius-sm);
+            font-family: "JetBrains Mono", monospace;
+            font-size: 0.8rem;
+            color: var(--ink-primary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            margin: 4px 4px 4px 0;
+        }
+
+        .hop-chip:hover {
+            border-color: var(--dim-accent);
+            background: var(--dim-bg);
+            color: var(--dim-text);
+        }
+
+        .sql-block-wrap {
+            position: relative;
+            background: #0d1117;
+            color: #e6edf3;
+            border-radius: var(--radius-md);
+            padding: 14px;
+            font-family: "JetBrains Mono", monospace;
+            font-size: 0.79rem;
+            overflow-x: auto;
+            border: 1px solid #30363d;
+        }
+
+        .copy-sql-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #21262d;
+            border: 1px solid #30363d;
+            color: #c9d1d9;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-size: 0.72rem;
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .copy-sql-btn:hover {
+            background: #30363d;
+            color: #ffffff;
+        }
+
+        .footer {
+            padding: 28px 0 40px;
+            border-top: 1px solid var(--border-subtle);
+            text-align: center;
+            color: var(--ink-muted);
+            font-size: 0.84rem;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .nav-links { display: none; }
+            .workspace-bar { top: 52px; }
+            .svg-viewport { height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+    <a href="#mainWorkspace" class="skip-link">Skip to Interactive Schema Workspace</a>
+    <div id="srAnnouncer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="topbar">
+        <div class="container topbar-inner">
+            <div class="brand-group">
+                <a class="brand" href="index.html">
+                    <span class="brand-mark">SB</span>
+                    <span>Scalable Brain Architecture Hub</span>
+                </a>
+                <span class="host-pill" title="Operational Database Host">PG-16 • Computer 4</span>
+            </div>
+
+            <nav class="nav-links" aria-label="Architecture Hub Pages">
+                <a href="index.html">Hub Home</a>
+                <a href="audit_remarks.html">Auditor Remarks</a>
+                <a href="architecture.html">System Architecture</a>
+                <a href="strategy-catalog.html">Strategy Catalog</a>
+                <a href="erd_interactive.html" class="active-page" aria-current="page">Interactive ERD & DFD</a>
+            </nav>
+
+            <div class="utility-actions">
+                <button type="button" class="btn-util" id="plainEnglishBtn" aria-pressed="false" onclick="togglePlainEnglish()" title="Translate technical quant & DB jargon into plain business English">
+                    <span>🗣️</span> <span id="plainEnglishLabel">Plain-English: OFF</span>
+                </button>
+                <button type="button" class="btn-util" id="glossaryToggleBtn" aria-expanded="false" onclick="togglePanel('glossaryPanel', 'glossaryToggleBtn')">
+                    <span>📖</span> <span>Jargon Decoder</span>
+                </button>
+                <button type="button" class="btn-util" id="patternToggleBtn" aria-expanded="false" onclick="togglePanel('patternPanel', 'patternToggleBtn')">
+                    <span>🏛️</span> <span>Galaxy vs. Snowflake Guide</span>
+                </button>
+                <button type="button" class="btn-util" id="themeToggleBtn" onclick="toggleTheme()" aria-label="Switch color theme">
+                    <span id="themeIcon">☀️</span> <span id="themeLabel">Light</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" id="mainWorkspace">
+        <!-- COMPACT HERO & INTERACTIVE TELEMETRY RIBBON -->
+        <section class="hero-header" aria-label="Database Telemetry Summary">
+            <div class="hero-top-row">
+                <div class="hero-title-box">
+                    <h1>Interactive ERD & Data Lineage Explorer</h1>
+                    <p class="hero-subtitle" id="heroSubtitleText">
+                        Explore the PostgreSQL 16 Fact Constellation (Galaxy Schema), explicit 1:1 / 1:N / M:N cardinalities, 
+                        and the 5-stage pipeline from OANDA candlestick ingestion to Computer 2 broker execution.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Interactive KPI Cards (Click any card to filter workspace) -->
+            <div class="kpi-ribbon" role="region" aria-label="Database Storage and Row Telemetry">
+                <button type="button" class="kpi-card" onclick="applyQuickFilter('all', 'all', '')" title="Reset filters and show all entities">
+                    <div class="kpi-label"><span>Total Database</span> <span>PostgreSQL 16</span></div>
+                    <div class="kpi-value">5,984 MB</div>
+                    <div class="kpi-sub">24 Public Tables & Contracts</div>
+                    <div class="mini-bar"><div class="mini-bar-fill" style="width: 100%; background: var(--dim-accent);"></div></div>
+                </button>
+
+                <button type="button" class="kpi-card" onclick="openInspector('fact_market_prices')" title="Inspect fact_market_prices (50.3% of DB volume)">
+                    <div class="kpi-label"><span>Market Prices</span> <span>50.3% of DB</span></div>
+                    <div class="kpi-value">14.34M rows</div>
+                    <div class="kpi-sub">3,008 MB (H1, H4, D1 bars)</div>
+                    <div class="mini-bar"><div class="mini-bar-fill" style="width: 50.3%; background: var(--fact-accent);"></div></div>
+                </button>
+
+                <button type="button" class="kpi-card" onclick="applyQuickFilter('fact', 'all', 'regime')" title="Filter regime classification tables">
+                    <div class="kpi-label"><span>Regime Vectors</span> <span>35.3% of DB</span></div>
+                    <div class="kpi-value">5.13M rows</div>
+                    <div class="kpi-sub">2,114 MB (Structural + v2 ML)</div>
+                    <div class="mini-bar"><div class="mini-bar-fill" style="width: 35.3%; background: var(--fact-accent);"></div></div>
+                </button>
+
+                <button type="button" class="kpi-card" onclick="openInspector('fact_trade_outcomes')" title="Inspect backtest trade outcomes">
+                    <div class="kpi-label"><span>Backtest Outcomes</span> <span>OOS + Holdout</span></div>
+                    <div class="kpi-value">111,593</div>
+                    <div class="kpi-sub">35.9k OOS • 40.7k Holdout</div>
+                    <div class="mini-bar"><div class="mini-bar-fill" style="width: 68%; background: var(--bridge-accent);"></div></div>
+                </button>
+
+                <button type="button" class="kpi-card" onclick="applyQuickFilter('dimension', 'all', 'strategy')" title="Filter strategy dimension hierarchy">
+                    <div class="kpi-label"><span>Strategy Catalog</span> <span>Conformed Hub</span></div>
+                    <div class="kpi-value">67 Engines</div>
+                    <div class="kpi-sub">11 Active Cells • 37 Demo Trades</div>
+                    <div class="mini-bar"><div class="mini-bar-fill" style="width: 45%; background: var(--dim-accent);"></div></div>
+                </button>
+
+                <button type="button" class="kpi-card" onclick="applyQuickFilter('all', 'risk', '')" title="Click to isolate tables with Auditor Warnings or Critical Findings">
+                    <div class="kpi-label"><span>Auditor Health</span> <span class="risk-badge risk-crit">Action Req</span></div>
+                    <div class="kpi-value">4 Alerts</div>
+                    <div class="kpi-sub">2 Critical • 2 Warnings (Click)</div>
+                    <div class="mini-bar"><div class="mini-bar-fill" style="width: 30%; background: #ef4444;"></div></div>
+                </button>
+            </div>
+
+            <!-- COLLAPSIBLE DRAWER 1: GALAXY VS SNOWFLAKE ARCHITECTURE GUIDE -->
+            <div id="patternPanel" class="collapsible-panel" role="region" aria-label="Schema Modeling Emulation Analysis">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                    <h2 style="font-family:'Space Grotesk',sans-serif;font-size:1.08rem;">
+                        🏛️ Architectural Schema Modeling: Why Scalable Brain is a Hybrid Fact Constellation
+                    </h2>
+                    <span class="type-badge type-dimension">Primary Pattern: Fact Constellation (Galaxy Schema)</span>
+                </div>
+                <p style="color:var(--ink-secondary);font-size:0.88rem;margin-top:6px;">
+                    Scalable Brain does not use a single flat Star Schema. Instead, it anchors <strong>8 analytical fact tables</strong> around two shared 
+                    <strong>conformed dimension hubs</strong> (<code>dim_asset</code> and <code>dim_strategy</code>), while branching into a normalized 
+                    <strong>Snowflake sub-hierarchy</strong> for versioned parameters and currency universe bridges.
+                </p>
+                <div class="pattern-grid">
+                    <div class="pattern-card primary-pattern">
+                        <h3><span>🌌 Fact Constellation (Galaxy)</span> <span class="card-badge">Active Core</span></h3>
+                        <p style="color:var(--ink-secondary);">
+                            Multiple independent fact tables at different grains (candlestick bars, regime states, simulated trades, attribution runs, live orders) share conformed dimensions <code>dim_asset</code> and <code>dim_strategy</code>.
+                        </p>
+                    </div>
+                    <div class="pattern-card">
+                        <h3><span>❄️ Snowflake Sub-Hierarchy</span> <span class="card-badge">Normalized</span></h3>
+                        <p style="color:var(--ink-secondary);">
+                            <code>dim_strategy</code> normalizes outward into <code>dim_strategy_config</code> (JSON parameter hashes) and bridge table <code>dim_strategy_asset_mapping</code> (resolving M:N currency pairs).
+                        </p>
+                    </div>
+                    <div class="pattern-card">
+                        <h3><span>⭐ Classic Star Schema</span> <span style="font-size:0.74rem;color:var(--ink-muted);">1 Fact : N Dims</span></h3>
+                        <p style="color:var(--ink-secondary);">
+                            <strong>Why SB departs:</strong> A strict Star Schema only permits one central fact table. Forced denormalization of 14.34M price bars with 111.5k trade outcomes would cause massive row explosion.
+                        </p>
+                    </div>
+                    <div class="pattern-card">
+                        <h3><span>⚙️ Operational 3NF & Contracts</span> <span class="type-badge type-operational">Stateful</span></h3>
+                        <p style="color:var(--ink-secondary);">
+                            Tables like <code>fact_job_runs</code>, <code>fact_market_prices_quarantine</code>, and <code>regime_strategy_map.json</code> act as real-time operational guardrails and fail-closed routing contracts.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLLAPSIBLE DRAWER 2: JARGON & ACRONYM DECODER -->
+            <div id="glossaryPanel" class="collapsible-panel" role="region" aria-label="Quant and Database Jargon Decoder">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                    <h2 style="font-family:'Space Grotesk',sans-serif;font-size:1.08rem;">
+                        📖 Plain-English Jargon & Acronym Decoder
+                    </h2>
+                    <span style="font-size:0.8rem;color:var(--ink-muted);">Tip: Toggle "Plain-English Mode" in the top bar to simplify all cards automatically</span>
+                </div>
+                <div class="glossary-grid" id="glossaryContainer"></div>
+            </div>
+        </section>
+
+        <!-- UNIFIED WORKSPACE CONTROL BAR -->
+        <section class="workspace-bar" aria-label="Workspace View Switcher and Global Filters">
+            <div class="workspace-row-top">
+                <div class="view-tabs" role="tablist" aria-label="Visualization Views">
+                    <button type="button" class="view-tab" id="tabBtn-dfd" role="tab" aria-selected="true" aria-controls="panel-dfd" onclick="switchView('dfd')">
+                        <span>🌊</span> <span>5-Stage Data Pipeline (DFD)</span> <span class="tab-count" id="count-dfd">18</span>
+                    </button>
+                    <button type="button" class="view-tab" id="tabBtn-graph" role="tab" aria-selected="false" aria-controls="panel-graph" onclick="switchView('graph')">
+                        <span>🕸️</span> <span>Interactive Schema Graph</span> <span class="tab-count">SVG</span>
+                    </button>
+                    <button type="button" class="view-tab" id="tabBtn-erd" role="tab" aria-selected="false" aria-controls="panel-erd" onclick="switchView('erd')">
+                        <span>🗂️</span> <span>ERD Cards & Cardinality</span> <span class="tab-count" id="count-erd">18</span>
+                    </button>
+                    <button type="button" class="view-tab" id="tabBtn-dict" role="tab" aria-selected="false" aria-controls="panel-dict" onclick="switchView('dict')">
+                        <span>📋</span> <span>Sortable Catalog & Audit</span> <span class="tab-count" id="count-dict">18</span>
+                    </button>
+                </div>
+
+                <div class="filter-controls">
+                    <div class="search-wrapper">
+                        <span class="search-icon" aria-hidden="true">🔍</span>
+                        <input type="search" id="globalSearch" class="search-input" placeholder="Filter tables, columns (e.g. r_multiple, asset_id)..." aria-label="Search tables, columns, or descriptions">
+                        <span class="search-kbd" aria-hidden="true">/</span>
+                    </div>
+
+                    <select id="modelTypeFilter" class="filter-select" aria-label="Filter by table model classification" onchange="applyFilters()">
+                        <option value="all">All Model Types (18)</option>
+                        <option value="dimension">Dimensions (4)</option>
+                        <option value="fact">Fact Tables (9)</option>
+                        <option value="bridge">Bridge / Mapping (1)</option>
+                        <option value="operational">Operational & Contracts (4)</option>
+                    </select>
+
+                    <select id="auditRiskFilter" class="filter-select" aria-label="Filter by Auditor Risk status" onchange="applyFilters()">
+                        <option value="all">All Audit Statuses</option>
+                        <option value="risk">⚠️ Warnings & Critical Only (4)</option>
+                        <option value="critical">🚨 Critical Findings Only (2)</option>
+                        <option value="ok">✅ Healthy Tables Only (14)</option>
+                    </select>
+
+                    <button type="button" class="btn-util" onclick="applyQuickFilter('all', 'all', '')" title="Reset all search and dropdown filters">
+                        Reset
+                    </button>
+                </div>
+            </div>
+
+            <div class="filter-status-strip">
+                <div id="activeFilterSummary">
+                    Showing <strong>all 18 core pipeline entities</strong> across 5 operational stages. Click any table or relationship arrow to open the Slide-Over Inspector.
+                </div>
+                <div class="legend-pills">
+                    <span class="type-badge type-dimension">Dimension Hub</span>
+                    <span class="type-badge type-fact">Analytical Fact</span>
+                    <span class="type-badge type-bridge">M:N Bridge</span>
+                    <span class="type-badge type-operational">Operational / Guard</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================================================
+             VIEW 1: 5-STAGE DATA FLOW DIAGRAM (DFD)
+             ========================================================================== -->
+        <section id="panel-dfd" class="dfd-pipeline" role="tabpanel" aria-labelledby="tabBtn-dfd">
+            <!-- Dynamically rendered by JS so search, Plain-English mode, and Audit filters work live! -->
+        </section>
+
+        <!-- ==========================================================================
+             VIEW 2: INTERACTIVE PAN & ZOOM SVG SCHEMA GRAPH
+             ========================================================================== -->
+        <section id="panel-graph" class="graph-workspace" role="tabpanel" aria-labelledby="tabBtn-graph" style="display:none;">
+            <div class="graph-toolbar">
+                <div class="preset-group" role="toolbar" aria-label="Schema Architecture Highlight Presets">
+                    <span style="font-size:0.78rem;font-weight:700;color:var(--ink-muted);margin-right:4px;">Architecture Lens:</span>
+                    <button type="button" class="preset-btn active" id="preset-galaxy" onclick="setGraphPreset('galaxy')">
+                        🌌 Fact Constellation (Galaxy)
+                    </button>
+                    <button type="button" class="preset-btn" id="preset-snowflake" onclick="setGraphPreset('snowflake')">
+                        ❄️ Snowflake Dimension Hierarchy
+                    </button>
+                    <button type="button" class="preset-btn" id="preset-lineage" onclick="setGraphPreset('lineage')">
+                        ⚡ End-to-End Execution Lineage
+                    </button>
+                    <button type="button" class="preset-btn" id="preset-risk" onclick="setGraphPreset('risk')">
+                        🚨 Auditor Risk Hotspots
+                    </button>
+                    <button type="button" class="preset-btn" id="preset-all" onclick="setGraphPreset('all')">
+                        🔍 All 16 Graph Entities
+                    </button>
+                </div>
+
+                <div class="canvas-controls" aria-label="Canvas Zoom and Pan Controls">
+                    <span style="font-size:0.76rem;color:var(--ink-muted);margin-right:6px;" class="mono" id="zoomLevelLabel">100%</span>
+                    <button type="button" class="zoom-btn" onclick="zoomSvg(1.18)" aria-label="Zoom In" title="Zoom In">+</button>
+                    <button type="button" class="zoom-btn" onclick="zoomSvg(0.85)" aria-label="Zoom Out" title="Zoom Out">&minus;</button>
+                    <button type="button" class="preset-btn" onclick="resetSvgViewport()" title="Reset Zoom and Pan">Reset Canvas</button>
+                </div>
+            </div>
+
+            <div class="svg-viewport" id="svgViewport" aria-label="Interactive Entity Relationship Canvas. Drag to pan, scroll or use buttons to zoom.">
+                <svg id="schemaSvg" class="schema-svg" viewBox="0 0 1300 860" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <marker id="arrow-dim" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                            <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#3b82f6"/>
+                        </marker>
+                        <marker id="arrow-fact" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                            <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#10b981"/>
+                        </marker>
+                        <marker id="arrow-bridge" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                            <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#8b5cf6"/>
+                        </marker>
+                        <marker id="arrow-op" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                            <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#f59e0b"/>
+                        </marker>
+                    </defs>
+                    <g id="svgPanZoomGroup" transform="translate(0,0) scale(1)">
+                        <g id="svgEdgesLayer"></g>
+                        <g id="svgNodesLayer"></g>
+                    </g>
+                </svg>
+            </div>
+
+            <div class="graph-footer-bar">
+                <span id="graphStatusText">Active Lens: <strong>Fact Constellation (Galaxy Schema)</strong> — Conformed Dimensions feeding multiple grain Facts.</span>
+                <span class="mono" style="font-size:0.77rem;">💡 Hover to trace neighbors • Click any node/edge to inspect SQL & schema • Drag canvas to pan</span>
+            </div>
+        </section>
+
+        <!-- ==========================================================================
+             VIEW 3: INTERACTIVE ERD GRID & CARDINALITY CARDS
+             ========================================================================== -->
+        <section id="panel-erd" class="erd-grid" role="tabpanel" aria-labelledby="tabBtn-erd" style="display:none;">
+            <!-- Dynamically rendered by JS -->
+        </section>
+
+        <!-- ==========================================================================
+             VIEW 4: SORTABLE COMPREHENSIVE DATA DICTIONARY & AUDIT TABLE
+             ========================================================================== -->
+        <section id="panel-dict" class="catalog-wrap" role="tabpanel" aria-labelledby="tabBtn-dict" style="display:none;">
+            <table class="catalog-table">
+                <thead>
+                    <tr>
+                        <th onclick="sortCatalog('name')">Entity / Table Name <span id="sort-name">↕</span></th>
+                        <th onclick="sortCatalog('type')">Model Type <span id="sort-type">↕</span></th>
+                        <th onclick="sortCatalog('stage')">Pipeline Stage <span id="sort-stage">↕</span></th>
+                        <th onclick="sortCatalog('rows')">Row Count <span id="sort-rows">↓</span></th>
+                        <th onclick="sortCatalog('sizeKb')">Total Size <span id="sort-sizeKb">↕</span></th>
+                        <th>Primary Key (Grain)</th>
+                        <th>Foreign Keys & Cardinality</th>
+                        <th onclick="sortCatalog('riskScore')">Auditor Risk <span id="sort-riskScore">↕</span></th>
+                    </tr>
+                </thead>
+                <tbody id="catalogTableBody"></tbody>
+            </table>
+        </section>
+
+        <footer class="footer">
+            <p>Scalable Brain Quantitative Trading Architecture Hub • PostgreSQL 16 (5,984 MB / 24 Tables) • WCAG 2.2 Accessible Interactive Explorer</p>
+        </footer>
+    </main>
+
+    <!-- ==========================================================================
+         SLIDE-OVER CONTEXTUAL INSPECTOR DRAWER
+         ========================================================================== -->
+    <div id="drawerBackdrop" class="drawer-backdrop" onclick="closeInspector()" aria-hidden="true"></div>
+    <aside id="inspectorDrawer" class="inspector-drawer" role="dialog" aria-modal="true" aria-labelledby="drawerEntityTitle" aria-hidden="true">
+        <div class="drawer-topbar">
+            <div class="breadcrumb-trail" id="drawerBreadcrumbs" aria-label="Inspection History"></div>
+            <button type="button" class="drawer-close" id="drawerCloseBtn" onclick="closeInspector()" aria-label="Close Inspector Drawer (Escape)">&times;</button>
+        </div>
+
+        <div class="drawer-header" id="drawerHeaderContent"></div>
+
+        <div class="drawer-tabs" role="tablist" aria-label="Entity Details Tabs">
+            <button type="button" class="drawer-tab active" id="dTab-overview" role="tab" aria-selected="true" onclick="switchDrawerTab('overview')">
+                Overview & Lineage
+            </button>
+            <button type="button" class="drawer-tab" id="dTab-columns" role="tab" aria-selected="false" onclick="switchDrawerTab('columns')">
+                Columns & Keys
+            </button>
+            <button type="button" class="drawer-tab" id="dTab-sql" role="tab" aria-selected="false" onclick="switchDrawerTab('sql')">
+                SQL DDL & Joins
+            </button>
+            <button type="button" class="drawer-tab" id="dTab-audit" role="tab" aria-selected="false" onclick="switchDrawerTab('audit')">
+                Auditor Evaluation
+            </button>
+        </div>
+
+        <div class="drawer-body" id="drawerBodyContent"></div>
+    </aside>
+
+    <script>
+        /* ==========================================================================
+           1. COMPLETE 18-ENTITY SCHEMA, LINEAGE & JARGON DATA STORE
+              (Fixes the missing table bugs from the original file)
+           ========================================================================== */
+        const JARGON_GLOSSARY = [
+            { term: "Fact Constellation (Galaxy)", cat: "DB Architecture", def: "A database design where multiple analytical fact tables (prices, regimes, trades, signals) share common 'Conformed Dimension' tables (Assets and Strategies)." },
+            { term: "Snowflake Schema", cat: "DB Architecture", def: "When a dimension table branches into sub-tables (e.g., dim_strategy branching into dim_strategy_config) instead of keeping everything in one flat table." },
+            { term: "OHLCV", cat: "Market Data", def: "Open, High, Low, Close, Volume — the 5 numbers that summarize price movement inside a single candlestick time bar (1-Hour, 4-Hour, or Daily)." },
+            { term: "OOS & Holdout", cat: "Quant Vetting", def: "Out-Of-Sample (35.9k trades) and Holdout (40.7k trades) are unseen historical time periods used to prove a trading strategy wasn't just curve-fitted to past data." },
+            { term: "R-Multiple", cat: "Risk Metric", def: "Trade profit or loss expressed as a multiple of initial risk. If you risk $100 (stop-loss) and make $250, the outcome is +2.5R." },
+            { term: "ATR & ADX", cat: "Indicators", def: "Average True Range (measures market volatility/stop distance) and Average Directional Index (measures trend strength vs. sideways chop)." },
+            { term: "BH-FDR & DSR", cat: "Gate v2 Vetting", def: "Benjamini-Hochberg False Discovery Rate and Deflated Sharpe Ratio — statistical tests that filter out lucky strategies caused by testing dozens of variations." },
+            { term: "Fail-Closed TTL", cat: "Safety Guard", def: "Time-To-Live expiry (7 days on regime_strategy_map.json). If the qualification file isn't refreshed within 7 days, live trading automatically halts for safety." }
+        ];
+
+        const DFD_STAGES = [
+            { num: 1, id: "stage1", title: "Stage 1: External Broker & Market Ingestion", pill: "Input Layer • 3,008 MB" },
+            { num: 2, id: "stage2", title: "Stage 2: Market Regime Classification & ML Features", pill: "Transformation • 2,123 MB" },
+            { num: 3, id: "stage3", title: "Stage 3: Strategy Catalog, Snowflake Configs & Backtests", pill: "Computation • 60.3 MB" },
+            { num: 4, id: "stage4", title: "Stage 4: Attribution, Statistical Vetting & State Contracts", pill: "Qualification • 492 MB" },
+            { num: 5, id: "stage5", title: "Stage 5: Live Signal Routing, Broker Execution & Audit", pill: "Output Layer • 16.5 MB" }
+        ];
+
+        const TABLE_DATA = [
+            {
+                name: "dim_asset",
+                type: "dimension",
+                stage: 1,
+                stageLabel: "Stage 1 (Ingestion)",
+                rows: 15,
+                size: "56 KB",
+                sizeKb: 56,
+                dataSize: "8 KB",
+                indexSize: "48 KB",
+                pk: ["asset_id"],
+                risk: "ok",
+                riskScore: 1,
+                riskLabel: "Healthy Conformed Hub",
+                badgeText: "1 : N Hub",
+                lineageSummary: "Feeds market pricing, regimes & trades",
+                description: "Canonical forex currency pairs (EUR_USD, USD_JPY, GBP_USD). Defines active status, quote/base currencies, and pip multipliers.",
+                plainEnglish: "The master lookup list of all 15 foreign exchange currency pairs that the system is allowed to track and trade.",
+                fks: [],
+                outgoing: [
+                    { target: "fact_market_prices", card: "1 : N", desc: "18-year OHLCV candlestick series" },
+                    { target: "fact_regime_structural", card: "1 : N", desc: "Structural regime labels per pair" },
+                    { target: "fact_market_regime_v2", card: "1 : N", desc: "ML feature vectors per pair" },
+                    { target: "dim_strategy_asset_mapping", card: "1 : N", desc: "Approved currency universe bridge" },
+                    { target: "fact_trade_outcomes", card: "1 : N", desc: "Simulated backtest trades" },
+                    { target: "fact_signals", card: "1 : N", desc: "Emitted trade signals" },
+                    { target: "fact_live_trades", card: "1 : N", desc: "Executed demo broker orders" }
+                ],
+                columns: [
+                    { name: "asset_id", type: "INT", isPK: true, desc: "Unique surrogate key for the currency pair" },
+                    { name: "symbol", type: "VARCHAR(20)", desc: "OANDA instrument code (e.g., EUR_USD)" },
+                    { name: "base_currency", type: "VARCHAR(10)", desc: "First currency in the pair (e.g., EUR)" },
+                    { name: "quote_currency", type: "VARCHAR(10)", desc: "Second currency in the pair (e.g., USD)" },
+                    { name: "pip_size", type: "NUMERIC(8,5)", desc: "Standard pip increment (0.0001 or 0.01 for JPY)" },
+                    { name: "is_active", type: "BOOLEAN", desc: "Whether ingestion is currently enabled" }
+                ],
+                auditorRemarks: "Clean conformed dimension hub. Standardized symbol names (EUR_USD, GBP_USD, USD_JPY) align strictly with OANDA broker conventions.",
+                graphPos: { x: 220, y: 50, tag: "CONFORMED", presets: ["galaxy", "snowflake", "lineage", "all"] }
+            },
+            {
+                name: "fact_market_prices",
+                type: "fact",
+                stage: 1,
+                stageLabel: "Stage 1 (Ingestion)",
+                rows: 14342088,
+                size: "3,008 MB",
+                sizeKb: 3080192,
+                dataSize: "2,150 MB",
+                indexSize: "858 MB",
+                pk: ["timestamp", "asset_id", "granularity"],
+                risk: "ok",
+                riskScore: 1,
+                riskLabel: "Healthy (50.3% DB)",
+                badgeText: "1 : 1 Bar Join",
+                lineageSummary: "Bar-level join to structural regime",
+                description: "Continuous 18-year OHLCV candlestick store ingested from OANDA broker API across H1, H4, and D1 granularities.",
+                plainEnglish: "The massive historical price archive containing 14.34 million hourly, 4-hour, and daily price bars over the last 18 years.",
+                fks: [
+                    { col: "asset_id", target: "dim_asset", card: "N : 1" }
+                ],
+                outgoing: [
+                    { target: "fact_regime_structural", card: "1 : 1", desc: "Bar-level point-in-time regime classification" },
+                    { target: "fact_market_regime_v2", card: "1 : 1", desc: "Bar-level volatility & ML feature vector join" },
+                    { target: "fact_market_prices_quarantine", card: "Filter", desc: "Routes corrupted or zero-spread ticks to quarantine" }
+                ],
+                columns: [
+                    { name: "timestamp", type: "TIMESTAMPTZ", isPK: true, desc: "Bar open timestamp in UTC" },
+                    { name: "asset_id", type: "INT", isPK: true, isFK: true, desc: "References dim_asset(asset_id)" },
+                    { name: "granularity", type: "VARCHAR(10)", isPK: true, desc: "Timeframe grain: H1, H4, or D1" },
+                    { name: "Open", type: "NUMERIC(12,5)", desc: "Opening bid/mid price of bar" },
+                    { name: "High", type: "NUMERIC(12,5)", desc: "Highest price reached during bar" },
+                    { name: "Low", type: "NUMERIC(12,5)", desc: "Lowest price reached during bar" },
+                    { name: "Close", type: "NUMERIC(12,5)", desc: "Closing price of bar" },
+                    { name: "volume", type: "BIGINT", desc: "Tick volume count during bar" }
+                ],
+                auditorRemarks: "Largest table in database (3.0 GB). Composite primary key prevents duplicate bars. Well-indexed on (timestamp, asset_id, granularity).",
+                graphPos: { x: 50, y: 360, tag: "FACT • 3.0GB", presets: ["galaxy", "lineage", "all"] }
+            },
+            {
+                name: "fact_market_prices_quarantine",
+                type: "operational",
+                stage: 1,
+                stageLabel: "Stage 1 (Ingestion)",
+                rows: 184,
+                size: "80 KB",
+                sizeKb: 80,
+                dataSize: "32 KB",
+                indexSize: "48 KB",
+                pk: ["quarantine_id"],
+                risk: "ok",
+                riskScore: 1,
+                riskLabel: "Active Data Guard",
+                badgeText: "🛡️ Integrity Guard",
+                lineageSummary: "Isolates bad broker ticks from analytics",
+                description: "Data quality quarantine isolating corrupted prices, zero-spread spikes, High < Low inversions, and holiday weekend tick gaps.",
+                plainEnglish: "A safety holding pen that catches broken or glitchy price data from the broker so bad numbers never corrupt strategy backtests.",
+                fks: [
+                    { col: "asset_id", target: "dim_asset", card: "N : 1" }
+                ],
+                outgoing: [],
+                columns: [
+                    { name: "quarantine_id", type: "BIGINT", isPK: true, desc: "Surrogate quarantine record ID" },
+                    { name: "timestamp", type: "TIMESTAMPTZ", desc: "Timestamp of rejected candle" },
+                    { name: "asset_id", type: "INT", isFK: true, desc: "Affected currency pair ID" },
+                    { name: "granularity", type: "VARCHAR(10)", desc: "Timeframe of rejected bar" },
+                    { name: "rejection_reason", type: "VARCHAR(120)", desc: "Rule triggered (e.g., high_lt_low, weekend_gap)" },
+                    { name: "raw_payload", type: "JSONB", desc: "Original raw broker candle for forensic review" }
+                ],
+                auditorRemarks: "Essential ingestion circuit-breaker. Keeps the 14.34M rows in fact_market_prices clean of broker feed anomalies.",
+                graphPos: { x: 50, y: 545, tag: "GUARD", presets: ["all"] }
+            },
+            {
+                name: "fact_regime_structural",
+                type: "fact",
+                stage: 2,
+                stageLabel: "Stage 2 (Regimes)",
+                rows: 2564638,
+                size: "456 MB",
+                sizeKb: 466944,
+                dataSize: "341 MB",
+                indexSize: "115 MB",
+                pk: ["asset_id", "granularity", "bar_time_utc"],
+                risk: "ok",
+                riskScore: 1,
+                riskLabel: "Healthy Authoritative",
+                badgeText: "1 : N Routing",
+                lineageSummary: "Routes strategy signal emission by market state",
+                description: "Point-in-time structural regime labels (Trending-Up, Trending-Down, Ranging, High-Vol) computed via shifted ATR and ADX.",
+                plainEnglish: "Labels every historical hour/day with the market's weather condition (e.g., Uptrend, Downtrend, Sideways) so strategies only trade in their best environment.",
+                fks: [
+                    { col: "asset_id", target: "dim_asset", card: "N : 1" }
+                ],
+                outgoing: [
+                    { target: "fact_trade_outcomes", card: "1 : N", desc: "Tags simulated trades with entry regime" },
+                    { target: "fact_strategy_regime_attribution", card: "1 : N", desc: "Partitions performance by regime cell" },
+                    { target: "fact_regime_structural_live", card: "1 : N", desc: "Mirrors logic to live streaming buffer" }
+                ],
+                columns: [
+                    { name: "asset_id", type: "INT", isPK: true, isFK: true, desc: "Currency pair reference" },
+                    { name: "granularity", type: "VARCHAR(10)", isPK: true, desc: "H1, H4, or D1 timeframe" },
+                    { name: "bar_time_utc", type: "TIMESTAMPTZ", isPK: true, desc: "Point-in-time candle timestamp" },
+                    { name: "regime_structural", type: "VARCHAR(30)", desc: "Canonical label (Trending-Up, Ranging, etc.)" },
+                    { name: "confidence", type: "NUMERIC(6,4)", desc: "Regime classification confidence score [0..1]" }
+                ],
+                auditorRemarks: "This is the authoritative structural label that live production signal routing asserts against. Shifted calculation prevents lookahead bias.",
+                graphPos: { x: 330, y: 360, tag: "FACT • 456MB", presets: ["galaxy", "lineage", "all"] }
+            },
+            {
+                name: "fact_market_regime_v2",
+                type: "fact",
+                stage: 2,
+                stageLabel: "Stage 2 (Regimes)",
+                rows: 2563093,
+                size: "1,658 MB",
+                sizeKb: 1697792,
+                dataSize: "889 MB",
+                indexSize: "769 MB",
+                pk: ["timestamp", "asset_id", "granularity"],
+                risk: "ok",
+                riskScore: 1,
+                riskLabel: "Heavy Index (769 MB)",
+                badgeText: "1 : 1 ML Features",
+                lineageSummary: "Feeds gatekeeper ML context features",
+                description: "Statistical volatility and clustering features for machine learning context models. Pre-computed ATR, ADX, and expansion indicators.",
+                plainEnglish: "Pre-calculated math indicators and volatility measurements used by machine learning models to judge trade quality.",
+                fks: [
+                    { col: "asset_id", target: "dim_asset", card: "N : 1" }
+                ],
+                outgoing: [
+                    { target: "fact_strategy_regime_attribution", card: "1 : N", desc: "Supplies secondary regime context" }
+                ],
+                columns: [
+                    { name: "timestamp", type: "TIMESTAMPTZ", isPK: true, desc: "Candle timestamp" },
+                    { name: "asset_id", type: "INT", isPK: true, isFK: true, desc: "Currency pair ID" },
+                    { name: "granularity", type: "VARCHAR(10)", isPK: true, desc: "Timeframe grain" },
+                    { name: "atr_value", type: "NUMERIC(10,5)", desc: "Average True Range volatility value" },
+                    { name: "adx_value", type: "NUMERIC(8,4)", desc: "Average Directional Index trend strength" },
+                    { name: "cluster_prob", type: "NUMERIC(6,4)", desc: "Unsupervised regime cluster probability" }
+                ],
+                auditorRemarks: "Heavy index footprint (769 MB out of 1.65 GB). Pre-computed features significantly accelerate gatekeeper ML training.",
+                graphPos: { x: 330, y: 545, tag: "FACT • 1.66GB", presets: ["all"] }
+            },
+            {
+                name: "fact_regime_structural_live",
+                type: "operational",
+                stage: 2,
+                stageLabel: "Stage 2 (Regimes)",
+                rows: 21365,
+                size: "8.7 MB",
+                sizeKb: 8908,
+                dataSize: "5.2 MB",
+                indexSize: "3.5 MB",
+                pk: ["asset_id", "granularity", "bar_time_utc"],
+                risk: "ok",
+                riskScore: 1,
+                riskLabel: "Live Stream Buffer",
+                badgeText: "⚡ Live Bridge",
+                lineageSummary: "Real-time regime state for live signal emission",
+                description: "Real-time streaming regime buffer computed on incoming live broker bars during active market execution.",
+                plainEnglish: "A fast, rolling memory buffer that calculates the current market weather in real time as live prices arrive from the broker.",
+                fks: [
+                    { col: "asset_id", target: "dim_asset", card: "N : 1" }
+                ],
+                outgoing: [
+                    { target: "fact_signals", card: "1 : N", desc: "Gates real-time signal emission" }
+                ],
+                columns: [
+                    { name: "asset_id", type: "INT", isPK: true, isFK: true, desc: "Live instrument ID" },
+                    { name: "granularity", type: "VARCHAR(10)", isPK: true, desc: "Active execution timeframe" },
+                    { name: "bar_time_utc", type: "TIMESTAMPTZ", isPK: true, desc: "Latest closed bar timestamp" },
+                    { name: "regime_structural", type: "VARCHAR(30)", desc: "Live structural label" },
+                    { name: "computed_at_utc", type: "TIMESTAMPTZ", desc: "Worker computation timestamp" }
+                ],
+                auditorRemarks: "Decouples live low-latency regime lookups from the 456 MB historical fact_regime_structural table.",
+                graphPos: { x: 330, y: 715, tag: "LIVE BUFFER", presets: ["all"] }
+            },
+            {
+                name: "dim_strategy",
+                type: "dimension",
+                stage: 3,
+                stageLabel: "Stage 3 (Strategy)",
+                rows: 67,
+                size: "88 KB",
+                sizeKb: 88,
+                dataSize: "16 KB",
+                indexSize: "72 KB",
+                pk: ["strategy_id"],
+                risk: "warn",
+                riskScore: 2,
+                riskLabel: "Bypassed by Fact FKs",
+                badgeText: "1 : N Snowflake",
+                lineageSummary: "Canonical hub for configs & asset mappings",
+                description: "Canonical strategy engine identity (strategy_key, engine, universe, family, granularity, is_active).",
+                plainEnglish: "The official catalog of all 67 automated trading strategies, grouping them by trading style (trend-following, breakout, mean-reversion).",
+                fks: [],
+                outgoing: [
+                    { target: "dim_strategy_config", card: "1 : N", desc: "Snowflake parameter versioning" },
+                    { target: "dim_strategy_asset_mapping", card: "1 : N", desc: "Approved currency pair universe" }
+                ],
+                columns: [
+                    { name: "strategy_id", type: "INT", isPK: true, desc: "Canonical strategy identifier (1..67)" },
+                    { name: "strategy_key", type: "VARCHAR(60)", desc: "Unique code slug (e.g., strat_donchian_breakout)" },
+                    { name: "engine", type: "VARCHAR(40)", desc: "Execution engine class" },
+                    { name: "universe", type: "VARCHAR(30)", desc: "Target instrument group (G10, Crosses)" },
+                    { name: "family", type: "VARCHAR(40)", desc: "Strategy archetype (Momentum, MeanReversion)" },
+                    { name: "granularity", type: "VARCHAR(10)", desc: "Primary operating timeframe" },
+                    { name: "is_active", type: "BOOLEAN", desc: "Active flag in strategy catalog" }
+                ],
+                auditorRemarks: "WARNING: Intended as the canonical strategy dimension, but downstream fact tables (fact_trade_outcomes, fact_signals, fact_live_trades) still point their foreign keys to legacy table dim_strategy_registry.",
+                graphPos: { x: 660, y: 50, tag: "CONFORMED", presets: ["galaxy", "snowflake", "all"] }
+            },
+            {
+                name: "dim_strategy_registry",
+                type: "dimension",
+                stage: 3,
+                stageLabel: "Stage 3 (Strategy)",
+                rows: 67,
+                size: "64 KB",
+                sizeKb: 64,
+                dataSize: "16 KB",
+                indexSize: "48 KB",
+                pk: ["strategy_id"],
+                risk: "critical",
+                riskScore: 3,
+                riskLabel: "CRITICAL: Legacy Split & Stale Flag",
+                badgeText: "1 : N Legacy FK",
+                lineageSummary: "Holds FK links from trades, signals & live orders",
+                description: "Legacy strategy table holding strategy_name and is_qualified boolean flag. Still referenced by core fact foreign keys.",
+                plainEnglish: "An older duplicate strategy list that the trade tables are still wired to. Contains a stale 'is_qualified' checkmark that conflicts with the modern vetting contract.",
+                fks: [],
+                outgoing: [
+                    { target: "fact_trade_outcomes", card: "1 : N", desc: "Backtest outcomes FK target" },
+                    { target: "fact_signals", card: "1 : N", desc: "Emitted signals FK target" },
+                    { target: "fact_live_trades", card: "1 : N", desc: "Live broker orders FK target" }
+                ],
+                columns: [
+                    { name: "strategy_id", type: "INT", isPK: true, desc: "Legacy strategy ID" },
+                    { name: "strategy_name", type: "VARCHAR(80)", desc: "Display name of strategy" },
+                    { name: "is_qualified", type: "BOOLEAN", desc: "Stale boolean qualification flag" },
+                    { name: "updated_at", type: "TIMESTAMPTZ", desc: "Last registry modification timestamp" }
+                ],
+                auditorRemarks: "HIGH RISK: Foreign keys from fact tables point here instead of dim_strategy. Worse, it falsely marks 3 designated failure strategies as is_qualified=true. Consolidate into dim_strategy.",
+                graphPos: { x: 810, y: 200, tag: "LEGACY FK HUB", presets: ["galaxy", "risk", "all"] }
+            },
+            {
+                name: "dim_strategy_config",
+                type: "dimension",
+                stage: 3,
+                stageLabel: "Stage 3 (Strategy)",
+                rows: 3,
+                size: "64 KB",
+                sizeKb: 64,
+                dataSize: "8 KB",
+                indexSize: "56 KB",
+                pk: ["config_id"],
+                risk: "warn",
+                riskScore: 2,
+                riskLabel: "Underutilized (3/67 rows)",
+                badgeText: "Snowflake Sub-Dim",
+                lineageSummary: "Versioned JSON parameter rulesets",
+                description: "Versioned strategy parameter hashes and JSONB rulesets. Currently underutilized; 125 Python files still embed parameters in code.",
+                plainEnglish: "Designed to store the exact settings (stop-loss distances, moving average lengths) for every strategy version, though most settings are still hardcoded in Python files.",
+                fks: [
+                    { col: "strategy_id", target: "dim_strategy", card: "N : 1" }
+                ],
+                outgoing: [
+                    { target: "dim_strategy_asset_mapping", card: "1 : N", desc: "Links parameter version to asset mapping" }
+                ],
+                columns: [
+                    { name: "config_id", type: "INT", isPK: true, desc: "Unique configuration version ID" },
+                    { name: "strategy_id", type: "INT", isFK: true, desc: "References dim_strategy(strategy_id)" },
+                    { name: "config_hash", type: "VARCHAR(64)", desc: "SHA-256 hash of parameter payload" },
+                    { name: "config_version", type: "INT", desc: "Sequential version number" },
+                    { name: "parameters", type: "JSONB", desc: "Full strategy hyperparameter dictionary" },
+                    { name: "is_active", type: "BOOLEAN", desc: "Whether this config version is active" }
+                ],
+                auditorRemarks: "WARNING: Schema is well-designed (Snowflake normalization), but only 3 of 67 strategies are populated here. Migrate hardcoded parameters from the 125 .py files into this table.",
+                graphPos: { x: 1000, y: 50, tag: "SNOWFLAKE", presets: ["snowflake", "risk", "all"] }
+            },
+            {
+                name: "dim_strategy_asset_mapping",
+                type: "bridge",
+                stage: 3,
+                stageLabel: "Stage 3 (Strategy)",
+                rows: 17,
+                size: "40 KB",
+                sizeKb: 40,
+                dataSize: "8 KB",
+                indexSize: "32 KB",
+                pk: ["mapping_id"],
+                risk: "ok",
+                riskScore: 1,
+                riskLabel: "Healthy M:N Bridge",
+                badgeText: "M : N Bridge",
+                lineageSummary: "Resolves M:N strategy-to-pair universe",
+                description: "Many-to-Many bridge table connecting strategies to approved currency pairs, granularities, and configuration versions.",
+                plainEnglish: "The permission slip table that specifies which strategies are allowed to trade which currency pairs and timeframes.",
+                fks: [
+                    { col: "strategy_id", target: "dim_strategy", card: "N : 1" },
+                    { col: "asset_id", target: "dim_asset", card: "N : 1" },
+                    { col: "config_id", target: "dim_strategy_config", card: "N : 1" }
+                ],
+                outgoing: [],
+                columns: [
+                    { name: "mapping_id", type: "INT", isPK: true, desc: "Bridge surrogate primary key" },
+                    { name: "strategy_id", type: "INT", isFK: true, desc: "References dim_strategy(strategy_id)" },
+                    { name: "asset_id", type: "INT", isFK: true, desc: "References dim_asset(asset_id)" },
+                    { name: "granularity", type: "VARCHAR(10)", desc: "Approved timeframe (H1, H4, D1)" },
+                    { name: "config_id", type: "INT", isFK: true, desc: "References dim_strategy_config(config_id)" }
+                ],
+                auditorRemarks: "Enforces universe constraints cleanly so strategies only evaluate on validated currency pairs.",
+                graphPos: { x: 450, y: 200, tag: "BRIDGE M:N", presets: ["snowflake", "all"] }
+            },
+            {
+                name: "fact_trade_outcomes",
+                type: "fact",
+                stage: 3,
+                stageLabel: "Stage 3 (Backtest)",
+                rows: 111593,
+                size: "60 MB",
+                sizeKb: 61440,
+                dataSize: "31 MB",
+                indexSize: "29 MB",
+                pk: ["outcome_id"],
+                risk: "critical",
+                riskScore: 3,
+                riskLabel: "CRITICAL: Overwrites Runs (No run_id)",
+                badgeText: "N : 1 Attribution",
+                lineageSummary: "111.5k trades feed Gate v2 statistical vetting",
+                description: "Out-of-sample (35.9k rows) and untouched holdout (40.7k rows) simulated trade outcomes with R-multiples and ATR stop/target geometry.",
+                plainEnglish: "The ledger of 111,593 simulated historical trades showing whether each trade won or lost, how much risk it took, and whether it occurred in unseen test data.",
+                fks: [
+                    { col: "strategy_id", target: "dim_strategy_registry", card: "N : 1" },
+                    { col: "asset_id", target: "dim_asset", card: "N : 1" }
+                ],
+                outgoing: [
+                    { target: "fact_strategy_regime_attribution", card: "N : 1", desc: "Aggregated into per-regime Sharpe & Profit Factor" }
+                ],
+                columns: [
+                    { name: "outcome_id", type: "BIGINT", isPK: true, desc: "Surrogate primary key" },
+                    { name: "timestamp", type: "TIMESTAMPTZ", desc: "Trade entry candle timestamp" },
+                    { name: "asset_id", type: "INT", isFK: true, desc: "Traded currency pair ID" },
+                    { name: "strategy_id", type: "INT", isFK: true, desc: "References dim_strategy_registry(strategy_id)" },
+                    { name: "granularity", type: "VARCHAR(10)", desc: "Execution timeframe" },
+                    { name: "r_multiple", type: "NUMERIC(8,4)", desc: "Realized PnL in units of initial risk (R)" },
+                    { name: "is_winner", type: "BOOLEAN", desc: "True if r_multiple > 0" },
+                    { name: "is_oos", type: "BOOLEAN", desc: "Out-of-sample validation split flag (35.9k rows)" },
+                    { name: "is_holdout", type: "BOOLEAN", desc: "Untouched holdout split flag (40.7k rows)" },
+                    { name: "atr_sl_multiplier", type: "NUMERIC(6,2)", desc: "Stop-loss distance in ATR multiples" },
+                    { name: "atr_tp_multiplier", type: "NUMERIC(6,2)", desc: "Take-profit distance in ATR multiples" }
+                ],
+                auditorRemarks: "CRITICAL FINDING: Rows lack a run_id and Git commit SHA. Destructive ON CONFLICT DO UPDATE overwrites prior backtest evidence whenever a strategy is re-run. Compare with fact_regime_trial_outcomes, which properly keys on run_id.",
+                graphPos: { x: 610, y: 360, tag: "FACT • RISK", presets: ["galaxy", "lineage", "risk", "all"] }
+            },
+            {
+                name: "fact_strategy_regime_attribution",
+                type: "fact",
+                stage: 4,
+                stageLabel: "Stage 4 (Attribution)",
+                rows: 7649,
+                size: "2.7 MB",
+                sizeKb: 2672,
+                dataSize: "1,752 KB",
+                indexSize: "920 KB",
+                pk: ["attribution_id"],
+                risk: "warn",
+                riskScore: 2,
+                riskLabel: "Misleading Column Name (avg_r)",
+                badgeText: "N : 1 Run Metrics",
+                lineageSummary: "54 qualification runs feed Gate v2 vetting",
+                description: "Historical qualification runs (54 distinct qualification_run_id UUIDs) tracking per-cell Sharpe, Profit Factor, Max Drawdown, and Win Rate.",
+                plainEnglish: "The report card table that grades how well each strategy performed inside each market regime across 54 different test runs.",
+                fks: [
+                    { col: "strategy_id", target: "dim_strategy_registry", card: "N : 1" }
+                ],
+                outgoing: [
+                    { target: "regime_strategy_map.json", card: "Gate v2", desc: "Qualifying cells written to state routing contract" },
+                    { target: "fact_signals", card: "Vetting", desc: "Authorizes live strategy-regime signal cells" }
+                ],
+                columns: [
+                    { name: "attribution_id", type: "BIGINT", isPK: true, desc: "Primary key for attribution cell record" },
+                    { name: "strategy_id", type: "INT", isFK: true, desc: "Evaluated strategy ID" },
+                    { name: "regime", type: "VARCHAR(30)", desc: "Target structural regime state" },
+                    { name: "granularity", type: "VARCHAR(10)", desc: "Evaluated timeframe" },
+                    { name: "qualification_run_id", type: "UUID", desc: "Unique batch UUID isolating the 54 runs" },
+                    { name: "sharpe", type: "NUMERIC(8,4)", desc: "Annualized Sharpe ratio in regime cell" },
+                    { name: "profit_factor", type: "NUMERIC(8,4)", desc: "Gross profit divided by gross loss" },
+                    { name: "win_rate", type: "NUMERIC(6,4)", desc: "Fraction of winning trades [0..1]" },
+                    { name: "max_drawdown", type: "NUMERIC(6,4)", desc: "Maximum peak-to-trough equity drop" },
+                    { name: "trade_count", type: "INT", desc: "Sample size of trades in cell" },
+                    { name: "avg_r", type: "NUMERIC(8,4)", desc: "WARNING: Stores Payoff Ratio (avg_win/avg_loss), not mean R" }
+                ],
+                auditorRemarks: "Well-designed run_id isolation (54 historical runs preserved). However, column avg_r is mathematically computed as the payoff ratio (win/loss ratio), not statistical average R-multiple. Rename or alias to payoff_ratio.",
+                graphPos: { x: 610, y: 545, tag: "FACT • 54 RUNS", presets: ["galaxy", "lineage", "risk", "all"] }
+            },
+            {
+                name: "regime_strategy_map.json",
+                type: "operational",
+                stage: 4,
+                stageLabel: "Stage 4 (State Contract)",
+                rows: 11,
+                size: "15.7 KB",
+                sizeKb: 16,
+                dataSize: "15.7 KB",
+                indexSize: "0 KB",
+                pk: ["cell_key (asset + gran + regime)"],
+                risk: "ok",
+                riskScore: 1,
+                riskLabel: "Fail-Closed 7d TTL",
+                badgeText: "🔒 State Contract",
+                lineageSummary: "Authoritative routing contract for live signals",
+                description: "Primary operational JSON state contract with fail-closed expiry (7-day TTL), Git SHA provenance, 11 active qualified cells, and designation failure records.",
+                plainEnglish: "The strict 'approved for takeoff' checklist file. If this file is older than 7 days, the entire trading system refuses to place trades to protect capital.",
+                fks: [],
+                outgoing: [
+                    { target: "fact_signals", card: "1 : N", desc: "Permits signal emission only for 11 active cells" }
+                ],
+                columns: [
+                    { name: "schema_version", type: "STRING", isPK: true, desc: "Contract schema specification version" },
+                    { name: "generated_at_utc", type: "ISO-8601", desc: "Generation timestamp used for 7-day TTL check" },
+                    { name: "git_commit_sha", type: "VARCHAR(40)", desc: "Exact code version that produced qualification" },
+                    { name: "active_cells", type: "JSON_ARRAY", desc: "11 vetted (asset, granularity, regime -> strategy_id) mappings" },
+                    { name: "designated_failures", type: "JSON_ARRAY", desc: "Explicitly blocked strategies failing Gate v2" }
+                ],
+                auditorRemarks: "Gold-standard operational guardrail. Enforces fail-closed 7-day TTL expiry and records exact Git SHA provenance.",
+                graphPos: { x: 50, y: 715, tag: "JSON CONTRACT", presets: ["lineage", "all"] }
+            },
+            {
+                name: "fact_regime_trial_outcomes",
+                type: "fact",
+                stage: 4,
+                stageLabel: "Stage 4 (Research Trial)",
+                rows: 1244139,
+                size: "489 MB",
+                sizeKb: 500736,
+                dataSize: "334 MB",
+                indexSize: "155 MB",
+                pk: ["run_id", "strategy_key", "asset_id", "granularity", "timestamp", "arm", "regime_source", "leg_index"],
+                risk: "ok",
+                riskScore: 1,
+                riskLabel: "Exemplary Provenance",
+                badgeText: "N : 1 Trial Store",
+                lineageSummary: "1.24M rows from 12-week regime research trial",
+                description: "High-volume outcome store from the 12-week regime trial. Includes run_id, strategy_key, treatment arm, and regime at entry.",
+                plainEnglish: "A 1.24-million-trade research laboratory log comparing how strategies perform with regime filtering turned on versus turned off.",
+                fks: [
+                    { col: "asset_id", target: "dim_asset", card: "N : 1" }
+                ],
+                outgoing: [],
+                columns: [
+                    { name: "run_id", type: "VARCHAR(64)", isPK: true, desc: "Immutable trial execution identifier" },
+                    { name: "strategy_key", type: "VARCHAR(60)", isPK: true, desc: "Strategy identifier slug" },
+                    { name: "asset_id", type: "INT", isPK: true, isFK: true, desc: "Currency pair ID" },
+                    { name: "granularity", type: "VARCHAR(10)", isPK: true, desc: "Timeframe grain" },
+                    { name: "timestamp", type: "TIMESTAMPTZ", isPK: true, desc: "Trade entry timestamp" },
+                    { name: "arm", type: "VARCHAR(20)", isPK: true, desc: "Experiment arm (baseline vs. regime-gated)" },
+                    { name: "regime_source", type: "VARCHAR(30)", isPK: true, desc: "Regime classifier version used" },
+                    { name: "leg_index", type: "INT", isPK: true, desc: "Multi-leg order index" },
+                    { name: "r_multiple", type: "NUMERIC(8,4)", desc: "Realized R-multiple outcome" },
+                    { name: "regime_at_entry", type: "VARCHAR(30)", desc: "Regime label active at trade open" }
+                ],
+                auditorRemarks: "Exemplary model for immutable run versioning: composite primary key preserves full run_id and experiment arm provenance without overwriting.",
+                graphPos: { x: 610, y: 715, tag: "RESEARCH • 489MB", presets: ["all"] }
+            },
+            {
+                name: "fact_signals",
+                type: "fact",
+                stage: 5,
+                stageLabel: "Stage 5 (Signal Routing)",
+                rows: 28750,
+                size: "15 MB",
+                sizeKb: 15360,
+                dataSize: "8,256 KB",
+                indexSize: "6,720 KB",
+                pk: ["timestamp", "asset_id", "granularity", "strategy_id"],
+                risk: "ok",
+                riskScore: 1,
+                riskLabel: "Healthy Signal Ledger",
+                badgeText: "1 : N Order Stream",
+                lineageSummary: "Streams vetted trade proposals to Computer 2",
+                description: "Historical signal ledger. Proposed trades with entry, stop-loss, and take-profit targets before final execution filters.",
+                plainEnglish: "The ledger of 28,750 trade alerts generated by strategies, recording the exact proposed entry price, stop-loss, and profit target.",
+                fks: [
+                    { col: "strategy_id", target: "dim_strategy_registry", card: "N : 1" },
+                    { col: "asset_id", target: "dim_asset", card: "N : 1" }
+                ],
+                outgoing: [
+                    { target: "fact_live_trades", card: "1 : N", desc: "Routed via signals/*.ndjson to broker execution" }
+                ],
+                columns: [
+                    { name: "timestamp", type: "TIMESTAMPTZ", isPK: true, desc: "Signal emission bar timestamp" },
+                    { name: "asset_id", type: "INT", isPK: true, isFK: true, desc: "Target currency pair ID" },
+                    { name: "granularity", type: "VARCHAR(10)", isPK: true, desc: "Signal timeframe" },
+                    { name: "strategy_id", type: "INT", isPK: true, isFK: true, desc: "Emitting strategy ID" },
+                    { name: "signal_value", type: "INT", desc: "Direction: +1 (Long), -1 (Short), 0 (Flat)" },
+                    { name: "proposed_entry", type: "NUMERIC(12,5)", desc: "Target entry price" },
+                    { name: "proposed_sl", type: "NUMERIC(12,5)", desc: "Protective stop-loss price" },
+                    { name: "proposed_tp", type: "NUMERIC(12,5)", desc: "Target take-profit price" }
+                ],
+                auditorRemarks: "High integrity. Composite primary key prevents duplicate signal emission within the same bar.",
+                graphPos: { x: 920, y: 360, tag: "FACT • SIGNALS", presets: ["galaxy", "lineage", "all"] }
+            },
+            {
+                name: "fact_live_trades",
+                type: "fact",
+                stage: 5,
+                stageLabel: "Stage 5 (Execution)",
+                rows: 37,
+                size: "256 KB",
+                sizeKb: 256,
+                dataSize: "16 KB",
+                indexSize: "240 KB",
+                pk: ["trade_id"],
+                risk: "ok",
+                riskScore: 1,
+                riskLabel: "Active Demo Fills",
+                badgeText: "1 : N Audit Log",
+                lineageSummary: "Logs fills & slippage to fact_execution_log",
+                description: "Actual broker executions placed on Computer 2 demo accounts. Tracks OANDA order IDs, fill prices, position units, and realized PnL.",
+                plainEnglish: "The real-world scoreboard tracking the 37 live demo trades actually placed with the broker on Computer 2, including exact fill prices and profit/loss.",
+                fks: [
+                    { col: "strategy_id", target: "dim_strategy_registry", card: "N : 1" },
+                    { col: "asset_id", target: "dim_asset", card: "N : 1" }
+                ],
+                outgoing: [
+                    { target: "fact_execution_log", card: "1 : N", desc: "Detailed order lifecycle & slippage telemetry" }
+                ],
+                columns: [
+                    { name: "trade_id", type: "BIGINT", isPK: true, desc: "Internal live trade identifier" },
+                    { name: "order_id", type: "VARCHAR(40)", desc: "External OANDA broker order ticket ID" },
+                    { name: "timestamp", type: "TIMESTAMPTZ", desc: "Broker execution fill timestamp" },
+                    { name: "strategy_id", type: "INT", isFK: true, desc: "Executing strategy ID (17, 22, 26, 41, 50)" },
+                    { name: "asset_id", type: "INT", isFK: true, desc: "Traded currency pair ID" },
+                    { name: "fill_price", type: "NUMERIC(12,5)", desc: "Actual broker fill price" },
+                    { name: "units", type: "NUMERIC(14,2)", desc: "Position size in base currency units" },
+                    { name: "realised_pnl", type: "NUMERIC(12,2)", desc: "Settled account profit/loss" }
+                ],
+                auditorRemarks: "Tracks live demo execution cleanly. Currently holds 37 trades across qualified strategies 17, 22, 26, 41, and 50.",
+                graphPos: { x: 920, y: 545, tag: "BROKER FILLS", presets: ["galaxy", "lineage", "all"] }
+            },
+            {
+                name: "fact_execution_log",
+                type: "operational",
+                stage: 5,
+                stageLabel: "Stage 5 (Execution)",
+                rows: 142,
+                size: "128 KB",
+                sizeKb: 128,
+                dataSize: "64 KB",
+                indexSize: "64 KB",
+                pk: ["exec_log_id"],
+                risk: "ok",
+                riskScore: 1,
+                riskLabel: "Slippage Telemetry",
+                badgeText: "N : 1 Order Audit",
+                lineageSummary: "Captures broker latency, spread & slippage",
+                description: "Granular broker order lifecycle log recording submission latency, bid-ask spread at fill, slippage in pips, and rejection payloads.",
+                plainEnglish: "A black-box flight recorder for every broker order, measuring how many milliseconds an order took and whether the broker price slipped.",
+                fks: [
+                    { col: "trade_id", target: "fact_live_trades", card: "N : 1" }
+                ],
+                outgoing: [],
+                columns: [
+                    { name: "exec_log_id", type: "BIGINT", isPK: true, desc: "Execution log entry ID" },
+                    { name: "trade_id", type: "BIGINT", isFK: true, desc: "References fact_live_trades(trade_id)" },
+                    { name: "event_type", type: "VARCHAR(30)", desc: "SUBMITTED, FILLED, CANCELLED, or REJECTED" },
+                    { name: "slippage_pips", type: "NUMERIC(6,2)", desc: "Difference between proposed_entry and fill_price" },
+                    { name: "latency_ms", type: "INT", desc: "Round-trip broker API response time in ms" }
+                ],
+                auditorRemarks: "Provides essential observability for comparing backtest assumptions against live broker slippage.",
+                graphPos: null
+            },
+            {
+                name: "fact_job_runs",
+                type: "operational",
+                stage: 5,
+                stageLabel: "Stage 5 (Observability)",
+                rows: 2505,
+                size: "800 KB",
+                sizeKb: 800,
+                dataSize: "448 KB",
+                indexSize: "352 KB",
+                pk: ["job_run_id"],
+                risk: "ok",
+                riskScore: 1,
+                riskLabel: "Cron Heartbeat Log",
+                badgeText: "⏱️ Scheduler Audit",
+                lineageSummary: "Tracks cron heartbeats, durations & exit codes",
+                description: "Automated scheduler task log tracking cron heartbeats, execution durations, row counts processed, and exit statuses.",
+                plainEnglish: "The system's attendance sheet that logs every scheduled background job, how long it took to run, and whether it succeeded.",
+                fks: [],
+                outgoing: [],
+                columns: [
+                    { name: "job_run_id", type: "BIGINT", isPK: true, desc: "Unique scheduled job execution ID" },
+                    { name: "job_name", type: "VARCHAR(60)", desc: "Scheduled task identifier" },
+                    { name: "started_at", type: "TIMESTAMPTZ", desc: "Job start timestamp" },
+                    { name: "ended_at", type: "TIMESTAMPTZ", desc: "Job completion timestamp" },
+                    { name: "status", type: "VARCHAR(20)", desc: "SUCCESS, FAILED, or RUNNING" }
+                ],
+                auditorRemarks: "Operational backbone for scheduler observability across ingestion and signal generation.",
+                graphPos: { x: 920, y: 715, tag: "CRON AUDIT", presets: ["all"] }
+            }
+        ];
+
+        const GRAPH_EDGES = [
+            { source: "dim_asset", target: "fact_market_prices", card: "1 : N", color: "dim", presets: ["galaxy", "lineage", "all"], join: "fact_market_prices.asset_id = dim_asset.asset_id" },
+            { source: "dim_asset", target: "fact_regime_structural", card: "1 : N", color: "dim", presets: ["galaxy", "lineage", "all"], join: "fact_regime_structural.asset_id = dim_asset.asset_id" },
+            { source: "dim_asset", target: "dim_strategy_asset_mapping", card: "1 : N", color: "bridge", presets: ["snowflake", "all"], join: "dim_strategy_asset_mapping.asset_id = dim_asset.asset_id" },
+            { source: "dim_strategy", target: "dim_strategy_config", card: "1 : N (Snow)", color: "dim", presets: ["snowflake", "risk", "all"], join: "dim_strategy_config.strategy_id = dim_strategy.strategy_id" },
+            { source: "dim_strategy", target: "dim_strategy_asset_mapping", card: "1 : N", color: "bridge", presets: ["snowflake", "all"], join: "dim_strategy_asset_mapping.strategy_id = dim_strategy.strategy_id" },
+            { source: "dim_strategy_registry", target: "fact_trade_outcomes", card: "1 : N", color: "dim", presets: ["galaxy", "risk", "all"], join: "fact_trade_outcomes.strategy_id = dim_strategy_registry.strategy_id" },
+            { source: "dim_strategy_registry", target: "fact_signals", card: "1 : N", color: "dim", presets: ["galaxy", "risk", "all"], join: "fact_signals.strategy_id = dim_strategy_registry.strategy_id" },
+            { source: "dim_strategy_registry", target: "fact_live_trades", card: "1 : N", color: "dim", presets: ["galaxy", "risk", "all"], join: "fact_live_trades.strategy_id = dim_strategy_registry.strategy_id" },
+            { source: "fact_market_prices", target: "fact_regime_structural", card: "1 : 1", color: "fact", presets: ["galaxy", "lineage", "all"], join: "fact_market_prices.timestamp = fact_regime_structural.bar_time_utc AND asset_id AND granularity" },
+            { source: "fact_regime_structural", target: "fact_trade_outcomes", card: "1 : N", color: "fact", presets: ["galaxy", "lineage", "all"], join: "Point-in-time entry bar regime alignment" },
+            { source: "fact_trade_outcomes", target: "fact_strategy_regime_attribution", card: "N : 1", color: "fact", presets: ["galaxy", "lineage", "risk", "all"], join: "Aggregated per (strategy_id, regime, granularity, qualification_run_id)" },
+            { source: "fact_strategy_regime_attribution", target: "regime_strategy_map.json", card: "Gate v2", color: "op", presets: ["lineage", "all"], join: "BH-FDR & DSR statistical vetting writes 11 active cells" },
+            { source: "fact_strategy_regime_attribution", target: "fact_signals", card: "Vetted", color: "fact", presets: ["galaxy", "lineage", "all"], join: "Qualifying strategy-regime cells authorize signal emission" },
+            { source: "fact_signals", target: "fact_live_trades", card: "1 : N", color: "fact", presets: ["galaxy", "lineage", "all"], join: "signals/*.ndjson stream executed on Computer 2 demo broker" },
+            { source: "fact_market_prices", target: "fact_market_prices_quarantine", card: "Filter", color: "op", presets: ["all"], join: "Isolates corrupted ticks and zero-spread anomalies" },
+            { source: "fact_market_prices", target: "fact_market_regime_v2", card: "1 : 1", color: "fact", presets: ["all"], join: "Pre-computed ATR, ADX & clustering feature vector join" },
+            { source: "fact_regime_structural", target: "fact_regime_structural_live", card: "Stream", color: "op", presets: ["all"], join: "Real-time rolling regime state buffer" }
+        ];
+
+        /* ==========================================================================
+           2. APPLICATION STATE & INITIALIZATION
+           ========================================================================== */
+        let appState = {
+            activeView: "dfd",
+            plainEnglish: false,
+            searchQuery: "",
+            typeFilter: "all",
+            riskFilter: "all",
+            graphPreset: "galaxy",
+            pinnedGraphNode: null,
+            catalogSortCol: "rows",
+            catalogSortAsc: false,
+            inspectedEntity: null,
+            inspectorTab: "overview",
+            historyTrail: [],
+            lastFocusedElement: null,
+            svgTransform: { x: 0, y: 0, scale: 1 }
+        };
+
+        function announce(msg) {
+            const el = document.getElementById("srAnnouncer");
+            if (el) el.textContent = msg;
+        }
+
+        /* ==========================================================================
+           3. FILTERING & REACTIVE RENDER PIPELINE ACROSS ALL 4 VIEWS
+           ========================================================================== */
+        function matchesFilters(table) {
+            const q = appState.searchQuery.trim().toLowerCase();
+            const matchType = appState.typeFilter === "all" || table.type === appState.typeFilter;
+            const matchRisk =
+                appState.riskFilter === "all" ||
+                (appState.riskFilter === "risk" && (table.risk === "warn" || table.risk === "critical")) ||
+                (appState.riskFilter === "critical" && table.risk === "critical") ||
+                (appState.riskFilter === "ok" && table.risk === "ok");
+
+            if (!matchType || !matchRisk) return false;
+            if (!q) return true;
+
+            const inName = table.name.toLowerCase().includes(q);
+            const inDesc = table.description.toLowerCase().includes(q) || table.plainEnglish.toLowerCase().includes(q);
+            const inStage = table.stageLabel.toLowerCase().includes(q);
+            const inCols = table.columns.some(c => c.name.toLowerCase().includes(q) || c.type.toLowerCase().includes(q));
+            const inAudit = table.auditorRemarks.toLowerCase().includes(q);
+
+            return inName || inDesc || inStage || inCols || inAudit;
+        }
+
+        function applyFilters() {
+            appState.searchQuery = document.getElementById("globalSearch").value;
+            appState.typeFilter = document.getElementById("modelTypeFilter").value;
+            appState.riskFilter = document.getElementById("auditRiskFilter").value;
+
+            const filtered = TABLE_DATA.filter(matchesFilters);
+
+            // Update badge counts
+            document.getElementById("count-dfd").textContent = filtered.length;
+            document.getElementById("count-erd").textContent = filtered.length;
+            document.getElementById("count-dict").textContent = filtered.length;
+
+            // Update status summary
+            const summaryEl = document.getElementById("activeFilterSummary");
+            if (filtered.length === TABLE_DATA.length && !appState.searchQuery) {
+                summaryEl.innerHTML = `Showing <strong>all ${TABLE_DATA.length} core pipeline entities</strong> across 5 operational stages. Click any card or node to inspect.`;
+            } else {
+                summaryEl.innerHTML = `Filtered to <strong>${filtered.length} of ${TABLE_DATA.length} entities</strong> matching current criteria.`;
+            }
+
+            renderDfdView();
+            renderSvgGraph();
+            renderErdView(filtered);
+            renderCatalogView(filtered);
+
+            announce(`Showing ${filtered.length} of ${TABLE_DATA.length} database entities.`);
+        }
+
+        function applyQuickFilter(type, risk, search) {
+            document.getElementById("modelTypeFilter").value = type;
+            document.getElementById("auditRiskFilter").value = risk;
+            document.getElementById("globalSearch").value = search;
+            applyFilters();
+        }
+
+        /* ==========================================================================
+           4. RENDER VIEW 1: 5-STAGE DATA FLOW DIAGRAM (DFD)
+           ========================================================================== */
+        function getRiskBadgeHtml(t) {
+            if (t.risk === "critical") return `<span class="risk-badge risk-crit" title="${t.auditorRemarks}">🚨 ${t.riskLabel}</span>`;
+            if (t.risk === "warn") return `<span class="risk-badge risk-warn" title="${t.auditorRemarks}">⚠️ ${t.riskLabel}</span>`;
+            return `<span class="risk-badge risk-ok">✅ ${t.riskLabel}</span>`;
+        }
+
+        function renderDfdView() {
+            const container = document.getElementById("panel-dfd");
+            container.innerHTML = "";
+
+            DFD_STAGES.forEach((stage, idx) => {
+                const stageTables = TABLE_DATA.filter(t => t.stage === stage.num);
+                const matchingInStage = stageTables.filter(matchesFilters);
+
+                const stageEl = document.createElement("div");
+                stageEl.className = `dfd-stage ${matchingInStage.length === 0 ? "stage-dimmed" : ""}`;
+
+                const cardsHtml = stageTables.map(t => {
+                    const isMatched = matchesFilters(t);
+                    const isSelected = appState.inspectedEntity === t.name;
+                    const descText = appState.plainEnglish ? t.plainEnglish : t.description;
+
+                    return `
+                        <div class="dfd-node-card ${!isMatched ? "card-filtered-out" : ""} ${isSelected ? "card-selected" : ""}"
+                             role="button"
+                             tabindex="${isMatched ? "0" : "-1"}"
+                             aria-label="Inspect ${t.name}, ${t.type}, ${t.rows.toLocaleString()} rows"
+                             onclick="openInspector('${t.name}', this)"
+                             onkeydown="handleCardKey(event, '${t.name}', this)">
+                            <div>
+                                <div class="dfd-card-top">
+                                    <span class="dfd-table-name">${t.name}</span>
+                                    <span class="type-badge type-${t.type}">${t.type}</span>
+                                </div>
+                                <div class="dfd-metrics-row" style="margin: 6px 0 8px;">
+                                    <span>${t.rows.toLocaleString()} rows</span>
+                                    <span>•</span>
+                                    <span>${t.size}</span>
+                                    <span>•</span>
+                                    ${getRiskBadgeHtml(t)}
+                                </div>
+                                <p class="dfd-desc">${descText}</p>
+                            </div>
+                            <div class="dfd-lineage-footer">
+                                <span class="card-badge">${t.badgeText}</span>
+                                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.lineageSummary}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join("");
+
+                stageEl.innerHTML = `
+                    <div class="dfd-stage-header">
+                        <div class="dfd-stage-title-group">
+                            <span class="stage-num">S${stage.num}</span>
+                            <h2 class="dfd-stage-title">${stage.title}</h2>
+                        </div>
+                        <span class="stage-summary-pill">${stage.pill}</span>
+                    </div>
+                    <div class="dfd-cards-grid">${cardsHtml}</div>
+                `;
+
+                container.appendChild(stageEl);
+
+                if (idx < DFD_STAGES.length - 1) {
+                    const flowMessages = [
+                        "14.34M Verified Candlestick Bars Stream into Regime Classification ▼",
+                        "5.13M Point-in-Time Regime Labels Align with 67 Strategy Backtest Engines ▼",
+                        "111,593 Simulated OOS & Holdout Trades Feed Gate v2 Statistical Vetting ▼",
+                        "11 Vetted Strategy-Regime Cells Authorize Live Broker Signal Routing ▼"
+                    ];
+                    const conn = document.createElement("div");
+                    conn.className = "dfd-flow-connector";
+                    conn.setAttribute("aria-hidden", "true");
+                    conn.innerHTML = `<div class="dfd-flow-pill">${flowMessages[idx]}</div>`;
+                    container.appendChild(conn);
+                }
+            });
+        }
+
+        /* ==========================================================================
+           5. RENDER VIEW 2: REACTIVE SVG SCHEMA GRAPH WITH PAN/ZOOM & PINNING
+           ========================================================================== */
+        function getNodeAnchorCenter(tableName) {
+            const t = TABLE_DATA.find(x => x.name === tableName);
+            if (!t || !t.graphPos) return { x: 0, y: 0 };
+            return { x: t.graphPos.x + 115, y: t.graphPos.y + 52 };
+        }
+
+        function renderSvgGraph() {
+            const edgesLayer = document.getElementById("svgEdgesLayer");
+            const nodesLayer = document.getElementById("svgNodesLayer");
+            if (!edgesLayer || !nodesLayer) return;
+
+            edgesLayer.innerHTML = "";
+            nodesLayer.innerHTML = "";
+
+            const preset = appState.graphPreset;
+            const hasActiveSearchOrFilter = appState.searchQuery.trim() !== "" || appState.typeFilter !== "all" || appState.riskFilter !== "all";
+
+            // 1. Render Directed Edges
+            GRAPH_EDGES.forEach(edge => {
+                const sNode = TABLE_DATA.find(x => x.name === edge.source);
+                const tNode = TABLE_DATA.find(x => x.name === edge.target);
+                if (!sNode || !tNode || !sNode.graphPos || !tNode.graphPos) return;
+
+                const sX = sNode.graphPos.x + 115;
+                const sY = sNode.graphPos.y + 55;
+                const tX = tNode.graphPos.x + 115;
+                const tY = tNode.graphPos.y + 55;
+
+                const midX = (sX + tX) / 2;
+                const midY = (sY + tY) / 2;
+                const dPath = `M ${sX} ${sY} C ${sX} ${midY}, ${tX} ${midY}, ${tX} ${tY}`;
+
+                const strokeMap = {
+                    dim: "#3b82f6",
+                    fact: "#10b981",
+                    bridge: "#8b5cf6",
+                    op: "#f59e0b"
+                };
+                const strokeColor = strokeMap[edge.color] || "#3b82f6";
+
+                const inPreset = preset === "all" || edge.presets.includes(preset);
+                const matchesSearch = !hasActiveSearchOrFilter || (matchesFilters(sNode) && matchesFilters(tNode));
+                const isPinnedMatch = !appState.pinnedGraphNode || edge.source === appState.pinnedGraphNode || edge.target === appState.pinnedGraphNode;
+
+                const isDimmed = !inPreset || !matchesSearch || !isPinnedMatch;
+                const isHighlighted = appState.pinnedGraphNode && (edge.source === appState.pinnedGraphNode || edge.target === appState.pinnedGraphNode);
+
+                const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                g.setAttribute("class", `svg-rel-link ${isDimmed ? "dimmed" : ""} ${isHighlighted ? "highlighted" : ""}`);
+                g.setAttribute("data-source", edge.source);
+                g.setAttribute("data-target", edge.target);
+                g.onclick = (e) => {
+                    e.stopPropagation();
+                    openInspector(edge.target);
+                };
+
+                g.innerHTML = `
+                    <path class="rel-path" d="${dPath}" fill="none" stroke="${strokeColor}" stroke-width="2.2" marker-end="url(#arrow-${edge.color})"/>
+                    <rect x="${midX - 34}" y="${midY - 11}" width="68" height="20" rx="5" fill="var(--svg-pill-bg)" stroke="${strokeColor}" stroke-width="1.2"/>
+                    <text x="${midX}" y="${midY + 3}" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="700" fill="var(--ink-primary)">${edge.card}</text>
+                `;
+                edgesLayer.appendChild(g);
+            });
+
+            // 2. Render Interactive SVG Table Nodes
+            TABLE_DATA.filter(t => t.graphPos).forEach(t => {
+                const { x, y, tag, presets } = t.graphPos;
+                const inPreset = preset === "all" || presets.includes(preset) || (preset === "risk" && t.risk !== "ok");
+                const matchesSearch = !hasActiveSearchOrFilter || matchesFilters(t);
+
+                let isNeighborOfPinned = true;
+                if (appState.pinnedGraphNode) {
+                    isNeighborOfPinned = t.name === appState.pinnedGraphNode ||
+                        GRAPH_EDGES.some(e => (e.source === appState.pinnedGraphNode && e.target === t.name) || (e.target === appState.pinnedGraphNode && e.source === t.name));
+                }
+
+                const isDimmed = !inPreset || !matchesSearch || !isNeighborOfPinned;
+                const isPinned = appState.pinnedGraphNode === t.name;
+
+                const colorMap = {
+                    dimension: { stroke: "#3b82f6", header: "rgba(59, 130, 246, 0.18)" },
+                    fact: { stroke: "#10b981", header: "rgba(16, 185, 129, 0.18)" },
+                    bridge: { stroke: "#8b5cf6", header: "rgba(139, 92, 246, 0.18)" },
+                    operational: { stroke: "#f59e0b", header: "rgba(245, 158, 11, 0.18)" }
+                };
+                const themeColors = colorMap[t.type] || colorMap.fact;
+                const strokeColor = t.risk === "critical" ? "#ef4444" : themeColors.stroke;
+
+                const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                g.setAttribute("class", `svg-table-node ${isDimmed ? "dimmed" : ""} ${isPinned ? "pinned" : ""}`);
+                g.setAttribute("data-id", t.name);
+                g.setAttribute("tabindex", "0");
+                g.setAttribute("role", "button");
+                g.setAttribute("aria-label", `${t.name}, ${t.rows.toLocaleString()} rows. Click to inspect details.`);
+
+                g.onclick = (e) => {
+                    e.stopPropagation();
+                    appState.pinnedGraphNode = appState.pinnedGraphNode === t.name ? null : t.name;
+                    renderSvgGraph();
+                    openInspector(t.name, g);
+                };
+
+                g.onkeydown = (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        openInspector(t.name, g);
+                    }
+                };
+
+                g.onmouseenter = () => {
+                    if (!appState.pinnedGraphNode) highlightGraphHover(t.name);
+                };
+                g.onmouseleave = () => {
+                    if (!appState.pinnedGraphNode) clearGraphHover();
+                };
+
+                const pkPreview = t.pk.slice(0, 2).join(", ") + (t.pk.length > 2 ? "..." : "");
+                const riskDot = t.risk === "critical" ? "🚨 " : t.risk === "warn" ? "⚠️ " : "";
+
+                g.innerHTML = `
+                    <rect class="node-frame" x="${x}" y="${y}" width="235" height="108" rx="9" fill="var(--svg-node-bg)" stroke="${strokeColor}" stroke-width="2"/>
+                    <rect x="${x}" y="${y}" width="235" height="30" rx="9" fill="${themeColors.header}"/>
+                    <text x="${x + 10}" y="${y + 20}" font-family="'JetBrains Mono', monospace" font-size="11.5" font-weight="700" fill="var(--ink-primary)">${riskDot}${t.name.slice(0, 22)}</text>
+                    <rect x="${x + 158}" y="${y + 6}" width="70" height="18" rx="4" fill="${strokeColor}"/>
+                    <text x="${x + 193}" y="${y + 18}" text-anchor="middle" font-family="'Space Grotesk', sans-serif" font-size="8.5" font-weight="700" fill="#ffffff">${tag}</text>
+                    <text x="${x + 10}" y="${y + 50}" font-family="'JetBrains Mono', monospace" font-size="10.5" fill="var(--ink-secondary)">PK: ${pkPreview}</text>
+                    <text x="${x + 10}" y="${y + 70}" font-family="'Plus Jakarta Sans', sans-serif" font-size="10.5" fill="var(--ink-muted)">${t.stageLabel}</text>
+                    <text x="${x + 10}" y="${y + 92}" font-family="'JetBrains Mono', monospace" font-size="10.5" font-weight="700" fill="${strokeColor}">${t.rows.toLocaleString()} rows (${t.size})</text>
+                `;
+                nodesLayer.appendChild(g);
+            });
+        }
+
+        function highlightGraphHover(nodeId) {
+            const links = document.querySelectorAll(".svg-rel-link");
+            const nodes = document.querySelectorAll(".svg-table-node");
+            const connected = new Set([nodeId]);
+            let edgeCount = 0;
+
+            links.forEach(l => {
+                const s = l.getAttribute("data-source");
+                const t = l.getAttribute("data-target");
+                if (s === nodeId || t === nodeId) {
+                    l.classList.remove("dimmed");
+                    l.classList.add("highlighted");
+                    connected.add(s);
+                    connected.add(t);
+                    edgeCount++;
+                } else {
+                    l.classList.add("dimmed");
+                }
+            });
+
+            nodes.forEach(n => {
+                if (connected.has(n.getAttribute("data-id"))) {
+                    n.classList.remove("dimmed");
+                } else {
+                    n.classList.add("dimmed");
+                }
+            });
+
+            document.getElementById("graphStatusText").innerHTML = `Tracing <strong>${nodeId}</strong>: ${edgeCount} incident foreign key / lineage paths highlighted. Click node to lock & inspect.`;
+        }
+
+        function clearGraphHover() {
+            renderSvgGraph();
+            const labels = {
+                galaxy: "Fact Constellation (Galaxy Schema) — Conformed Dimensions feeding multiple grain Facts.",
+                snowflake: "Snowflake Dimension Hierarchy — Strategy normalization into Configs & M:N Asset Bridges.",
+                lineage: "End-to-End Execution Lineage — OANDA candlesticks to Computer 2 broker fills.",
+                risk: "Auditor Risk Hotspots — Highlighting tables with schema drift or destructive upserts.",
+                all: "All 16 Graph Entities — Complete relational and lineage topology."
+            };
+            document.getElementById("graphStatusText").innerHTML = `Active Lens: <strong>${labels[appState.graphPreset]}</strong>`;
+        }
+
+        function setGraphPreset(preset) {
+            appState.graphPreset = preset;
+            appState.pinnedGraphNode = null;
+            ["galaxy", "snowflake", "lineage", "risk", "all"].forEach(p => {
+                const btn = document.getElementById(`preset-${p}`);
+                if (btn) btn.classList.toggle("active", p === preset);
+            });
+            clearGraphHover();
+        }
+
+        /* SVG Pan & Zoom Engine */
+        function updateSvgTransform() {
+            const g = document.getElementById("svgPanZoomGroup");
+            if (g) {
+                g.setAttribute("transform", `translate(${appState.svgTransform.x}, ${appState.svgTransform.y}) scale(${appState.svgTransform.scale})`);
+            }
+            const lbl = document.getElementById("zoomLevelLabel");
+            if (lbl) lbl.textContent = `${Math.round(appState.svgTransform.scale * 100)}%`;
+        }
+
+        function zoomSvg(factor) {
+            appState.svgTransform.scale = Math.min(2.4, Math.max(0.55, appState.svgTransform.scale * factor));
+            updateSvgTransform();
+        }
+
+        function resetSvgViewport() {
+            appState.svgTransform = { x: 0, y: 0, scale: 1 };
+            appState.pinnedGraphNode = null;
+            updateSvgTransform();
+            renderSvgGraph();
+        }
+
+        (function initSvgDragPan() {
+            const vp = document.getElementById("svgViewport");
+            if (!vp) return;
+            let isDragging = false;
+            let startX = 0, startY = 0;
+
+            vp.addEventListener("mousedown", (e) => {
+                if (e.target.closest(".svg-table-node") || e.target.closest(".svg-rel-link")) return;
+                isDragging = true;
+                startX = e.clientX - appState.svgTransform.x;
+                startY = e.clientY - appState.svgTransform.y;
+            });
+
+            window.addEventListener("mousemove", (e) => {
+                if (!isDragging) return;
+                appState.svgTransform.x = e.clientX - startX;
+                appState.svgTransform.y = e.clientY - startY;
+                updateSvgTransform();
+            });
+
+            window.addEventListener("mouseup", () => { isDragging = false; });
+        })();
+
+        /* ==========================================================================
+           6. RENDER VIEW 3: INTERACTIVE ERD GRID & CARDINALITY
+           ========================================================================== */
+        function renderErdView(data) {
+            const container = document.getElementById("panel-erd");
+            container.innerHTML = "";
+            const q = appState.searchQuery.trim().toLowerCase();
+
+            data.forEach(t => {
+                const card = document.createElement("div");
+                card.className = "erd-card";
+                card.setAttribute("role", "button");
+                card.setAttribute("tabindex", "0");
+                card.setAttribute("aria-label", `Inspect ${t.name} schema and relationships`);
+                card.onclick = () => openInspector(t.name, card);
+                card.onkeydown = (e) => handleCardKey(e, t.name, card);
+
+                const colsHtml = t.columns.slice(0, 6).map(c => {
+                    const isColMatch = q && c.name.toLowerCase().includes(q);
+                    const keyBadge = c.isPK ? `<span class="key-pill key-pk">PK</span>` :
+                                     c.isFK ? `<span class="key-pill key-fk">FK</span>` : `<span style="color:var(--ink-muted);text-align:center;">•</span>`;
+                    return `
+                        <div class="col-preview-row ${isColMatch ? "col-match" : ""}">
+                            ${keyBadge}
+                            <span>${c.name}</span>
+                            <span style="color:var(--ink-muted);font-size:0.72rem;">${c.type}</span>
+                        </div>
+                    `;
+                }).join("") + (t.columns.length > 6 ? `<div style="font-size:0.74rem;color:var(--ink-muted);padding-top:3px;">+ ${t.columns.length - 6} more columns...</div>` : "");
+
+                const fkHtml = t.fks.length > 0
+                    ? t.fks.map(f => `<div class="erd-rel-item"><span class="card-badge">${f.card}</span> <span>${f.col} ──► <strong>${f.target}</strong></span></div>`).join("")
+                    : `<div class="erd-rel-item" style="color:var(--ink-muted);">Root / Conformed Hub (No outbound FKs)</div>`;
+
+                const outHtml = t.outgoing.slice(0, 3).map(o =>
+                    `<div class="erd-rel-item"><span class="card-badge">${o.card}</span> <span>Feeds <strong>${o.target}</strong></span></div>`
+                ).join("");
+
+                card.innerHTML = `
+                    <div class="erd-card-header">
+                        <span class="erd-card-title">${t.name}</span>
+                        <span class="type-badge type-${t.type}">${t.type}</span>
+                    </div>
+                    <div class="erd-card-body">
+                        <div class="erd-telemetry-row">
+                            <span><strong>${t.rows.toLocaleString()}</strong> rows (${t.size})</span>
+                            ${getRiskBadgeHtml(t)}
+                        </div>
+                        <p style="font-size:0.82rem;color:var(--ink-secondary);">
+                            ${appState.plainEnglish ? t.plainEnglish : t.description}
+                        </p>
+                        <div class="col-list-preview">${colsHtml}</div>
+                        <div class="erd-rel-box">
+                            <div class="erd-rel-header">Foreign Keys & Downstream Lineage</div>
+                            ${fkHtml}
+                            ${outHtml}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        /* ==========================================================================
+           7. RENDER VIEW 4: SORTABLE COMPREHENSIVE TABLE CATALOG
+           ========================================================================== */
+        function sortCatalog(col) {
+            if (appState.catalogSortCol === col) {
+                appState.catalogSortAsc = !appState.catalogSortAsc;
+            } else {
+                appState.catalogSortCol = col;
+                appState.catalogSortAsc = col === "name" || col === "type";
+            }
+            applyFilters();
+        }
+
+        function renderCatalogView(data) {
+            const tbody = document.getElementById("catalogTableBody");
+            tbody.innerHTML = "";
+
+            const sorted = [...data].sort((a, b) => {
+                const col = appState.catalogSortCol;
+                let vA = a[col], vB = b[col];
+                if (typeof vA === "string") {
+                    return appState.catalogSortAsc ? vA.localeCompare(vB) : vB.localeCompare(vA);
+                }
+                return appState.catalogSortAsc ? vA - vB : vB - vA;
+            });
+
+            sorted.forEach(t => {
+                const tr = document.createElement("tr");
+                tr.setAttribute("tabindex", "0");
+                tr.setAttribute("role", "button");
+                tr.onclick = () => openInspector(t.name, tr);
+                tr.onkeydown = (e) => handleCardKey(e, t.name, tr);
+
+                const fksText = t.fks.length > 0
+                    ? t.fks.map(f => `<div class="mono" style="font-size:0.76rem;margin-bottom:3px;"><span class="card-badge">${f.card}</span> ${f.col} → ${f.target}</div>`).join("")
+                    : `<span style="color:var(--ink-muted);font-size:0.78rem;">Conformed Root</span>`;
+
+                tr.innerHTML = `
+                    <td>
+                        <div class="mono" style="font-weight:700;color:var(--dim-accent);">${t.name}</div>
+                        <div style="font-size:0.78rem;color:var(--ink-muted);margin-top:2px;">${appState.plainEnglish ? t.plainEnglish : t.description}</div>
+                    </td>
+                    <td><span class="type-badge type-${t.type}">${t.type}</span></td>
+                    <td style="white-space:nowrap;font-size:0.8rem;">${t.stageLabel}</td>
+                    <td class="mono" style="font-weight:700;">${t.rows.toLocaleString()}</td>
+                    <td class="mono">${t.size}</td>
+                    <td class="mono" style="font-size:0.78rem;">${t.pk.join(", ")}</td>
+                    <td>${fksText}</td>
+                    <td>
+                        ${getRiskBadgeHtml(t)}
+                        <div style="font-size:0.76rem;color:var(--ink-secondary);margin-top:4px;">${t.auditorRemarks}</div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        /* ==========================================================================
+           8. SLIDE-OVER INSPECTOR DRAWER & AUTO-GENERATED SQL DDL / JOINS
+           ========================================================================== */
+        function generateSqlDdl(t) {
+            const colLines = t.columns.map(c => {
+                const fkRef = t.fks.find(f => f.col === c.name);
+                const fkClause = fkRef ? ` REFERENCES public.${fkRef.target}(${fkRef.col})` : "";
+                return `    "${c.name}" ${c.type} NOT NULL${fkClause}`;
+            });
+            colLines.push(`    CONSTRAINT pk_${t.name.replace(/[^a-z0-9_]/gi, "_")} PRIMARY KEY (${t.pk.map(k => `"${k}"`).join(", ")})`);
+
+            let sql = `-- PostgreSQL 16 DDL for ${t.name} (${t.size} / ${t.rows.toLocaleString()} rows)\nCREATE TABLE public.${t.name} (\n${colLines.join(",\n")}\n);\n`;
+
+            if (t.fks.length > 0) {
+                const f = t.fks[0];
+                sql += `\n-- Canonical Analytical JOIN Query\nSELECT\n    a.*,\n    b.*\nFROM public.${t.name} a\nINNER JOIN public.${f.target} b\n    ON a.${f.col} = b.${f.col}\nLIMIT 100;`;
+            } else if (t.outgoing.length > 0) {
+                const o = t.outgoing[0];
+                sql += `\n-- Downstream Lineage Inspection Query\nSELECT\n    hub.*,\n    fact.*\nFROM public.${t.name} hub\nINNER JOIN public.${o.target} fact\n    ON hub.${t.pk[0]} = fact.${t.pk[0]}\nLIMIT 100;`;
+            }
+            return sql;
+        }
+
+        function openInspector(entityName, triggerEl = null) {
+            const t = TABLE_DATA.find(x => x.name === entityName);
+            if (!t) return;
+
+            if (triggerEl) appState.lastFocusedElement = triggerEl;
+            appState.inspectedEntity = t.name;
+
+            // Update Breadcrumb Trail (keep last 4)
+            if (appState.historyTrail[appState.historyTrail.length - 1] !== t.name) {
+                appState.historyTrail.push(t.name);
+                if (appState.historyTrail.length > 4) appState.historyTrail.shift();
+            }
+
+            renderDrawerContent();
+
+            document.getElementById("drawerBackdrop").classList.add("open");
+            const drawer = document.getElementById("inspectorDrawer");
+            drawer.classList.add("open");
+            drawer.setAttribute("aria-hidden", "false");
+            document.getElementById("drawerCloseBtn").focus();
+
+            renderDfdView();
+        }
+
+        function switchDrawerTab(tabName) {
+            appState.inspectorTab = tabName;
+            ["overview", "columns", "sql", "audit"].forEach(id => {
+                const btn = document.getElementById(`dTab-${id}`);
+                if (btn) {
+                    btn.classList.toggle("active", id === tabName);
+                    btn.setAttribute("aria-selected", id === tabName ? "true" : "false");
+                }
+            });
+            renderDrawerContent();
+        }
+
+        function renderDrawerContent() {
+            const t = TABLE_DATA.find(x => x.name === appState.inspectedEntity);
+            if (!t) return;
+
+            // Breadcrumbs
+            const crumbsEl = document.getElementById("drawerBreadcrumbs");
+            crumbsEl.innerHTML = appState.historyTrail.map((name, i) => `
+                <button type="button" class="crumb-btn" onclick="openInspector('${name}')">${name}</button>
+                ${i < appState.historyTrail.length - 1 ? `<span style="color:var(--ink-muted);">→</span>` : ""}
+            `).join("");
+
+            // Header
+            document.getElementById("drawerHeaderContent").innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;">
+                    <span class="type-badge type-${t.type}">${t.type} • ${t.stageLabel}</span>
+                    ${getRiskBadgeHtml(t)}
+                </div>
+                <h2 id="drawerEntityTitle" class="mono" style="font-size:1.35rem;font-weight:700;margin-bottom:6px;">${t.name}</h2>
+                <p style="font-size:0.88rem;color:var(--ink-secondary);">${appState.plainEnglish ? t.plainEnglish : t.description}</p>
+            `;
+
+            const body = document.getElementById("drawerBodyContent");
+
+            if (appState.inspectorTab === "overview") {
+                const inHops = t.fks.length > 0
+                    ? t.fks.map(f => `<button type="button" class="hop-chip" onclick="openInspector('${f.target}')"><span class="card-badge">${f.card}</span> ${f.col} → <strong>${f.target}</strong></button>`).join("")
+                    : `<p style="font-size:0.83rem;color:var(--ink-muted);">None — This entity acts as an upstream Conformed Dimension or State Contract.</p>`;
+
+                const outHops = t.outgoing.length > 0
+                    ? t.outgoing.map(o => `<button type="button" class="hop-chip" onclick="openInspector('${o.target}')"><span class="card-badge">${o.card}</span> Feeds <strong>${o.target}</strong> <span style="font-size:0.72rem;color:var(--ink-muted);">(${o.desc})</span></button>`).join("")
+                    : `<p style="font-size:0.83rem;color:var(--ink-muted);">Terminal sink / audit table.</p>`;
+
+                body.innerHTML = `
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+                        <div class="pattern-card">
+                            <div style="font-size:0.72rem;color:var(--ink-muted);text-transform:uppercase;font-weight:700;">Row Count</div>
+                            <div class="mono" style="font-size:1.05rem;font-weight:700;margin-top:2px;">${t.rows.toLocaleString()}</div>
+                        </div>
+                        <div class="pattern-card">
+                            <div style="font-size:0.72rem;color:var(--ink-muted);text-transform:uppercase;font-weight:700;">Data Heap</div>
+                            <div class="mono" style="font-size:1.05rem;font-weight:700;margin-top:2px;">${t.dataSize}</div>
+                        </div>
+                        <div class="pattern-card">
+                            <div style="font-size:0.72rem;color:var(--ink-muted);text-transform:uppercase;font-weight:700;">B-Tree Indexes</div>
+                            <div class="mono" style="font-size:1.05rem;font-weight:700;margin-top:2px;">${t.indexSize}</div>
+                        </div>
+                    </div>
+
+                    <div class="pattern-card">
+                        <h3 style="margin-bottom:6px;">🗣️ Plain-English Translation</h3>
+                        <p style="color:var(--ink-secondary);">${t.plainEnglish}</p>
+                    </div>
+
+                    <div>
+                        <h3 style="font-family:'Space Grotesk',sans-serif;font-size:0.95rem;margin-bottom:6px;">⬆️ Upstream Foreign Key Dependencies (Click to Hop)</h3>
+                        <div>${inHops}</div>
+                    </div>
+
+                    <div>
+                        <h3 style="font-family:'Space Grotesk',sans-serif;font-size:0.95rem;margin-bottom:6px;">⬇️ Downstream Data Lineage Consumers (Click to Hop)</h3>
+                        <div>${outHops}</div>
+                    </div>
+                `;
+            } else if (appState.inspectorTab === "columns") {
+                const rowsHtml = t.columns.map(c => `
+                    <tr style="border-bottom:1px solid var(--border-subtle);">
+                        <td class="mono" style="padding:9px 8px;font-weight:600;color:var(--ink-primary);">${c.name}</td>
+                        <td class="mono" style="padding:9px 8px;font-size:0.78rem;color:var(--dim-text);">${c.type}</td>
+                        <td style="padding:9px 8px;">
+                            ${c.isPK ? `<span class="key-pill key-pk">PK</span>` : ""}
+                            ${c.isFK ? `<span class="key-pill key-fk">FK</span>` : ""}
+                            ${!c.isPK && !c.isFK ? `<span style="color:var(--ink-muted);font-size:0.75rem;">Attr</span>` : ""}
+                        </td>
+                        <td style="padding:9px 8px;font-size:0.8rem;color:var(--ink-secondary);">${c.desc || ""}</td>
+                    </tr>
+                `).join("");
+
+                body.innerHTML = `
+                    <div style="font-size:0.82rem;color:var(--ink-secondary);">
+                        Composite Primary Key Grain: <strong class="mono">(${t.pk.join(", ")})</strong>
+                    </div>
+                    <table style="width:100%;border-collapse:collapse;text-align:left;font-size:0.84rem;">
+                        <thead>
+                            <tr style="background:var(--bg-elevated);border-bottom:2px solid var(--border-strong);">
+                                <th style="padding:8px;">Column</th>
+                                <th style="padding:8px;">PG Type</th>
+                                <th style="padding:8px;">Key</th>
+                                <th style="padding:8px;">Role / Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rowsHtml}</tbody>
+                    </table>
+                `;
+            } else if (appState.inspectorTab === "sql") {
+                const ddl = generateSqlDdl(t);
+                body.innerHTML = `
+                    <p style="font-size:0.84rem;color:var(--ink-secondary);">
+                        Ready-to-run PostgreSQL 16 table definition and canonical join query for <code>${t.name}</code>:
+                    </p>
+                    <div class="sql-block-wrap">
+                        <button type="button" class="copy-sql-btn" id="copySqlBtn" onclick="copySqlToClipboard()">📋 Copy SQL</button>
+                        <pre id="sqlCodeBlock">${ddl}</pre>
+                    </div>
+                `;
+            } else if (appState.inspectorTab === "audit") {
+                body.innerHTML = `
+                    <div class="pattern-card" style="border-left:4px solid ${t.risk === 'critical' ? '#ef4444' : t.risk === 'warn' ? '#f59e0b' : '#10b981'};">
+                        <h3 style="margin-bottom:8px;">Auditor Verification Remarks</h3>
+                        <p style="font-size:0.9rem;color:var(--ink-primary);line-height:1.6;">${t.auditorRemarks}</p>
+                    </div>
+                    <div class="pattern-card">
+                        <h3 style="margin-bottom:6px;">Storage & Indexing Breakdown</h3>
+                        <p style="color:var(--ink-secondary);">
+                            Total footprint is <strong>${t.size}</strong> across <strong>${t.rows.toLocaleString()} rows</strong> 
+                            (Heap Data: <code>${t.dataSize}</code>, B-Tree Indexes: <code>${t.indexSize}</code>).
+                        </p>
+                    </div>
+                `;
+            }
+        }
+
+        function copySqlToClipboard() {
+            const code = document.getElementById("sqlCodeBlock");
+            const btn = document.getElementById("copySqlBtn");
+            if (!code || !btn) return;
+            navigator.clipboard.writeText(code.textContent).then(() => {
+                btn.textContent = "✅ Copied!";
+                setTimeout(() => { btn.textContent = "📋 Copy SQL"; }, 1800);
+            });
+        }
+
+        function closeInspector() {
+            document.getElementById("drawerBackdrop").classList.remove("open");
+            const drawer = document.getElementById("inspectorDrawer");
+            drawer.classList.remove("open");
+            drawer.setAttribute("aria-hidden", "true");
+            appState.inspectedEntity = null;
+            renderDfdView();
+            if (appState.lastFocusedElement) {
+                appState.lastFocusedElement.focus();
+            }
+        }
+
+        /* ==========================================================================
+           9. VIEW SWITCHING, PLAIN-ENGLISH TOGGLE, GLOSSARY & KEYBOARD SHORTCUTS
+           ========================================================================== */
+        function switchView(view) {
+            appState.activeView = view;
+            ["dfd", "graph", "erd", "dict"].forEach(v => {
+                const btn = document.getElementById(`tabBtn-${v}`);
+                const panel = document.getElementById(`panel-${v}`);
+                if (btn) btn.setAttribute("aria-selected", v === view ? "true" : "false");
+                if (panel) {
+                    panel.style.display = v === view ? (v === "erd" ? "grid" : v === "dict" ? "block" : "flex") : "none";
+                }
+            });
+            if (view === "graph") renderSvgGraph();
+            announce(`Switched to ${view.toUpperCase()} view.`);
+        }
+
+        function togglePlainEnglish() {
+            appState.plainEnglish = !appState.plainEnglish;
+            const btn = document.getElementById("plainEnglishBtn");
+            const lbl = document.getElementById("plainEnglishLabel");
+            btn.setAttribute("aria-pressed", appState.plainEnglish ? "true" : "false");
+            lbl.textContent = appState.plainEnglish ? "Plain-English: ON" : "Plain-English: OFF";
+
+            document.getElementById("heroSubtitleText").textContent = appState.plainEnglish
+                ? "Plain-English Mode Active: All 18 database tables, trading terms, and data flows are translated into clear, everyday language."
+                : "Explore the PostgreSQL 16 Fact Constellation (Galaxy Schema), explicit 1:1 / 1:N / M:N cardinalities, and the 5-stage pipeline from OANDA candlestick ingestion to Computer 2 broker execution.";
+
+            applyFilters();
+            if (appState.inspectedEntity) renderDrawerContent();
+        }
+
+        function togglePanel(panelId, btnId) {
+            const panel = document.getElementById(panelId);
+            const btn = document.getElementById(btnId);
+            const isOpen = panel.classList.toggle("open");
+            btn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+            btn.setAttribute("aria-pressed", isOpen ? "true" : "false");
+        }
+
+        function renderGlossary() {
+            const container = document.getElementById("glossaryContainer");
+            container.innerHTML = JARGON_GLOSSARY.map(g => `
+                <div class="glossary-item">
+                    <div class="glossary-term">
+                        <span>${g.term}</span>
+                        <span style="font-size:0.7rem;color:var(--ink-muted);font-weight:500;">${g.cat}</span>
+                    </div>
+                    <p style="color:var(--ink-secondary);">${g.def}</p>
+                </div>
+            `).join("");
+        }
+
+        function handleCardKey(e, name, el) {
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                openInspector(name, el);
+            }
+        }
+
+        function toggleTheme() {
+            const root = document.documentElement;
+            const current = root.getAttribute("data-theme");
+            const next = current === "dark" ? "light" : "dark";
+            root.setAttribute("data-theme", next);
+            document.getElementById("themeIcon").textContent = next === "dark" ? "☀️" : "🌙";
+            document.getElementById("themeLabel").textContent = next === "dark" ? "Light" : "Dark";
+            localStorage.setItem("sb_erd_theme", next);
+        }
+
+        // Global Keyboard Shortcuts ('/' to search, 'Escape' to close drawer)
+        window.addEventListener("keydown", (e) => {
+            const searchEl = document.getElementById("globalSearch");
+            if (e.key === "/" && document.activeElement !== searchEl) {
+                e.preventDefault();
+                searchEl.focus();
+            } else if (e.key === "Escape") {
+                closeInspector();
+            }
+        });
+
+        document.getElementById("globalSearch").addEventListener("input", applyFilters);
+
+        // Initialize Saved Theme & Render Workspace
+        (function init() {
+            const savedTheme = localStorage.getItem("sb_erd_theme") || "dark";
+            document.documentElement.setAttribute("data-theme", savedTheme);
+            document.getElementById("themeIcon").textContent = savedTheme === "dark" ? "☀️" : "🌙";
+            document.getElementById("themeLabel").textContent = savedTheme === "dark" ? "Light" : "Dark";
+
+            renderGlossary();
+            applyFilters();
+        })();
+    </script>
+</body>
+</html>

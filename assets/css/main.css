@@ -160,20 +160,80 @@ hr { border: 0; border-top: 1px solid var(--border); margin: 2.5rem 0; }
 }
 .nav { display: flex; gap: 4px; margin-left: auto; align-items: center; flex-wrap: wrap; }
 
-/* Grouped nav: each group has a label + links side by side */
-.nav-group { display: flex; align-items: center; gap: 0; }
+/* Grouped nav with dropdowns */
+.nav-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
 .nav-group-label {
-  font-family: var(--mono); font-size: 0.64rem; font-weight: 600;
-  letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint);
-  padding: 0 6px 0 10px; border-left: 1px solid var(--border); white-space: nowrap;
+  display: none;
 }
-.nav-group:first-child .nav-group-label { border-left: 0; padding-left: 0; }
-.nav a {
-  color: var(--text-dim); padding: 6px 10px; border-radius: var(--radius-sm);
-  font-size: 0.88rem; font-weight: 500;
+.nav-group-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-dim);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 550;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
 }
-.nav a:hover { background: var(--bg-raised); color: var(--text); text-decoration: none; }
-.nav a.active { color: var(--text); background: var(--bg-raised); box-shadow: inset 0 0 0 1px var(--border); }
+.nav-group-btn:hover,
+.nav-group:hover .nav-group-btn,
+.nav-group:focus-within .nav-group-btn {
+  color: var(--text);
+  background: var(--bg-raised);
+}
+.nav-group.has-active .nav-group-btn {
+  color: var(--accent);
+  font-weight: 650;
+}
+.nav-group-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 200px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 10px 28px -4px rgba(0,0,0,0.35);
+  padding: 6px;
+  z-index: 100;
+  flex-direction: column;
+  gap: 2px;
+}
+.nav-group:hover .nav-group-dropdown,
+.nav-group:focus-within .nav-group-dropdown {
+  display: flex;
+}
+.nav-group-dropdown a {
+  display: block;
+  padding: 7px 12px;
+  color: var(--text-dim);
+  font-size: 0.84rem;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: 0.12s ease;
+}
+.nav-group-dropdown a:hover {
+  color: var(--text);
+  background: var(--bg-raised);
+}
+.nav-group-dropdown a.active {
+  color: var(--text);
+  background: var(--bg-sunken);
+  font-weight: 700;
+  box-shadow: inset 3px 0 0 var(--accent);
+}
 
 /* Search trigger button */
 .search-trigger {
@@ -285,13 +345,17 @@ hr { border: 0; border-top: 1px solid var(--border); margin: 2.5rem 0; }
 
   .nav-group { flex-direction: column; align-items: stretch; gap: 2px; padding-bottom: 6px; }
   .nav-group + .nav-group { border-top: 1px solid var(--border); padding-top: 10px; margin-top: 4px; }
-  /* The group labels are noise in a crowded desktop bar but useful section
-     headers once the nav is a vertical list, so they come back here. */
+  .nav-group-btn { display: none; }
   .nav-group-label {
-    display: block; border-left: 0; padding: 0 0 4px;
-    font-size: 0.62rem; color: var(--text-faint);
+    display: block; border-left: 0; padding: 4px 0 6px 4px;
+    font-family: var(--mono); font-size: 0.68rem; font-weight: 700;
+    text-transform: uppercase; color: var(--text-faint); letter-spacing: 0.06em;
   }
-  .nav a { padding: 11px 12px; font-size: 0.95rem; border-radius: var(--radius-sm); }
+  .nav-group-dropdown {
+    display: flex; position: static; box-shadow: none; border: none;
+    background: transparent; padding: 0; min-width: 0; flex-direction: column; gap: 2px;
+  }
+  .nav a, .nav-group-dropdown a { padding: 9px 12px; font-size: 0.92rem; border-radius: var(--radius-sm); }
 
   .nav .search-trigger,
   .nav .mode-switch { width: 100%; margin-top: 10px; }

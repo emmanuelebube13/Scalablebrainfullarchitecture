@@ -19,6 +19,10 @@ import { loadAll, loadJSON } from './core.js';
 
 /* ---- Result types ---- */
 const TYPES = {
+  strategy:  { label: 'Strategy',    colour: 'var(--s1)' },
+  table:     { label: 'Database',    colour: 'var(--s3)' },
+  tree:      { label: 'Directory',   colour: 'var(--info)' },
+  page:      { label: 'Page',        colour: 'var(--accent)' },
   node:      { label: 'Map node',    colour: 'var(--accent)' },
   edge:      { label: 'Connection',  colour: 'var(--edge)' },
   system:    { label: 'System',      colour: 'var(--s1)' },
@@ -40,13 +44,16 @@ async function buildIndex() {
 
   INDEX = [];
 
-  const [{ registry, systems }, arch, goals, decisions, vision] =
+  const [{ registry, systems }, arch, goals, decisions, vision, strategiesData, dictData, treeData] =
     await Promise.all([
       loadAll(),
       loadJSON('data/architecture.json').catch(() => null),
       loadJSON('data/goals.json').catch(() => null),
       loadJSON('data/decisions.json').catch(() => null),
       loadJSON('data/vision.json').catch(() => null),
+      loadJSON('data/strategies.json').catch(() => null),
+      loadJSON('data/data-dictionary.json').catch(() => null),
+      loadJSON('data/system-tree.json').catch(() => null),
     ]);
 
   /* Architecture nodes */
@@ -248,6 +255,66 @@ async function buildIndex() {
       }
     }
   } catch (_) { /* runbook not critical */ }
+
+  /* 67 Quantitative Strategies */
+  if (strategiesData?.strategies) {
+    for (const s of strategiesData.strategies) {
+      INDEX.push({
+        type: 'strategy',
+        title: `#${s.id} ${s.name} (${s.granularity})`,
+        detail: `${s.family} · WR: ${Math.round((s.oos_metrics?.win_rate || 0) * 100)}% · PF: ${s.oos_metrics?.profit_factor || 0} · ${(s.indicators || []).join(', ')}`,
+        url: `strategies.html?search=${encodeURIComponent(s.name)}`,
+        searchText: `#${s.id} ${s.name} ${s.family} ${s.granularity} ${(s.indicators || []).join(' ')} ${(s.qualified_regimes || []).join(' ')} ${s.entry_rules || ''} ${s.exit_rules || ''}`.toLowerCase(),
+      });
+    }
+  }
+
+  /* Data Dictionary Tables & Columns */
+  if (dictData?.stores) {
+    for (const store of dictData.stores) {
+      for (const tbl of store.tables || []) {
+        INDEX.push({
+          type: 'table',
+          title: `${tbl.name} (${store.name})`,
+          detail: `${tbl.row_count_estimate?.toLocaleString() || 0} rows · ${tbl.purpose || ''}`,
+          url: `data-dictionary.html`,
+          searchText: `${tbl.name} ${store.name} ${tbl.purpose || ''} ${(tbl.columns || []).map((c) => `${c.name} ${c.type} ${c.description || ''}`).join(' ')}`.toLowerCase(),
+        });
+      }
+    }
+  }
+
+  /* Monorepo Directory Hierarchy */
+  if (treeData?.nodes) {
+    for (const node of treeData.nodes) {
+      INDEX.push({
+        type: 'tree',
+        title: node.path,
+        detail: `${node.category || ''} · ${node.description || ''}`,
+        url: `system-tree.html`,
+        searchText: `${node.path} ${node.name || ''} ${node.category || ''} ${node.description || ''} ${(node.subdirectories || []).map((s) => `${s.path} ${s.name} ${s.description}`).join(' ')}`.toLowerCase(),
+      });
+    }
+  }
+
+  /* Modernized Architecture Pages */
+  const KEY_PAGES = [
+    { title: 'Interactive ERD & Lineage Canvas', detail: 'Visual schema topology, 17 production tables, and live execution lineage', url: 'erd.html', search: 'erd entity relationship data lineage schema tables foreign keys' },
+    { title: 'FinBERT Macro Sentiment & Entropy Engine', detail: 'ProsusAI/FinBERT inference, Shannon entropy dispersion, and calendar gating', url: 'macro-finbert.html', search: 'finbert nlp sentiment shannon entropy chunking prosusai feds ecb macro' },
+    { title: 'Forex Sessions & Guardian Time Rules', detail: 'Live UTC session clock, overlaps, Friday 20:55 freeze, Sunday buffer', url: 'market-sessions.html', search: 'forex sessions timezone utc hours sydney tokyo london new york rollover friday cutoff' },
+    { title: 'Database Design & Forensic Audit Remarks', detail: 'Galaxy schema, dual-identity resolution, SQLite WAL, True Net Currency Exposure', url: 'audit-remarks.html', search: 'audit remarks database design galaxy star schema wal lock true net currency exposure' },
+    { title: 'Quantitative Principles & Research Notes', detail: 'Deterministic edges, meta-labeling, fractional Kelly sizing, HMM regimes', url: 'research.html', search: 'research notes kelly sizing meta labeling de prado hmm regimes oos' },
+    { title: 'Historical Archive & Legacy Library', detail: 'Preserved migration reports (5 PDFs) and frontend education v1 prototypes', url: 'archive.html', search: 'archive legacy reports historical pdf v1 frontend education' },
+  ];
+  for (const p of KEY_PAGES) {
+    INDEX.push({
+      type: 'page',
+      title: p.title,
+      detail: p.detail,
+      url: p.url,
+      searchText: `${p.title} ${p.detail} ${p.search}`.toLowerCase(),
+    });
+  }
 
   return INDEX;
 }
