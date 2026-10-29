@@ -1,0 +1,100 @@
+{
+  "version": "2026-10-29",
+  "root": "C:\\SB",
+  "description": "Scalable Brain Production & Development Monorepo Hierarchy",
+  "nodes": [
+    {
+      "path": "C:\\SB\\prod\\",
+      "name": "prod",
+      "category": "Production Runtime",
+      "duty": "Always On (Windows Task / Supervisor)",
+      "description": "Production execution directory containing running microservices, local SQLite databases, service supervisors, and operational log files.",
+      "subdirectories": [
+        {
+          "path": "services\\",
+          "name": "services",
+          "description": "PowerShell service automation (`sb_service.ps1`, `alwayson_elevated.ps1`) managing background daemons (publisher, telemetry-server, queue)."
+        },
+        {
+          "path": "state\\",
+          "name": "state",
+          "description": "Active state databases: `ams.db` (System 3 risk gate & positions), `system2.db` (order execution facts), `notifications.db`, `shadow_incubator.db`."
+        },
+        {
+          "path": "logs\\",
+          "name": "logs",
+          "description": "Rotated execution logs for publisher, supervisor, and System 3 AMS daemon."
+        },
+        {
+          "path": "repo\\",
+          "name": "repo",
+          "description": "Git checkout of the production core systems (`systems/brain`, `systems/bridge`, `systems/guardian`)."
+        }
+      ]
+    },
+    {
+      "path": "C:\\SB\\scalablebrain-umbrella\\",
+      "name": "scalablebrain-umbrella",
+      "category": "Production Telemetry & Web",
+      "duty": "Always On (Port 8050)",
+      "description": "Production deployment repository hosting the Layer 4 FastAPI Telemetry Server and Layer 5 React/Vite Telemetry Dashboard.",
+      "subdirectories": [
+        {
+          "path": "telemetry-server\\",
+          "name": "telemetry-server",
+          "description": "FastAPI backend answering `/api/v1/*` routes (trades, risk, kpi, candles, decisions, currency-exposure), backed by Postgres with read-only SQLite fallbacks."
+        },
+        {
+          "path": "telemetry-dashboard\\",
+          "name": "telemetry-dashboard",
+          "description": "Vite/React frontend client with TradingView Lightweight Charts, 6-card trade inspector, real-time filters, and CAD risk toggles."
+        }
+      ]
+    },
+    {
+      "path": "C:\\SB\\dev\\ & dev-umbrella\\",
+      "name": "dev & dev-umbrella",
+      "category": "Development & Staging",
+      "duty": "Engineer Pair Programming",
+      "description": "Isolated development working trees for building and testing features before deployment to production."
+    },
+    {
+      "path": "C:\\SB\\data\\artifacts\\",
+      "name": "data/artifacts",
+      "category": "Artifact Authority",
+      "duty": "Local Storage & GCS Mirror",
+      "description": "Permanent store for trained models, analytics bundles, hourly signal ledgers, and 30-second publisher snapshots.",
+      "subdirectories": [
+        {
+          "path": "telemetry\\",
+          "name": "telemetry",
+          "description": "Publisher outputs: `latest.json` (30s snapshot), `s1_health.json`, `s1_model.json`, `history/`."
+        },
+        {
+          "path": "system1\\analytics\\",
+          "name": "system1/analytics",
+          "description": "System 1 analytics releases: `strategy_catalog.json`, `trade_returns.json`, `frequency_stats.json`."
+        },
+        {
+          "path": "signals\\",
+          "name": "signals",
+          "description": "Hourly signal ledger NDJSON files grouped by date (`signals/YYYY-MM-DD/*.ndjson`)."
+        }
+      ]
+    },
+    {
+      "path": "C:\\SB\\Scalablebrainfullarchitecture\\",
+      "name": "Scalablebrainfullarchitecture",
+      "category": "Architecture & Documentation Portal",
+      "duty": "Static GitHub Pages (Public & Internal Reading)",
+      "description": "Central architecture hub, reading library, interactive ERD, and operations tracking portal."
+    },
+    {
+      "path": "C:\\SB\\control-panel\\",
+      "name": "control-panel",
+      "category": "Operations Control",
+      "duty": "Intermittent (Port 8060)",
+      "description": "Independent operator console for pausing trading, manual resets, and health probes."
+    }
+  ]
+}

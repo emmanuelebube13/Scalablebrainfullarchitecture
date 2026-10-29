@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monorepo System Tree & Architecture Guide — Scalable Brain</title>
+<meta name="description" content="Complete directory hierarchy, duty allocation, failure point analysis, and readjustment playbook for Scalable Brain Computer 4.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/css/main.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌳</text></svg>">
+<style>
+.section-nav-pills {
+  display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0;
+  position: sticky; top: 60px; z-index: 30; background: var(--bg);
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.pill-anchor {
+  padding: 6px 14px; border-radius: 9999px; background: var(--bg-surface);
+  border: 1px solid var(--border); color: var(--text-dim); font-size: 0.85rem;
+  font-weight: 600; text-decoration: none; transition: 0.15s ease;
+}
+.pill-anchor:hover { color: var(--text); background: var(--bg-raised); text-decoration: none; border-color: var(--border-strong); }
+.dict-table-card {
+  background: var(--bg-surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 20px 24px; margin-bottom: 20px;
+}
+.dict-table-header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<header id="site-header"></header>
+
+<main class="wrap">
+  <div class="page-head" style="margin-top: 24px;">
+    <span class="eyebrow">Monorepo Hierarchy & System Guide</span>
+    <h1 style="margin: 8px 0 12px 0;">Computer 4 Directory & Architecture Guide</h1>
+    <p class="lead" style="max-width: 860px; color: var(--text-dim); line-height: 1.6;">
+      Detailed blueprint of all folders, background supervisor services, runtime state databases, failure points, and emergency recovery playbooks powering Scalable Brain on Computer 4.
+    </p>
+  </div>
+
+  <div class="section-nav-pills">
+    <a href="#dir-catalog" class="pill-anchor">📁 Directory Catalog</a>
+    <a href="#failure-map" class="pill-anchor">⚠️ Point of Failure Map</a>
+    <a href="#scalability" class="pill-anchor">📈 Scalability Assessment</a>
+    <a href="#playbook" class="pill-anchor">🚨 Readjustment Playbook</a>
+    <div style="margin-left: auto; min-width: 240px;">
+      <input type="text" id="tree-search-input" placeholder="Search path, symptom, or command..." style="width: 100%; padding: 6px 12px; font-size: 0.84rem; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text);">
+    </div>
+  </div>
+
+  <section id="dir-catalog" style="margin-top: 20px;">
+    <div style="margin-bottom: 16px;">
+      <h2 style="font-size: 1.35rem; margin: 0 0 6px 0;">1. Monorepo Directory Purpose Catalog</h2>
+      <p style="color: var(--text-dim); font-size: 0.88rem; margin: 0;">Logical hierarchy of production, development, and telemetry repositories in <code>C:\SB</code>.</p>
+    </div>
+    <div id="dir-catalog-container"></div>
+  </section>
+
+  <section id="failure-map" style="margin-top: 40px;">
+    <div style="margin-bottom: 16px;">
+      <h2 style="font-size: 1.35rem; margin: 0 0 6px 0;">2. High-Risk Point of Failure Map</h2>
+      <p style="color: var(--text-dim); font-size: 0.88rem; margin: 0;">Where the system can stall or fail first, with exact containment rules and immediate recovery commands.</p>
+    </div>
+    <div id="failures-container"></div>
+  </section>
+
+  <section id="scalability" style="margin-top: 40px;">
+    <div class="dict-table-card">
+      <h2 style="font-size: 1.35rem; margin: 0 0 12px 0;">3. Scalability Assessment & Bottlenecks</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+        <div style="background: var(--bg-sunken); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+          <span class="badge tone-warn" style="margin-bottom: 8px;">Active Constraint</span>
+          <h4 style="margin: 6px 0;">SQLite Write-Lock Serialization</h4>
+          <p style="font-size: 0.86rem; color: var(--text-dim); line-height: 1.5; margin: 0;">
+            <code>ams.db</code> uses SQLite WAL mode. While WAL permits infinite concurrent readers, writers serialize with an exclusive lock. If telemetry dashboard polling coincides with a high-volatility 10-signal burst from System 1, lock contention can cause transient 5-second delays.
+          </p>
+        </div>
+        <div style="background: var(--bg-sunken); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+          <span class="badge tone-good" style="margin-bottom: 8px;">Architectural Solution</span>
+          <h4 style="margin: 6px 0;">Local-First Read Replicas & PostgreSQL</h4>
+          <p style="font-size: 0.86rem; color: var(--text-dim); line-height: 1.5; margin: 0;">
+            The Layer 4 Telemetry server connects to SQLite using <code>?mode=ro&immutable=1</code> or queries the PostgreSQL replica directly. System 3 Guardian writes uninterrupted to <code>ams.db</code> with dedicated 5000ms busy timeouts.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="playbook" style="margin-top: 40px; margin-bottom: 60px;">
+    <div style="margin-bottom: 16px;">
+      <h2 style="font-size: 1.35rem; margin: 0 0 6px 0;">4. System Readjustment Playbook</h2>
+      <p style="color: var(--text-dim); font-size: 0.88rem; margin: 0;">Click any incident trigger to view step-by-step diagnostic and recovery actions.</p>
+    </div>
+    <div id="playbook-container"></div>
+  </section>
+</main>
+
+<footer id="site-footer"></footer>
+
+<script type="module">
+  import { initSystemTreePage } from './assets/js/system-tree.js';
+  initSystemTreePage();
+</script>
+</body>
+</html>

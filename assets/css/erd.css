@@ -1,0 +1,363 @@
+/* ============================================================
+   erd.css — Styling for the Interactive ERD & Data Lineage Canvas
+   ============================================================ */
+
+.erd-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+/* Control Toolbar */
+.erd-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+}
+
+.erd-filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.erd-pill-btn {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 550;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  background: var(--bg-raised);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.erd-pill-btn:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+  background: var(--bg-hover);
+}
+
+.erd-pill-btn.active {
+  background: var(--accent);
+  color: #08101a;
+  border-color: var(--accent);
+  font-weight: 650;
+}
+
+.erd-search-box {
+  position: relative;
+  min-width: 240px;
+}
+
+.erd-search-box input {
+  width: 100%;
+  padding: 6px 12px 6px 32px;
+  font-size: 0.85rem;
+  font-family: var(--font-mono);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+}
+
+.erd-search-box input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.erd-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.8rem;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Zoom & Viewport controls */
+.erd-view-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.erd-icon-btn {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 700;
+  transition: all 0.15s ease;
+}
+
+.erd-icon-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+
+/* Canvas Area */
+.erd-canvas-wrap {
+  position: relative;
+  width: 100%;
+  height: 720px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.25);
+  cursor: grab;
+}
+
+.erd-canvas-wrap:active {
+  cursor: grabbing;
+}
+
+.erd-svg-viewport {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* SVG Nodes & Edges */
+.svg-table-node {
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.2s ease;
+}
+
+.svg-table-node:hover .node-frame {
+  stroke-width: 3px;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+}
+
+.svg-table-node.pinned .node-frame {
+  stroke-width: 3.5px;
+  stroke: var(--accent) !important;
+  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--accent) 45%, transparent));
+}
+
+.svg-table-node.dimmed,
+.svg-rel-link.dimmed {
+  opacity: 0.18;
+  pointer-events: none;
+}
+
+.svg-rel-link {
+  transition: opacity 0.2s ease;
+  cursor: pointer;
+}
+
+.svg-rel-link:hover .rel-path {
+  stroke-width: 3.5px;
+}
+
+.svg-rel-link.highlighted .rel-path {
+  stroke-width: 3.8px;
+  stroke: var(--accent) !important;
+}
+
+/* Drawer / Inspector Panel */
+.erd-drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 480px;
+  max-width: 90vw;
+  background: var(--bg-surface);
+  border-left: 1px solid var(--border-strong);
+  box-shadow: -8px 0 32px rgba(0,0,0,0.35);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 40;
+}
+
+.erd-drawer.open {
+  transform: translateX(0);
+}
+
+.erd-drawer-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-raised);
+}
+
+.erd-drawer-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.erd-drawer-title {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.erd-drawer-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.erd-drawer-close {
+  background: transparent;
+  border: none;
+  font-size: 1.3rem;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.erd-drawer-close:hover {
+  color: var(--text);
+  background: var(--bg-hover);
+}
+
+.erd-drawer-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.erd-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.erd-stat-card {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+}
+
+.erd-stat-label {
+  font-size: 0.72rem;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: var(--font-mono);
+}
+
+.erd-stat-val {
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text);
+  margin-top: 2px;
+}
+
+.erd-col-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.erd-col-table th {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 2px solid var(--border);
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+}
+
+.erd-col-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-subtle, var(--border));
+  vertical-align: top;
+}
+
+.erd-col-name {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.erd-col-type {
+  font-family: var(--font-mono);
+  color: var(--accent);
+  font-size: 0.78rem;
+}
+
+.erd-pk-badge {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--s3);
+  color: #08101a;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  margin-right: 4px;
+}
+
+.erd-fk-badge {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--info);
+  color: #08101a;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  margin-right: 4px;
+}
+
+/* Minimap */
+.erd-minimap {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  width: 160px;
+  height: 90px;
+  background: rgba(10, 16, 26, 0.75);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+}
+
+.erd-canvas-hint {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  font-size: 0.78rem;
+  color: var(--text-faint);
+  background: var(--bg-sunken);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  pointer-events: none;
+}

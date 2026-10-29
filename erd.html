@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interactive ERD & Data Lineage Canvas — Scalable Brain</title>
+<meta name="description" content="Interactive Entity Relationship Diagram (ERD) and trade data lineage explorer for Scalable Brain System 1, System 2, and System 3.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/css/main.css">
+<link rel="stylesheet" href="assets/css/erd.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕸️</text></svg>">
+</head>
+<body>
+<header id="site-header"></header>
+
+<main class="wrap">
+  <div class="page-head" style="margin-top: 24px;">
+    <span class="eyebrow">Data Architecture & Lineage</span>
+    <h1 style="margin: 8px 0 12px 0;">Interactive ERD & Lineage Canvas</h1>
+    <p class="lead" style="max-width: 860px; color: var(--text-dim); line-height: 1.6;">
+      Interactive topology of the live production stores across <strong>Computer 4</strong>. Trace the trade journey from raw 18-year tick ingestion, through System 1 quant signals, System 3 Guardian 10-stage risk gate, System 2 broker execution, and post-trade performance attribution.
+    </p>
+  </div>
+
+  <div class="erd-container">
+    <!-- Toolbar -->
+    <div class="erd-toolbar">
+      <div class="erd-filter-group" id="erd-filter-group">
+        <!-- Preset pills rendered by JS -->
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="erd-search-box">
+          <span class="erd-search-icon">🔍</span>
+          <input type="text" id="erd-search-input" placeholder="Search table, column, or purpose..." aria-label="Search schema">
+        </div>
+
+        <div class="erd-view-controls">
+          <button type="button" class="erd-icon-btn" id="erd-zoom-in" title="Zoom in">+</button>
+          <button type="button" class="erd-icon-btn" id="erd-zoom-out" title="Zoom out">−</button>
+          <button type="button" class="erd-icon-btn" id="erd-zoom-reset" title="Reset view">⤢</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Canvas Wrap -->
+    <div class="erd-canvas-wrap" id="erd-canvas-wrap">
+      <svg class="erd-svg-viewport" id="erd-svg-viewport" viewBox="0 0 1600 780" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <pattern id="grid-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="var(--border)" stroke-width="0.5" opacity="0.3"/>
+          </pattern>
+          <marker id="arrow-dim" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M 0 1 L 9 5 L 0 9 z" fill="#3b82f6"/>
+          </marker>
+          <marker id="arrow-fact" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M 0 1 L 9 5 L 0 9 z" fill="#10b981"/>
+          </marker>
+          <marker id="arrow-op" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M 0 1 L 9 5 L 0 9 z" fill="#f59e0b"/>
+          </marker>
+        </defs>
+
+        <rect width="100%" height="100%" fill="url(#grid-pattern)" />
+
+        <!-- Scalable and Pannable Group -->
+        <g id="erd-svg-content"></g>
+      </svg>
+
+      <div class="erd-canvas-hint">Drag canvas to pan · Scroll / + − to zoom · Click table to inspect</div>
+
+      <!-- Slide-over Drawer / Inspector -->
+      <aside class="erd-drawer" id="erd-drawer" aria-label="Table Inspector">
+        <div class="erd-drawer-header">
+          <div class="erd-drawer-title-wrap">
+            <h3 class="erd-drawer-title" id="erd-drawer-title">table_name</h3>
+            <span class="erd-drawer-subtitle" id="erd-drawer-subtitle">store · stage</span>
+          </div>
+          <button type="button" class="erd-drawer-close" id="erd-drawer-close" aria-label="Close drawer">✕</button>
+        </div>
+        <div class="erd-drawer-content" id="erd-drawer-content">
+          <!-- Populated by JS -->
+        </div>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<footer id="site-footer"></footer>
+
+<script type="module">
+  import { initErdPage } from './assets/js/erd.js';
+  initErdPage();
+</script>
+</body>
+</html>

@@ -1,0 +1,2925 @@
+{
+  "version": "2026-10-29",
+  "total": 67,
+  "qualified_count": 7,
+  "families": [
+    "bollinger_aggressive",
+    "bollinger_h1",
+    "bollinger_h4",
+    "breakout",
+    "calendar-anomaly",
+    "donchian_h1",
+    "donchian_h4",
+    "donchian_vcp",
+    "ema_adx_h1",
+    "ema_adx_h4",
+    "ema_adx_multitf",
+    "gap-fade",
+    "liquidity-sweep",
+    "mean-reversion",
+    "momentum-divergence",
+    "trend",
+    "trend-following"
+  ],
+  "strategies": [
+    {
+      "id": "1",
+      "name": "Trend_EMA_ADX_H1",
+      "family": "trend",
+      "description": "EMA crossover with ADX trend strength filter",
+      "granularities": [],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [],
+      "exits": [],
+      "indicators": [],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {},
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "2",
+      "name": "Trend_EMA_ADX_H4",
+      "family": "trend",
+      "description": "EMA crossover with ADX trend strength filter",
+      "granularities": [],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [],
+      "exits": [],
+      "indicators": [],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {},
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "3",
+      "name": "Trend_EMA_ADX_MultiTF",
+      "family": "trend",
+      "description": "EMA crossover with ADX trend strength filter",
+      "granularities": [],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [],
+      "exits": [],
+      "indicators": [],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {},
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "4",
+      "name": "Trend_Donchian_H1",
+      "family": "trend",
+      "description": "Donchian Channel breakout with ADX confirmation",
+      "granularities": [],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [],
+      "exits": [],
+      "indicators": [],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {},
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "5",
+      "name": "Trend_Donchian_H4",
+      "family": "trend",
+      "description": "Donchian Channel breakout with ADX confirmation",
+      "granularities": [],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [],
+      "exits": [],
+      "indicators": [],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {},
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "6",
+      "name": "Trend_Donchian_VCP",
+      "family": "trend",
+      "description": "Donchian Channel breakout with ADX confirmation",
+      "granularities": [],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [],
+      "exits": [],
+      "indicators": [],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {},
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "7",
+      "name": "Range_Bollinger_H1",
+      "family": "mean-reversion",
+      "description": "H1 Bollinger Band mean reversion (10,2) with RSI(7).",
+      "granularities": [],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [],
+      "exits": [],
+      "indicators": [],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {},
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "8",
+      "name": "Range_Bollinger_H4",
+      "family": "mean-reversion",
+      "description": "H4 Bollinger Band mean reversion (20,2) with RSI(14).",
+      "granularities": [],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [],
+      "exits": [],
+      "indicators": [],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {},
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "9",
+      "name": "Range_Bollinger_Aggressive",
+      "family": "mean-reversion",
+      "description": "Bollinger Band mean reversion with RSI confirmation",
+      "granularities": [],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [],
+      "exits": [],
+      "indicators": [],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {},
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "10",
+      "name": "Range_Stochastic_Divergence",
+      "family": "mean-reversion",
+      "description": "Stochastic divergence detection (14,3).",
+      "granularities": [
+        "H4"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [],
+      "exits": [],
+      "indicators": [],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {},
+      "verdict": "retired",
+      "why_it_failed": "Look-ahead. Divergence detection used a centred rolling window (range_stochastic.py:245,248,281,284), so it read the future. Computed causally it emits ZERO signals. Its reported PF 1.92 / Sharpe 1.07 were fiction.",
+      "next_step": null
+    },
+    {
+      "id": "11",
+      "name": "adx_trend_pullback_ea",
+      "family": "trend",
+      "description": "ADX Trend Pullback EA \u2014 row 38 of ``forex_swing_strategies.csv``.",
+      "granularities": [
+        "H1"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "adx",
+        "atr",
+        "ema"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "adx_trend_pullback_ea@H1@High-Vol": [
+          "LOW_CONFIDENCE"
+        ],
+        "adx_trend_pullback_ea@H1@Ranging": [
+          "LOW_CONFIDENCE"
+        ],
+        "adx_trend_pullback_ea@H1@Trending-Down": [
+          "PF=0.80 < 1.50",
+          "Sharpe=-2.78 < 0.80",
+          "MaxDD=97.6% > 25%",
+          "WinRate=32.8% < 40%",
+          "Recovery=-1.00 < 3.00"
+        ],
+        "adx_trend_pullback_ea@H1@Trending-Up": [
+          "PF=0.80 < 1.50",
+          "Sharpe=-2.73 < 0.80",
+          "MaxDD=97.2% > 25%",
+          "WinRate=32.6% < 40%",
+          "Recovery=-1.00 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "12",
+      "name": "amazing_crossover",
+      "family": "trend",
+      "description": "Amazing Crossover \u2014 EMA(5)/EMA(10) cross confirmed by RSI(10, median) at 50.",
+      "granularities": [
+        "H1"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "ema",
+        "rsi"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "amazing_crossover@H1@High-Vol": [
+          "PF=0.72 < 1.50",
+          "Sharpe=-1.99 < 0.80",
+          "MaxDD=47.3% > 25%",
+          "WinRate=32.3% < 40%",
+          "Recovery=-0.99 < 3.00"
+        ],
+        "amazing_crossover@H1@Ranging": [
+          "PF=0.75 < 1.50",
+          "Sharpe=-1.62 < 0.80",
+          "MaxDD=39.7% > 25%",
+          "WinRate=32.9% < 40%",
+          "Recovery=-0.95 < 3.00"
+        ],
+        "amazing_crossover@H1@Trending-Down": [
+          "PF=0.74 < 1.50",
+          "Sharpe=-2.12 < 0.80",
+          "MaxDD=53.8% > 25%",
+          "WinRate=32.8% < 40%",
+          "Recovery=-0.99 < 3.00"
+        ],
+        "amazing_crossover@H1@Trending-Up": [
+          "PF=0.73 < 1.50",
+          "Sharpe=-2.24 < 0.80",
+          "MaxDD=58.6% > 25%",
+          "WinRate=33.8% < 40%",
+          "Recovery=-0.96 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "13",
+      "name": "bb_midline_break",
+      "family": "mean-reversion",
+      "description": "bb_midline_break \u2014 Bollinger 2-sigma excursion, then a decisive midline break.",
+      "granularities": [
+        "H4"
+      ],
+      "qualified": true,
+      "qualified_regimes": [
+        "Ranging"
+      ],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "bollinger_bands",
+        "sma"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "bb_midline_break@H4@High-Vol": [
+          "PF=0.98 < 1.50",
+          "Sharpe=-0.08 < 0.80",
+          "MaxDD=26.4% > 25%",
+          "Recovery=-0.15 < 3.00"
+        ],
+        "bb_midline_break@H4@Ranging": [
+          "PF=0.70 < 1.50",
+          "Sharpe=-1.44 < 0.80",
+          "MaxDD=38.2% > 25%",
+          "WinRate=36.1% < 40%",
+          "Recovery=-0.91 < 3.00"
+        ],
+        "bb_midline_break@H4@Trending-Down": [
+          "PF=0.72 < 1.50",
+          "Sharpe=-1.69 < 0.80",
+          "MaxDD=56.4% > 25%",
+          "WinRate=35.8% < 40%",
+          "Recovery=-0.92 < 3.00"
+        ],
+        "bb_midline_break@H4@Trending-Up": [
+          "PF=0.71 < 1.50",
+          "Sharpe=-1.69 < 0.80",
+          "MaxDD=52.0% > 25%",
+          "WinRate=35.6% < 40%",
+          "Recovery=-0.96 < 3.00"
+        ]
+      },
+      "verdict": "qualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "14",
+      "name": "currency_momentum_factor",
+      "family": "momentum-divergence",
+      "description": "Currency Momentum Factor \u2014 SPEC-currency_momentum_factor.md (CSV row 43).",
+      "granularities": [
+        "D1"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "time exit"
+      ],
+      "indicators": [
+        "atr"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "currency_momentum_factor@D1@High-Vol": [
+          "PF=0.77 < 1.50",
+          "Sharpe=-0.46 < 0.80",
+          "Recovery=-0.77 < 3.00"
+        ],
+        "currency_momentum_factor@D1@Ranging": [
+          "PF=1.23 < 1.50",
+          "Sharpe=0.38 < 0.80",
+          "Recovery=0.77 < 3.00"
+        ],
+        "currency_momentum_factor@D1@Trending-Down": [
+          "PF=0.97 < 1.50",
+          "Sharpe=-0.07 < 0.80",
+          "Recovery=-0.13 < 3.00"
+        ],
+        "currency_momentum_factor@D1@Trending-Up": [
+          "PF=1.07 < 1.50",
+          "Sharpe=0.18 < 0.80",
+          "Recovery=0.44 < 3.00"
+        ]
+      },
+      "verdict": "parked",
+      "why_it_failed": "Scored PF 0.89 / Sharpe -0.42 over 300 trades -- but that verdict is on a mutilated version. Its headline mechanism is a cross-pair ranking, and the harness passes one pair at a time with no pair identity, so the rank filter was unreachable and the module degenerated to absolute momentum.",
+      "next_step": "Five currencies leave four active legs (net_tercile_weights sends the median to 0.0) and the published effect is a breadth effect. Needs a wider universe to be a fair test."
+    },
+    {
+      "id": "15",
+      "name": "daily_fib_retracement",
+      "family": "trend",
+      "description": "Gp's simple daily Fibonacci retracement system \u2014 SPEC-daily_fib_retracement (row 16).",
+      "granularities": [],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [],
+      "exits": [
+        "ATR trail",
+        "fixed target"
+      ],
+      "indicators": [
+        "atr",
+        "ema"
+      ],
+      "moves_to_breakeven": true,
+      "gates_passed": {},
+      "gates_failed": {},
+      "verdict": "parked",
+      "why_it_failed": "Not measured, despite having a row. It emitted 254 orders and the engine admitted none of them.",
+      "next_step": "Fix the order construction before drawing any conclusion about the idea."
+    },
+    {
+      "id": "16",
+      "name": "demark_fractal_breakout",
+      "family": "breakout",
+      "description": "demark_fractal_breakout \u2014 SPEC-demark_fractal_breakout (row 48).",
+      "granularities": [
+        "H4"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "buy_stop",
+        "sell_stop"
+      ],
+      "exits": [
+        "ATR trail"
+      ],
+      "indicators": [
+        "atr",
+        "confirmed_swing_points",
+        "get_pip_value"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "demark_fractal_breakout@H4@High-Vol": [
+          "PF=0.73 < 1.50",
+          "Sharpe=-1.65 < 0.80",
+          "MaxDD=49.6% > 25%",
+          "WinRate=37.6% < 40%",
+          "Recovery=-0.94 < 3.00"
+        ],
+        "demark_fractal_breakout@H4@Ranging": [
+          "PF=0.78 < 1.50",
+          "Sharpe=-1.47 < 0.80",
+          "MaxDD=54.0% > 25%",
+          "WinRate=34.6% < 40%",
+          "Recovery=-0.98 < 3.00"
+        ],
+        "demark_fractal_breakout@H4@Trending-Down": [
+          "PF=0.72 < 1.50",
+          "Sharpe=-1.66 < 0.80",
+          "MaxDD=62.6% > 25%",
+          "WinRate=32.6% < 40%",
+          "Recovery=-0.96 < 3.00"
+        ],
+        "demark_fractal_breakout@H4@Trending-Up": [
+          "PF=0.77 < 1.50",
+          "Sharpe=-1.55 < 0.80",
+          "MaxDD=56.6% > 25%",
+          "WinRate=36.2% < 40%",
+          "Recovery=-0.91 < 3.00"
+        ]
+      },
+      "verdict": "retired",
+      "why_it_failed": "Its USD_JPY H4 cell was the single best result in the whole 47-strategy exercise -- 610 OOS trades, PF 1.51, Sharpe 1.11, clearing every gate. Debunked: a pip-conversion bug (commit 2d3b432).",
+      "next_step": null
+    },
+    {
+      "id": "17",
+      "name": "double_bottom_measured_move",
+      "family": "breakout",
+      "description": "Double Bottom / Double Top \u2014 Measured Move \u2014 row 47 of forex_swing_strategies.csv.",
+      "granularities": [
+        "D1"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": 7.5,
+      "avg_win_rate_pct": 90.9,
+      "max_drawdown_pct": 1.0,
+      "total_oos_trades": 11,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "atr",
+        "confirmed_swing_points",
+        "get_pip_value"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {
+        "double_bottom_measured_move@D1@High-Vol": {
+          "profit_factor": 7.4969,
+          "sharpe": 2.3055,
+          "win_rate": 0.9091,
+          "max_drawdown": 0.0101,
+          "recovery_factor": 6.6776,
+          "trade_count": 11,
+          "oos_months": 27.89
+        }
+      },
+      "gates_failed": {
+        "double_bottom_measured_move@D1@Ranging": [
+          "PF=0.29 < 1.50",
+          "Sharpe=-1.63 < 0.80",
+          "WinRate=28.6% < 40%",
+          "Recovery=-0.89 < 3.00"
+        ],
+        "double_bottom_measured_move@D1@Trending-Down": [
+          "PF=0.00 < 1.50",
+          "Recovery=0.00 < 3.00"
+        ],
+        "double_bottom_measured_move@D1@Trending-Up": [
+          "PF=0.25 < 1.50",
+          "Sharpe=-1.65 < 0.80",
+          "WinRate=33.3% < 40%",
+          "Recovery=-0.93 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "18",
+      "name": "ema_cross_h4_filter_bot",
+      "family": "trend",
+      "description": "ema_cross_h4_filter_bot \u2014 H1 EMA9/21 cross gated by an H4 EMA200 regime.",
+      "granularities": [
+        "H1"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "ema"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "ema_cross_h4_filter_bot@H1@High-Vol": [
+          "PF=0.88 < 1.50",
+          "Sharpe=-0.73 < 0.80",
+          "MaxDD=40.4% > 25%",
+          "WinRate=32.9% < 40%",
+          "Recovery=-0.93 < 3.00"
+        ],
+        "ema_cross_h4_filter_bot@H1@Ranging": [
+          "PF=0.75 < 1.50",
+          "Sharpe=-1.45 < 0.80",
+          "MaxDD=53.7% > 25%",
+          "WinRate=29.4% < 40%",
+          "Recovery=-0.97 < 3.00"
+        ],
+        "ema_cross_h4_filter_bot@H1@Trending-Down": [
+          "PF=1.02 < 1.50",
+          "Sharpe=0.13 < 0.80",
+          "MaxDD=30.0% > 25%",
+          "WinRate=36.2% < 40%",
+          "Recovery=0.07 < 3.00"
+        ],
+        "ema_cross_h4_filter_bot@H1@Trending-Up": [
+          "PF=0.87 < 1.50",
+          "Sharpe=-0.95 < 0.80",
+          "MaxDD=52.5% > 25%",
+          "WinRate=32.5% < 40%",
+          "Recovery=-0.96 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "19",
+      "name": "engulfing_broken_level",
+      "family": "breakout",
+      "description": "SPEC-engulfing_broken_level \u2014 daily engulfing candle at a broken confirmed level.",
+      "granularities": [
+        "D1"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "buy_limit",
+        "sell_limit"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "atr",
+        "confirmed_swing_points"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "engulfing_broken_level@D1@High-Vol": [
+          "LOW_CONFIDENCE"
+        ],
+        "engulfing_broken_level@D1@Ranging": [
+          "PF=0.17 < 1.50",
+          "Sharpe=-1.10 < 0.80",
+          "Recovery=-1.00 < 3.00"
+        ],
+        "engulfing_broken_level@D1@Trending-Down": [
+          "PF=0.29 < 1.50",
+          "Sharpe=-1.38 < 0.80",
+          "Recovery=-0.87 < 3.00"
+        ],
+        "engulfing_broken_level@D1@Trending-Up": [
+          "PF=0.81 < 1.50",
+          "Sharpe=-0.13 < 0.80",
+          "Recovery=-0.25 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "20",
+      "name": "h4_box_breakout",
+      "family": "breakout",
+      "description": "h4_box_breakout \u2014 weekly opening-range (\"box\") breakout on JPY crosses.",
+      "granularities": [
+        "H4"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "buy_stop",
+        "sell_stop"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "get_pip_value"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "h4_box_breakout@H4@High-Vol": [
+          "PF=0.94 < 1.50",
+          "Sharpe=-0.19 < 0.80",
+          "Recovery=-0.53 < 3.00"
+        ],
+        "h4_box_breakout@H4@Ranging": [
+          "PF=0.87 < 1.50",
+          "Sharpe=-0.51 < 0.80",
+          "Recovery=-0.58 < 3.00"
+        ],
+        "h4_box_breakout@H4@Trending-Down": [
+          "PF=0.95 < 1.50",
+          "Sharpe=-0.31 < 0.80",
+          "MaxDD=27.4% > 25%",
+          "Recovery=-0.46 < 3.00"
+        ],
+        "h4_box_breakout@H4@Trending-Up": [
+          "PF=0.91 < 1.50",
+          "Sharpe=-0.46 < 0.80",
+          "MaxDD=27.5% > 25%",
+          "Recovery=-0.63 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "21",
+      "name": "h4_crossover_21_89_macd",
+      "family": "trend",
+      "description": "h4_crossover_21_89_macd quantitative trading strategy.",
+      "granularities": [
+        "H4"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "ema",
+        "macd",
+        "sma"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "h4_crossover_21_89_macd@H4@High-Vol": [
+          "PF=0.96 < 1.50",
+          "Sharpe=-0.07 < 0.80",
+          "Recovery=-0.20 < 3.00"
+        ],
+        "h4_crossover_21_89_macd@H4@Ranging": [
+          "PF=1.30 < 1.50",
+          "Sharpe=0.46 < 0.80",
+          "Recovery=1.38 < 3.00"
+        ],
+        "h4_crossover_21_89_macd@H4@Trending-Down": [
+          "Recovery=2.90 < 3.00"
+        ],
+        "h4_crossover_21_89_macd@H4@Trending-Up": [
+          "PF=0.78 < 1.50",
+          "Sharpe=-0.54 < 0.80",
+          "Recovery=-0.81 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "22",
+      "name": "h4_forex_system",
+      "family": "trend",
+      "description": "h4_forex_system \u2014 6 EMA / 13 SMA cross confirmed by a same-bar MACD cross and",
+      "granularities": [
+        "H4"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": 2.19,
+      "avg_win_rate_pct": 73.3,
+      "max_drawdown_pct": 1.0,
+      "total_oos_trades": 15,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "ema",
+        "macd",
+        "parabolic_sar",
+        "sma"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {
+        "h4_forex_system@H4@Ranging": {
+          "profit_factor": 2.1886,
+          "sharpe": 0.9402,
+          "win_rate": 0.7333,
+          "max_drawdown": 0.0104,
+          "recovery_factor": 4.8123,
+          "trade_count": 15,
+          "oos_months": 30.06
+        }
+      },
+      "gates_failed": {
+        "h4_forex_system@H4@High-Vol": [
+          "PF=1.16 < 1.50",
+          "Sharpe=0.10 < 0.80",
+          "Recovery=0.15 < 3.00"
+        ],
+        "h4_forex_system@H4@Trending-Down": [
+          "PF=0.97 < 1.50",
+          "Sharpe=-0.05 < 0.80",
+          "Recovery=-0.09 < 3.00"
+        ],
+        "h4_forex_system@H4@Trending-Up": [
+          "PF=0.76 < 1.50",
+          "Sharpe=-0.40 < 0.80",
+          "Recovery=-0.63 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "23",
+      "name": "holy_grail_pullback",
+      "family": "trend",
+      "description": "Holy Grail Pullback \u2014 row 29 of ``forex_swing_strategies.csv``.",
+      "granularities": [
+        "D1"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "buy_stop",
+        "sell_stop"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "adx",
+        "confirmed_swing_points",
+        "sma"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "holy_grail_pullback@D1@Trending-Down": [
+          "PF=0.92 < 1.50",
+          "Sharpe=-0.10 < 0.80",
+          "Recovery=-0.17 < 3.00"
+        ],
+        "holy_grail_pullback@D1@Trending-Up": [
+          "PF=0.41 < 1.50",
+          "Sharpe=-1.01 < 0.80",
+          "Recovery=-0.92 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "24",
+      "name": "inside_bar_continuation_ea",
+      "family": "breakout",
+      "description": "INSIDE_BAR_CONTINUATION_EA \u2014 inside-bar breakout continuation.",
+      "granularities": [
+        "H4"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "atr"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "inside_bar_continuation_ea@H4@High-Vol": [
+          "PF=0.52 < 1.50",
+          "Sharpe=-1.26 < 0.80",
+          "Recovery=-0.97 < 3.00"
+        ],
+        "inside_bar_continuation_ea@H4@Ranging": [
+          "PF=0.54 < 1.50",
+          "Sharpe=-1.15 < 0.80",
+          "Recovery=-0.97 < 3.00"
+        ],
+        "inside_bar_continuation_ea@H4@Trending-Down": [
+          "PF=0.96 < 1.50",
+          "Sharpe=-0.13 < 0.80",
+          "Recovery=-0.25 < 3.00"
+        ],
+        "inside_bar_continuation_ea@H4@Trending-Up": [
+          "PF=0.61 < 1.50",
+          "Sharpe=-1.75 < 0.80",
+          "MaxDD=34.2% > 25%",
+          "Recovery=-0.95 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "25",
+      "name": "inside_bar_pinbar_combo",
+      "family": "breakout",
+      "description": "inside_bar_pinbar_combo strategy.",
+      "granularities": [
+        "D1"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "buy_limit",
+        "sell_limit"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "atr",
+        "confirmed_swing_points",
+        "ema"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "inside_bar_pinbar_combo@D1@High-Vol": [
+          "LOW_CONFIDENCE"
+        ],
+        "inside_bar_pinbar_combo@D1@Ranging": [
+          "PF=1.27 < 1.50",
+          "Sharpe=0.17 < 0.80",
+          "Recovery=0.50 < 3.00"
+        ],
+        "inside_bar_pinbar_combo@D1@Trending-Down": [
+          "PF=0.29 < 1.50",
+          "Sharpe=-0.90 < 0.80",
+          "WinRate=10.0% < 40%",
+          "Recovery=-1.00 < 3.00"
+        ],
+        "inside_bar_pinbar_combo@D1@Trending-Up": [
+          "PF=0.00 < 1.50",
+          "Sharpe=-10.00 < 0.80",
+          "WinRate=0.0% < 40%",
+          "Recovery=-1.00 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "26",
+      "name": "inside_bar_reversal",
+      "family": "mean-reversion",
+      "description": "inside_bar_reversal \u2014 counter-trend inside-bar reversal off the nearest confirmed swing.",
+      "granularities": [
+        "D1"
+      ],
+      "qualified": true,
+      "qualified_regimes": [
+        "Trending-Up"
+      ],
+      "avg_profit_factor": 1.02,
+      "avg_win_rate_pct": 49.0,
+      "max_drawdown_pct": 27.8,
+      "total_oos_trades": 204,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "confirmed_swing_points",
+        "trend_slope_diff10_roll5"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {
+        "inside_bar_reversal@D1@Trending-Up": {
+          "profit_factor": 1.0167,
+          "sharpe": 0.0328,
+          "win_rate": 0.4902,
+          "max_drawdown": 0.2775,
+          "recovery_factor": -0.0377,
+          "trade_count": 204,
+          "oos_months": 39.98
+        }
+      },
+      "gates_failed": {
+        "inside_bar_reversal@D1@High-Vol": [
+          "Sharpe=0.46 < 0.80"
+        ],
+        "inside_bar_reversal@D1@Ranging": [
+          "PF=0.62 < 1.50",
+          "Sharpe=-1.08 < 0.80",
+          "Recovery=-0.98 < 3.00"
+        ],
+        "inside_bar_reversal@D1@Trending-Down": [
+          "PF=0.73 < 1.50",
+          "Sharpe=-0.90 < 0.80",
+          "MaxDD=26.0% > 25%",
+          "Recovery=-0.97 < 3.00"
+        ]
+      },
+      "verdict": "qualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "27",
+      "name": "janus_swing_system",
+      "family": "trend",
+      "description": "janus_swing_system quantitative trading strategy.",
+      "granularities": [
+        "D1"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "buy_limit",
+        "sell_limit"
+      ],
+      "exits": [
+        "ATR trail"
+      ],
+      "indicators": [
+        "confirmed_swing_points"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "janus_swing_system@D1@High-Vol": [
+          "LOW_CONFIDENCE"
+        ],
+        "janus_swing_system@D1@Ranging": [
+          "LOW_CONFIDENCE"
+        ],
+        "janus_swing_system@D1@Trending-Down": [
+          "LOW_CONFIDENCE"
+        ],
+        "janus_swing_system@D1@Trending-Up": [
+          "LOW_CONFIDENCE"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "28",
+      "name": "kiss_h4",
+      "family": "trend",
+      "description": "kiss_h4 quantitative trading strategy.",
+      "granularities": [
+        "H4"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "fixed target",
+        "time exit"
+      ],
+      "indicators": [
+        "atr",
+        "confirmed_swing_points",
+        "macd"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "kiss_h4@H4@High-Vol": [
+          "PF=1.12 < 1.50",
+          "Sharpe=0.29 < 0.80",
+          "Recovery=0.52 < 3.00"
+        ],
+        "kiss_h4@H4@Ranging": [
+          "PF=1.05 < 1.50",
+          "Sharpe=0.14 < 0.80",
+          "Recovery=0.17 < 3.00"
+        ],
+        "kiss_h4@H4@Trending-Down": [
+          "PF=0.91 < 1.50",
+          "Sharpe=-0.30 < 0.80",
+          "Recovery=-0.50 < 3.00"
+        ],
+        "kiss_h4@H4@Trending-Up": [
+          "PF=0.90 < 1.50",
+          "Sharpe=-0.35 < 0.80",
+          "Recovery=-0.61 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "29",
+      "name": "kpl_donchian_breakout",
+      "family": "breakout",
+      "description": "kpl_donchian_breakout quantitative trading strategy.",
+      "granularities": [
+        "D1"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "ATR trail"
+      ],
+      "indicators": [
+        "atr",
+        "donchian_channel"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "kpl_donchian_breakout@D1@High-Vol": [
+          "PF=0.95 < 1.50",
+          "Sharpe=-0.08 < 0.80",
+          "WinRate=37.0% < 40%",
+          "Recovery=-0.20 < 3.00"
+        ],
+        "kpl_donchian_breakout@D1@Ranging": [
+          "PF=0.83 < 1.50",
+          "Sharpe=-0.29 < 0.80",
+          "WinRate=31.6% < 40%",
+          "Recovery=-0.45 < 3.00"
+        ],
+        "kpl_donchian_breakout@D1@Trending-Down": [
+          "PF=0.94 < 1.50",
+          "Sharpe=-0.11 < 0.80",
+          "WinRate=36.8% < 40%",
+          "Recovery=-0.42 < 3.00"
+        ],
+        "kpl_donchian_breakout@D1@Trending-Up": [
+          "PF=0.93 < 1.50",
+          "Sharpe=-0.13 < 0.80",
+          "WinRate=30.6% < 40%",
+          "Recovery=-0.34 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "30",
+      "name": "liquidity_grab_fade",
+      "family": "liquidity-sweep",
+      "description": "liquidity_grab_fade strategy",
+      "granularities": [],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "confirmed_swing_points"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {},
+      "verdict": "live",
+      "why_it_failed": "Has not failed -- currently one of three qualified. But it qualified on 13 out-of-sample trades with PF 8.28 and a 0.05% max drawdown, which is what a small sample looks like rather than an established edge.",
+      "next_step": "Watch live. System 3's sizing prior gives it NEGATIVE expectancy (-0.0517), so it will suppress or refuse sizing regardless of the headline PF."
+    },
+    {
+      "id": "31",
+      "name": "liquidity_sweep_ob",
+      "family": "liquidity-sweep",
+      "description": "liquidity_sweep_ob quantitative trading strategy.",
+      "granularities": [
+        "H4"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "buy_limit",
+        "sell_limit"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "confirmed_swing_points"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "liquidity_sweep_ob@H4@High-Vol": [
+          "PF=0.58 < 1.50",
+          "Sharpe=-0.46 < 0.80",
+          "WinRate=22.2% < 40%",
+          "Recovery=-0.60 < 3.00"
+        ],
+        "liquidity_sweep_ob@H4@Ranging": [
+          "PF=0.10 < 1.50",
+          "Sharpe=-2.72 < 0.80",
+          "WinRate=6.2% < 40%",
+          "Recovery=-1.00 < 3.00"
+        ],
+        "liquidity_sweep_ob@H4@Trending-Down": [
+          "PF=0.34 < 1.50",
+          "Sharpe=-1.05 < 0.80",
+          "WinRate=10.0% < 40%",
+          "Recovery=-1.00 < 3.00"
+        ],
+        "liquidity_sweep_ob@H4@Trending-Up": [
+          "PF=0.41 < 1.50",
+          "Sharpe=-0.87 < 0.80",
+          "WinRate=20.0% < 40%",
+          "Recovery=-0.68 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "32",
+      "name": "long_wick_pinbar_8ema",
+      "family": "trend",
+      "description": "long_wick_pinbar_8ema quantitative trading strategy.",
+      "granularities": [
+        "D1"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "ema"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "long_wick_pinbar_8ema@D1@High-Vol": [
+          "PF=1.41 < 1.50",
+          "Sharpe=0.53 < 0.80",
+          "Recovery=2.08 < 3.00"
+        ],
+        "long_wick_pinbar_8ema@D1@Ranging": [
+          "PF=1.30 < 1.50",
+          "Sharpe=0.57 < 0.80",
+          "Recovery=1.88 < 3.00"
+        ],
+        "long_wick_pinbar_8ema@D1@Trending-Down": [
+          "PF=0.98 < 1.50",
+          "Sharpe=-0.05 < 0.80",
+          "WinRate=34.8% < 40%",
+          "Recovery=-0.13 < 3.00"
+        ],
+        "long_wick_pinbar_8ema@D1@Trending-Up": [
+          "PF=1.04 < 1.50",
+          "Sharpe=0.08 < 0.80",
+          "WinRate=36.2% < 40%",
+          "Recovery=0.06 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "33",
+      "name": "ma_crossover_swing",
+      "family": "trend",
+      "description": "ma_crossover_swing strategy.",
+      "granularities": [
+        "D1"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "fixed target",
+        "time exit"
+      ],
+      "indicators": [
+        "atr",
+        "ema",
+        "macd",
+        "sma"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "ma_crossover_swing@D1@High-Vol": [
+          "PF=0.81 < 1.50",
+          "Sharpe=-0.35 < 0.80",
+          "WinRate=30.6% < 40%",
+          "Recovery=-0.56 < 3.00"
+        ],
+        "ma_crossover_swing@D1@Ranging": [
+          "PF=0.93 < 1.50",
+          "Sharpe=-0.16 < 0.80",
+          "WinRate=30.2% < 40%",
+          "Recovery=-0.36 < 3.00"
+        ],
+        "ma_crossover_swing@D1@Trending-Down": [
+          "PF=1.26 < 1.50",
+          "Sharpe=0.36 < 0.80",
+          "Recovery=0.56 < 3.00"
+        ],
+        "ma_crossover_swing@D1@Trending-Up": [
+          "PF=0.67 < 1.50",
+          "Sharpe=-0.58 < 0.80",
+          "WinRate=23.7% < 40%",
+          "Recovery=-0.63 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "34",
+      "name": "macd_divergence",
+      "family": "momentum-divergence",
+      "description": "macd_divergence quantitative trading strategy.",
+      "granularities": [
+        "H4"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "confirmed_swing_points",
+        "macd"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "macd_divergence@H4@High-Vol": [
+          "PF=0.48 < 1.50",
+          "Sharpe=-0.95 < 0.80",
+          "Recovery=-0.92 < 3.00"
+        ],
+        "macd_divergence@H4@Ranging": [
+          "PF=0.37 < 1.50",
+          "Sharpe=-1.24 < 0.80",
+          "WinRate=31.0% < 40%",
+          "Recovery=-0.80 < 3.00"
+        ],
+        "macd_divergence@H4@Trending-Down": [
+          "PF=0.73 < 1.50",
+          "Sharpe=-0.57 < 0.80",
+          "Recovery=-0.81 < 3.00"
+        ],
+        "macd_divergence@H4@Trending-Up": [
+          "PF=0.52 < 1.50",
+          "Sharpe=-1.12 < 0.80",
+          "Recovery=-0.86 < 3.00"
+        ]
+      },
+      "verdict": "live",
+      "why_it_failed": "Has not failed -- qualified. On 20 out-of-sample trades with PF 13.58 and a 0.02% max drawdown. Treat the profit factor as an artefact of sample size.",
+      "next_step": "System 3's prior expectancy is +0.0011, effectively zero, so expect approved-then-tiny rather than meaningful size."
+    },
+    {
+      "id": "35",
+      "name": "mtf_swing_weekly_pivots",
+      "family": "trend",
+      "description": "mtf_swing_weekly_pivots quantitative trading strategy.",
+      "granularities": [
+        "H4"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "ema",
+        "rsi"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "mtf_swing_weekly_pivots@H4@High-Vol": [
+          "PF=0.53 < 1.50",
+          "Sharpe=-0.91 < 0.80",
+          "WinRate=22.6% < 40%",
+          "Recovery=-0.84 < 3.00"
+        ],
+        "mtf_swing_weekly_pivots@H4@Ranging": [
+          "PF=1.12 < 1.50",
+          "Sharpe=0.22 < 0.80",
+          "Recovery=0.58 < 3.00"
+        ],
+        "mtf_swing_weekly_pivots@H4@Trending-Down": [
+          "PF=0.65 < 1.50",
+          "Sharpe=-1.11 < 0.80",
+          "MaxDD=29.3% > 25%",
+          "WinRate=26.5% < 40%",
+          "Recovery=-0.82 < 3.00"
+        ],
+        "mtf_swing_weekly_pivots@H4@Trending-Up": [
+          "PF=1.17 < 1.50",
+          "Sharpe=0.38 < 0.80",
+          "WinRate=39.1% < 40%",
+          "Recovery=0.83 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "36",
+      "name": "nnfx_backtrader",
+      "family": "trend",
+      "description": "nnfx_backtrader quantitative trading strategy.",
+      "granularities": [
+        "D1"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "atr"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "nnfx_backtrader@D1@High-Vol": [
+          "PF=1.37 < 1.50",
+          "Sharpe=0.35 < 0.80",
+          "Recovery=1.13 < 3.00"
+        ],
+        "nnfx_backtrader@D1@Ranging": [
+          "PF=0.27 < 1.50",
+          "Sharpe=-1.23 < 0.80",
+          "WinRate=12.5% < 40%",
+          "Recovery=-0.74 < 3.00"
+        ],
+        "nnfx_backtrader@D1@Trending-Down": [
+          "Sharpe=0.58 < 0.80",
+          "Recovery=1.56 < 3.00"
+        ],
+        "nnfx_backtrader@D1@Trending-Up": [
+          "Sharpe=0.49 < 0.80",
+          "Recovery=1.91 < 3.00"
+        ]
+      },
+      "verdict": "parked",
+      "why_it_failed": "Pooled PF 1.63 / Sharpe 0.94 -- on 113 trades with 0 of 5 cells passing and a best cell resting on 16 trades. A concentration artefact.",
+      "next_step": null
+    },
+    {
+      "id": "37",
+      "name": "nzdjpy_median_ma_retrace",
+      "family": "trend",
+      "description": "nzdjpy_median_ma_retrace quantitative trading strategy.",
+      "granularities": [
+        "H1"
+      ],
+      "qualified": true,
+      "qualified_regimes": [
+        "Trending-Down"
+      ],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "sma"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "nzdjpy_median_ma_retrace@H1@High-Vol": [
+          "PF=0.87 < 1.50",
+          "Sharpe=-0.68 < 0.80",
+          "MaxDD=29.9% > 25%",
+          "Recovery=-0.64 < 3.00"
+        ],
+        "nzdjpy_median_ma_retrace@H1@Ranging": [
+          "PF=0.76 < 1.50",
+          "Sharpe=-1.31 < 0.80",
+          "MaxDD=34.6% > 25%",
+          "Recovery=-0.95 < 3.00"
+        ],
+        "nzdjpy_median_ma_retrace@H1@Trending-Down": [
+          "PF=0.85 < 1.50",
+          "Sharpe=-1.34 < 0.80",
+          "MaxDD=53.6% > 25%",
+          "Recovery=-0.96 < 3.00"
+        ],
+        "nzdjpy_median_ma_retrace@H1@Trending-Up": [
+          "PF=0.78 < 1.50",
+          "Sharpe=-2.12 < 0.80",
+          "MaxDD=67.8% > 25%",
+          "Recovery=-1.00 < 3.00"
+        ]
+      },
+      "verdict": "qualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "38",
+      "name": "outside_hma_klinger",
+      "family": "momentum-divergence",
+      "description": "Advanced OutSide with HMA and Klinger Forex Swing strategy.",
+      "granularities": [
+        "H4"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "outside_hma_klinger@H4@High-Vol": [
+          "PF=0.79 < 1.50",
+          "Sharpe=-0.90 < 0.80",
+          "Recovery=-0.78 < 3.00"
+        ],
+        "outside_hma_klinger@H4@Ranging": [
+          "PF=0.78 < 1.50",
+          "Sharpe=-0.69 < 0.80",
+          "Recovery=-0.72 < 3.00"
+        ],
+        "outside_hma_klinger@H4@Trending-Down": [
+          "PF=0.90 < 1.50",
+          "Sharpe=-0.75 < 0.80",
+          "MaxDD=37.4% > 25%",
+          "Recovery=-0.65 < 3.00"
+        ],
+        "outside_hma_klinger@H4@Trending-Up": [
+          "PF=0.94 < 1.50",
+          "Sharpe=-0.38 < 0.80",
+          "Recovery=-0.56 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "39",
+      "name": "pinbar_key_level_50pct",
+      "family": "breakout",
+      "description": "pinbar_key_level_50pct quantitative trading strategy.",
+      "granularities": [
+        "D1"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "buy_limit",
+        "sell_limit"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "atr",
+        "confirmed_swing_points"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "pinbar_key_level_50pct@D1@High-Vol": [
+          "PF=0.61 < 1.50",
+          "Sharpe=-0.37 < 0.80",
+          "WinRate=20.0% < 40%",
+          "Recovery=-0.51 < 3.00"
+        ],
+        "pinbar_key_level_50pct@D1@Ranging": [
+          "Sharpe=0.31 < 0.80",
+          "WinRate=21.4% < 40%",
+          "Recovery=1.83 < 3.00"
+        ],
+        "pinbar_key_level_50pct@D1@Trending-Down": [
+          "PF=0.56 < 1.50",
+          "Sharpe=-0.62 < 0.80",
+          "WinRate=20.0% < 40%",
+          "Recovery=-0.72 < 3.00"
+        ],
+        "pinbar_key_level_50pct@D1@Trending-Up": [
+          "PF=0.24 < 1.50",
+          "Sharpe=-1.62 < 0.80",
+          "WinRate=12.5% < 40%",
+          "Recovery=-1.00 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "40",
+      "name": "pinbar_nose_eyes",
+      "family": "breakout",
+      "description": "pinbar_nose_eyes quantitative trading strategy.",
+      "granularities": [
+        "H4"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "buy_stop",
+        "sell_stop"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "atr",
+        "confirmed_swing_points"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "pinbar_nose_eyes@H4@High-Vol": [
+          "PF=1.10 < 1.50",
+          "Sharpe=0.06 < 0.80",
+          "Recovery=0.10 < 3.00"
+        ],
+        "pinbar_nose_eyes@H4@Ranging": [
+          "LOW_CONFIDENCE"
+        ],
+        "pinbar_nose_eyes@H4@Trending-Down": [
+          "PF=0.13 < 1.50",
+          "Sharpe=-0.97 < 0.80",
+          "WinRate=33.3% < 40%",
+          "Recovery=-0.97 < 3.00"
+        ],
+        "pinbar_nose_eyes@H4@Trending-Up": [
+          "PF=0.59 < 1.50",
+          "Sharpe=-0.34 < 0.80",
+          "Recovery=-0.65 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "41",
+      "name": "precision_swing",
+      "family": "trend",
+      "description": "H4 swing strategy that identifies confirmed swing highs/lows using price structure, enters on pullbacks to EMA, and exits at fixed ATR-based targets. Uses ATR for volatility sizing and EMA for trend alignment.",
+      "granularities": [
+        "H4"
+      ],
+      "qualified": true,
+      "qualified_regimes": [
+        "Trending-Up",
+        "Trending-Down",
+        "Ranging"
+      ],
+      "avg_profit_factor": 1.0,
+      "avg_win_rate_pct": 45.5,
+      "max_drawdown_pct": 19.1,
+      "total_oos_trades": 641,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "atr",
+        "confirmed_swing_points",
+        "ema"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {
+        "precision_swing@H4@Trending-Up": {
+          "profit_factor": 0.9654,
+          "sharpe": -0.1507,
+          "win_rate": 0.4498,
+          "max_drawdown": 0.1843,
+          "recovery_factor": -0.336,
+          "trade_count": 249,
+          "oos_months": 40.21
+        },
+        "precision_swing@H4@Trending-Down": {
+          "profit_factor": 1.0799,
+          "sharpe": 0.3533,
+          "win_rate": 0.479,
+          "max_drawdown": 0.1913,
+          "recovery_factor": 0.5765,
+          "trade_count": 286,
+          "oos_months": 40.21
+        },
+        "precision_swing@H4@Ranging": {
+          "profit_factor": 1.3596,
+          "sharpe": 0.57,
+          "win_rate": 0.5532,
+          "max_drawdown": 0.0415,
+          "recovery_factor": 1.9237,
+          "trade_count": 47,
+          "oos_months": 40.21
+        },
+        "precision_swing@H4@High-Vol": {
+          "profit_factor": 0.5882,
+          "sharpe": -1.113,
+          "win_rate": 0.339,
+          "max_drawdown": 0.1787,
+          "recovery_factor": -0.8781,
+          "trade_count": 59,
+          "oos_months": 40.21
+        }
+      },
+      "gates_failed": {},
+      "verdict": "qualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "42",
+      "name": "psar_gbpjpy_daily",
+      "family": "trend",
+      "description": "Strategy: PSAR GBPJPY Daily.",
+      "granularities": [
+        "D1"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "time exit"
+      ],
+      "indicators": [
+        "atr"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "psar_gbpjpy_daily@D1@High-Vol": [
+          "PF=0.87 < 1.50",
+          "Sharpe=-0.35 < 0.80",
+          "WinRate=33.3% < 40%",
+          "Recovery=-0.63 < 3.00"
+        ],
+        "psar_gbpjpy_daily@D1@Ranging": [
+          "PF=1.07 < 1.50",
+          "Sharpe=0.12 < 0.80",
+          "WinRate=30.7% < 40%",
+          "Recovery=0.12 < 3.00"
+        ],
+        "psar_gbpjpy_daily@D1@Trending-Down": [
+          "PF=0.96 < 1.50",
+          "Sharpe=-0.12 < 0.80",
+          "MaxDD=33.2% > 25%",
+          "WinRate=31.6% < 40%",
+          "Recovery=-0.29 < 3.00"
+        ],
+        "psar_gbpjpy_daily@D1@Trending-Up": [
+          "PF=0.67 < 1.50",
+          "Sharpe=-1.21 < 0.80",
+          "MaxDD=36.4% > 25%",
+          "WinRate=28.2% < 40%",
+          "Recovery=-1.00 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "43",
+      "name": "reference_pullback_continuation",
+      "family": "trend",
+      "description": "REFERENCE STRATEGY \u2014 the shape every Wave-2 strategy should copy.",
+      "granularities": [
+        "H4"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "buy_stop"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "confirmed_swing_points",
+        "sma"
+      ],
+      "moves_to_breakeven": true,
+      "gates_passed": {},
+      "gates_failed": {
+        "reference_pullback_continuation@H4@High-Vol": [
+          "PF=0.46 < 1.50",
+          "Sharpe=-1.04 < 0.80",
+          "WinRate=21.4% < 40%",
+          "Recovery=-1.00 < 3.00"
+        ],
+        "reference_pullback_continuation@H4@Ranging": [
+          "PF=0.91 < 1.50",
+          "Sharpe=-0.12 < 0.80",
+          "WinRate=32.1% < 40%",
+          "Recovery=-0.19 < 3.00"
+        ],
+        "reference_pullback_continuation@H4@Trending-Down": [
+          "PF=0.73 < 1.50",
+          "Sharpe=-0.43 < 0.80",
+          "WinRate=30.0% < 40%",
+          "Recovery=-0.54 < 3.00"
+        ],
+        "reference_pullback_continuation@H4@Trending-Up": [
+          "PF=1.33 < 1.50",
+          "Sharpe=0.65 < 0.80",
+          "Recovery=1.38 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "44",
+      "name": "reps_donchian_pyramiding",
+      "family": "trend",
+      "description": "REPS Donchian Pyramiding \u2014 implementation of SPEC-reps_donchian_pyramiding.",
+      "granularities": [
+        "D1"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "ATR trail"
+      ],
+      "indicators": [
+        "atr",
+        "donchian_channel"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "reps_donchian_pyramiding@D1@High-Vol": [
+          "PF=0.57 < 1.50",
+          "Sharpe=-0.50 < 0.80",
+          "WinRate=26.7% < 40%",
+          "Recovery=-0.60 < 3.00"
+        ],
+        "reps_donchian_pyramiding@D1@Ranging": [
+          "PF=0.10 < 1.50",
+          "Sharpe=-2.90 < 0.80",
+          "WinRate=7.1% < 40%",
+          "Recovery=-1.00 < 3.00"
+        ],
+        "reps_donchian_pyramiding@D1@Trending-Down": [
+          "PF=0.21 < 1.50",
+          "Sharpe=-4.85 < 0.80",
+          "MaxDD=63.1% > 25%",
+          "WinRate=12.1% < 40%",
+          "Recovery=-1.00 < 3.00"
+        ],
+        "reps_donchian_pyramiding@D1@Trending-Up": [
+          "PF=0.66 < 1.50",
+          "Sharpe=-0.85 < 0.80",
+          "MaxDD=38.4% > 25%",
+          "WinRate=22.4% < 40%",
+          "Recovery=-0.66 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "45",
+      "name": "retail_sentiment_fade",
+      "family": "mean-reversion",
+      "description": "Retail Sentiment Fade \u2014 SPEC-retail_sentiment_fade.md (CSV row 51).",
+      "granularities": [],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "atr",
+        "sma"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {},
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "46",
+      "name": "riding_trend_retracement",
+      "family": "trend",
+      "description": "Riding Trend Retracement Strategy.",
+      "granularities": [],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "buy_stop",
+        "sell_stop"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "confirmed_swing_points",
+        "sma",
+        "zigzag_swings"
+      ],
+      "moves_to_breakeven": true,
+      "gates_passed": {},
+      "gates_failed": {},
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "47",
+      "name": "smart_money_swing",
+      "family": "liquidity-sweep",
+      "description": "smart_money_swing quantitative trading strategy.",
+      "granularities": [
+        "H4"
+      ],
+      "qualified": true,
+      "qualified_regimes": [
+        "Trending-Up"
+      ],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "atr",
+        "ema",
+        "rsi"
+      ],
+      "moves_to_breakeven": true,
+      "gates_passed": {},
+      "gates_failed": {},
+      "verdict": "qualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "48",
+      "name": "smash_days",
+      "family": "breakout",
+      "description": "Smash Days Strategy.",
+      "granularities": [
+        "D1"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "sell_stop"
+      ],
+      "exits": [
+        "time exit"
+      ],
+      "indicators": [],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "smash_days@D1@High-Vol": [
+          "PF=0.77 < 1.50",
+          "Sharpe=-0.52 < 0.80",
+          "Recovery=-0.54 < 3.00"
+        ],
+        "smash_days@D1@Ranging": [
+          "PF=0.69 < 1.50",
+          "Sharpe=-0.72 < 0.80",
+          "Recovery=-0.80 < 3.00"
+        ],
+        "smash_days@D1@Trending-Down": [
+          "PF=1.17 < 1.50",
+          "Sharpe=0.37 < 0.80",
+          "Recovery=1.07 < 3.00"
+        ],
+        "smash_days@D1@Trending-Up": [
+          "PF=0.89 < 1.50",
+          "Sharpe=-0.28 < 0.80",
+          "WinRate=36.8% < 40%",
+          "Recovery=-0.51 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "49",
+      "name": "smashing_forex_2",
+      "family": "trend",
+      "description": "Smashing Forex 2 strategy.",
+      "granularities": [],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "cci",
+        "ema"
+      ],
+      "moves_to_breakeven": true,
+      "gates_passed": {},
+      "gates_failed": {},
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "50",
+      "name": "strong_weak_analysis",
+      "family": "trend",
+      "description": "Strong/Weak Analysis \u2014 SPEC-strong_weak_analysis.md (CSV row 50).",
+      "granularities": [
+        "D1"
+      ],
+      "qualified": true,
+      "qualified_regimes": [
+        "Trending-Up",
+        "High-Vol"
+      ],
+      "avg_profit_factor": 0.85,
+      "avg_win_rate_pct": 28.5,
+      "max_drawdown_pct": 14.5,
+      "total_oos_trades": 190,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "ATR trail"
+      ],
+      "indicators": [
+        "atr",
+        "confirmed_swing_points",
+        "sma",
+        "zscore"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {
+        "strong_weak_analysis@D1@Trending-Up": {
+          "profit_factor": 1.041,
+          "sharpe": 0.0616,
+          "win_rate": 0.2982,
+          "max_drawdown": 0.1064,
+          "recovery_factor": 0.0616,
+          "trade_count": 57,
+          "oos_months": 39.98
+        },
+        "strong_weak_analysis@D1@Trending-Down": {
+          "profit_factor": 0.7386,
+          "sharpe": -0.5142,
+          "win_rate": 0.2632,
+          "max_drawdown": 0.1255,
+          "recovery_factor": -0.7593,
+          "trade_count": 57,
+          "oos_months": 36.01
+        },
+        "strong_weak_analysis@D1@Ranging": {
+          "profit_factor": 0.4915,
+          "sharpe": -1.2159,
+          "win_rate": 0.2368,
+          "max_drawdown": 0.1447,
+          "recovery_factor": -0.8474,
+          "trade_count": 38,
+          "oos_months": 29.96
+        },
+        "strong_weak_analysis@D1@High-Vol": {
+          "profit_factor": 1.1483,
+          "sharpe": 0.191,
+          "win_rate": 0.3421,
+          "max_drawdown": 0.0778,
+          "recovery_factor": 0.3937,
+          "trade_count": 38,
+          "oos_months": 39.98
+        }
+      },
+      "gates_failed": {},
+      "verdict": "parked",
+      "why_it_failed": "PF 1.24 / Sharpe 0.36 over 295 trades -- but like currency_momentum_factor, its strength-rank gate was unreachable one pair at a time. What was measured is a trend-plus-pullback skeleton, not the strategy its author described.",
+      "next_step": "Re-measure through src/portfolio/ now that pair-keyed bundles exist."
+    },
+    {
+      "id": "51",
+      "name": "sunday_breakout",
+      "family": "calendar-anomaly",
+      "description": "Sunday Breakout \u2014 SPEC-sunday_breakout.md (CSV row 4).",
+      "granularities": [],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "atr",
+        "get_pip_value"
+      ],
+      "moves_to_breakeven": true,
+      "gates_passed": {},
+      "gates_failed": {},
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "52",
+      "name": "three_candle_swing_reversal",
+      "family": "mean-reversion",
+      "description": "three_candle_swing_reversal quantitative trading strategy.",
+      "granularities": [
+        "D1"
+      ],
+      "qualified": true,
+      "qualified_regimes": [
+        "High-Vol"
+      ],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "buy_limit",
+        "sell_limit"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "three_candle_swing_reversal@D1@High-Vol": [
+          "PF=0.92 < 1.50",
+          "Sharpe=-0.17 < 0.80",
+          "WinRate=39.6% < 40%",
+          "Recovery=-0.35 < 3.00"
+        ],
+        "three_candle_swing_reversal@D1@Ranging": [
+          "PF=0.91 < 1.50",
+          "Sharpe=-0.20 < 0.80",
+          "WinRate=37.5% < 40%",
+          "Recovery=-0.42 < 3.00"
+        ],
+        "three_candle_swing_reversal@D1@Trending-Down": [
+          "PF=0.73 < 1.50",
+          "Sharpe=-0.83 < 0.80",
+          "MaxDD=25.5% > 25%",
+          "WinRate=32.7% < 40%",
+          "Recovery=-0.80 < 3.00"
+        ],
+        "three_candle_swing_reversal@D1@Trending-Up": [
+          "PF=0.95 < 1.50",
+          "Sharpe=-0.13 < 0.80",
+          "WinRate=39.6% < 40%",
+          "Recovery=-0.38 < 3.00"
+        ]
+      },
+      "verdict": "qualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "53",
+      "name": "trending_retracement_daily",
+      "family": "trend",
+      "description": "trending_retracement_daily quantitative trading strategy.",
+      "granularities": [
+        "D1"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "buy_stop",
+        "sell_stop"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "confirmed_swing_points"
+      ],
+      "moves_to_breakeven": true,
+      "gates_passed": {},
+      "gates_failed": {
+        "trending_retracement_daily@D1@High-Vol": [
+          "PF=0.13 < 1.50",
+          "Sharpe=-0.74 < 0.80",
+          "WinRate=9.1% < 40%",
+          "Recovery=-0.87 < 3.00"
+        ],
+        "trending_retracement_daily@D1@Ranging": [
+          "LOW_CONFIDENCE"
+        ],
+        "trending_retracement_daily@D1@Trending-Down": [
+          "PF=0.11 < 1.50",
+          "Sharpe=-1.72 < 0.80",
+          "WinRate=9.5% < 40%",
+          "Recovery=-0.96 < 3.00"
+        ],
+        "trending_retracement_daily@D1@Trending-Up": [
+          "PF=1.30 < 1.50",
+          "Sharpe=0.25 < 0.80",
+          "Recovery=0.53 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "54",
+      "name": "vshape_swing_breakout",
+      "family": "breakout",
+      "description": "vshape_swing_breakout strategy.",
+      "granularities": [
+        "H4"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "ATR trail"
+      ],
+      "indicators": [
+        "atr",
+        "confirmed_swing_points",
+        "sma"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "vshape_swing_breakout@H4@High-Vol": [
+          "PF=0.69 < 1.50",
+          "Sharpe=-1.29 < 0.80",
+          "MaxDD=31.8% > 25%",
+          "WinRate=33.2% < 40%",
+          "Recovery=-0.98 < 3.00"
+        ],
+        "vshape_swing_breakout@H4@Ranging": [
+          "PF=0.75 < 1.50",
+          "Sharpe=-0.99 < 0.80",
+          "MaxDD=35.4% > 25%",
+          "WinRate=33.0% < 40%",
+          "Recovery=-0.78 < 3.00"
+        ],
+        "vshape_swing_breakout@H4@Trending-Down": [
+          "PF=0.98 < 1.50",
+          "Sharpe=-0.09 < 0.80",
+          "MaxDD=30.6% > 25%",
+          "WinRate=36.6% < 40%",
+          "Recovery=-0.26 < 3.00"
+        ],
+        "vshape_swing_breakout@H4@Trending-Up": [
+          "PF=0.72 < 1.50",
+          "Sharpe=-1.57 < 0.80",
+          "MaxDD=58.8% > 25%",
+          "WinRate=29.8% < 40%",
+          "Recovery=-0.95 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "55",
+      "name": "weekly_day_reversal_ea",
+      "family": "calendar-anomaly",
+      "description": "weekly_day_reversal_ea quantitative trading strategy.",
+      "granularities": [
+        "D1"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "time exit"
+      ],
+      "indicators": [],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "weekly_day_reversal_ea@D1@High-Vol": [
+          "PF=0.76 < 1.50",
+          "Sharpe=-0.24 < 0.80",
+          "WinRate=9.5% < 40%",
+          "Recovery=-0.36 < 3.00"
+        ],
+        "weekly_day_reversal_ea@D1@Ranging": [
+          "PF=0.10 < 1.50",
+          "Sharpe=-4.53 < 0.80",
+          "WinRate=4.0% < 40%",
+          "Recovery=-1.00 < 3.00"
+        ],
+        "weekly_day_reversal_ea@D1@Trending-Down": [
+          "PF=0.73 < 1.50",
+          "Sharpe=-0.38 < 0.80",
+          "MaxDD=37.1% > 25%",
+          "WinRate=9.3% < 40%",
+          "Recovery=-0.56 < 3.00"
+        ],
+        "weekly_day_reversal_ea@D1@Trending-Up": [
+          "PF=0.41 < 1.50",
+          "Sharpe=-1.15 < 0.80",
+          "MaxDD=37.5% > 25%",
+          "WinRate=6.6% < 40%",
+          "Recovery=-1.00 < 3.00"
+        ]
+      },
+      "verdict": "live",
+      "why_it_failed": "Has not failed -- qualified on 5 out-of-sample trades. Five.",
+      "next_step": "The only one of the three whose sizing prior (+0.4764) will produce a meaningful position. Also the thinnest evidence. Both are true."
+    },
+    {
+      "id": "56",
+      "name": "weekly_gap_fade",
+      "family": "gap-fade",
+      "description": "Weekly Gap Fade \u2014 SPEC-weekly_gap_fade.md (CSV row 3).",
+      "granularities": [
+        "H1"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "time exit"
+      ],
+      "indicators": [
+        "atr",
+        "calculate_pips"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "weekly_gap_fade@H1@High-Vol": [
+          "PF=1.16 < 1.50",
+          "Sharpe=0.47 < 0.80",
+          "Recovery=1.12 < 3.00"
+        ],
+        "weekly_gap_fade@H1@Ranging": [
+          "PF=0.72 < 1.50",
+          "Sharpe=-0.84 < 0.80",
+          "Recovery=-0.69 < 3.00"
+        ],
+        "weekly_gap_fade@H1@Trending-Down": [
+          "PF=0.85 < 1.50",
+          "Sharpe=-0.74 < 0.80",
+          "Recovery=-0.67 < 3.00"
+        ],
+        "weekly_gap_fade@H1@Trending-Up": [
+          "PF=0.86 < 1.50",
+          "Sharpe=-0.65 < 0.80",
+          "Recovery=-0.81 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "57",
+      "name": "weekly_range_reversal",
+      "family": "calendar-anomaly",
+      "description": "Weekly Range Reversal \u2014 SPEC-weekly_range_reversal.md (CSV row 27).",
+      "granularities": [
+        "H1"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "cci",
+        "get_pip_value"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "weekly_range_reversal@H1@High-Vol": [
+          "LOW_CONFIDENCE"
+        ],
+        "weekly_range_reversal@H1@Ranging": [
+          "LOW_CONFIDENCE"
+        ],
+        "weekly_range_reversal@H1@Trending-Down": [
+          "PF=1.04 < 1.50",
+          "Sharpe=0.04 < 0.80",
+          "WinRate=27.3% < 40%",
+          "Recovery=0.04 < 3.00"
+        ],
+        "weekly_range_reversal@H1@Trending-Up": [
+          "PF=0.72 < 1.50",
+          "Sharpe=-0.39 < 0.80",
+          "WinRate=14.7% < 40%",
+          "Recovery=-0.73 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "58",
+      "name": "xard_ma_cross_daily_open",
+      "family": "trend-following",
+      "description": "Xard MA Cross Daily Open strategy.",
+      "granularities": [
+        "H1"
+      ],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [
+        "market"
+      ],
+      "exits": [
+        "fixed target"
+      ],
+      "indicators": [
+        "sma"
+      ],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {
+        "xard_ma_cross_daily_open@H1@High-Vol": [
+          "PF=0.62 < 1.50",
+          "Sharpe=-1.90 < 0.80",
+          "MaxDD=57.2% > 25%",
+          "WinRate=27.0% < 40%",
+          "Recovery=-0.89 < 3.00"
+        ],
+        "xard_ma_cross_daily_open@H1@Ranging": [
+          "PF=0.71 < 1.50",
+          "Sharpe=-1.38 < 0.80",
+          "MaxDD=45.1% > 25%",
+          "WinRate=30.2% < 40%",
+          "Recovery=-0.95 < 3.00"
+        ],
+        "xard_ma_cross_daily_open@H1@Trending-Down": [
+          "PF=0.85 < 1.50",
+          "Sharpe=-1.45 < 0.80",
+          "MaxDD=80.7% > 25%",
+          "WinRate=32.7% < 40%",
+          "Recovery=-0.92 < 3.00"
+        ],
+        "xard_ma_cross_daily_open@H1@Trending-Up": [
+          "PF=0.92 < 1.50",
+          "Sharpe=-0.74 < 0.80",
+          "MaxDD=62.8% > 25%",
+          "WinRate=34.4% < 40%",
+          "Recovery=-0.86 < 3.00"
+        ]
+      },
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "59",
+      "name": "Range_Bollinger_Aggressive_RA",
+      "family": "bollinger_aggressive",
+      "description": "Range_Bollinger_Aggressive_RA quantitative trading strategy.",
+      "granularities": [],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [],
+      "exits": [],
+      "indicators": [],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {},
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "60",
+      "name": "Range_Bollinger_H1_RA",
+      "family": "bollinger_h1",
+      "description": "Range_Bollinger_H1_RA quantitative trading strategy.",
+      "granularities": [],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [],
+      "exits": [],
+      "indicators": [],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {},
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "61",
+      "name": "Range_Bollinger_H4_RA",
+      "family": "bollinger_h4",
+      "description": "Range_Bollinger_H4_RA quantitative trading strategy.",
+      "granularities": [],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [],
+      "exits": [],
+      "indicators": [],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {},
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "62",
+      "name": "Trend_Donchian_H1_RA",
+      "family": "donchian_h1",
+      "description": "Trend_Donchian_H1_RA quantitative trading strategy.",
+      "granularities": [],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [],
+      "exits": [],
+      "indicators": [],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {},
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "63",
+      "name": "Trend_Donchian_H4_RA",
+      "family": "donchian_h4",
+      "description": "Trend_Donchian_H4_RA quantitative trading strategy.",
+      "granularities": [],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [],
+      "exits": [],
+      "indicators": [],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {},
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "64",
+      "name": "Trend_Donchian_VCP_RA",
+      "family": "donchian_vcp",
+      "description": "Trend_Donchian_VCP_RA quantitative trading strategy.",
+      "granularities": [],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [],
+      "exits": [],
+      "indicators": [],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {},
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "65",
+      "name": "Trend_EMA_ADX_H1_RA",
+      "family": "ema_adx_h1",
+      "description": "Trend_EMA_ADX_H1_RA quantitative trading strategy.",
+      "granularities": [],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [],
+      "exits": [],
+      "indicators": [],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {},
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "66",
+      "name": "Trend_EMA_ADX_H4_RA",
+      "family": "ema_adx_h4",
+      "description": "Trend_EMA_ADX_H4_RA quantitative trading strategy.",
+      "granularities": [],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [],
+      "exits": [],
+      "indicators": [],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {},
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    },
+    {
+      "id": "67",
+      "name": "Trend_EMA_ADX_MultiTF_RA",
+      "family": "ema_adx_multitf",
+      "description": "Trend_EMA_ADX_MultiTF_RA quantitative trading strategy.",
+      "granularities": [],
+      "qualified": false,
+      "qualified_regimes": [],
+      "avg_profit_factor": null,
+      "avg_win_rate_pct": null,
+      "max_drawdown_pct": null,
+      "total_oos_trades": 0,
+      "entries": [],
+      "exits": [],
+      "indicators": [],
+      "moves_to_breakeven": false,
+      "gates_passed": {},
+      "gates_failed": {},
+      "verdict": "disqualified",
+      "why_it_failed": null,
+      "next_step": null
+    }
+  ]
+}

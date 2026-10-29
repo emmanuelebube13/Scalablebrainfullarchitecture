@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data Dictionary v2 · Complete Schema Reference — Scalable Brain</title>
+<meta name="description" content="Modernized database schema and data dictionary reference for Scalable Brain System 3, System 2, and Telemetry.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/css/main.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗄️</text></svg>">
+<style>
+.store-tabs {
+  display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0 16px;
+  border-bottom: 1px solid var(--border); padding-bottom: 12px;
+}
+.store-tab-btn {
+  font-family: var(--sans); font-size: 0.92rem; font-weight: 600;
+  padding: 8px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+  background: var(--bg-surface); color: var(--text-dim); cursor: pointer; transition: 0.15s ease;
+}
+.store-tab-btn:hover { color: var(--text); border-color: var(--border-strong); }
+.store-tab-btn.active { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+
+.dict-layout {
+  display: grid; grid-template-columns: 280px 1fr; gap: 24px; margin-top: 20px;
+}
+@media (max-width: 900px) {
+  .dict-layout { grid-template-columns: 1fr; }
+}
+
+.table-nav {
+  position: sticky; top: 70px; max-height: calc(100vh - 90px); overflow-y: auto;
+  background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-md);
+  padding: 12px;
+}
+.table-nav-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 10px; border-radius: var(--radius-sm); font-family: var(--mono); font-size: 0.8rem;
+  color: var(--text-dim); cursor: pointer; transition: 0.15s ease; margin-bottom: 2px;
+}
+.table-nav-item:hover { background: var(--bg-raised); color: var(--text); }
+.table-nav-item.active { background: var(--bg-sunken); color: var(--text); font-weight: 700; border-left: 3px solid var(--accent); }
+
+.dict-table-card {
+  background: var(--bg-surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 24px; margin-bottom: 24px;
+}
+.dict-table-header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.schema-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; margin-top: 14px; }
+.schema-table th, .schema-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.schema-table th { background: var(--bg-sunken); font-family: var(--mono); font-size: 0.72rem; text-transform: uppercase; color: var(--text-faint); }
+.type-tag { font-family: var(--mono); font-size: 0.72rem; color: var(--brass); background: var(--bg-sunken); padding: 2px 6px; border-radius: 3px; }
+.pk-badge { font-family: var(--mono); font-size: 0.65rem; font-weight: 700; color: #fff; background: var(--accent); padding: 1px 5px; border-radius: 3px; margin-left: 6px; }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header id="site-header"></header>
+
+<main id="main">
+  <section class="hero">
+    <div class="wrap">
+      <div class="eyebrow">Data Governance · Layer 2+ Schema Authority</div>
+      <h1>Data Dictionary v2</h1>
+      <p class="lede">
+        Complete schema specification and field-level dictionary for all active persistent datastores across
+        <strong>System 3 AMS Guardian</strong>, <strong>System 2 Execution Bridge</strong>, and the <strong>Telemetry Forensics Server</strong>.
+      </p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <!-- Store Tabs -->
+    <div class="store-tabs" id="store-tabs">
+      <button class="store-tab-btn active" data-store="system3_ams">System 3: AMS Guardian (ams.db)</button>
+      <button class="store-tab-btn" data-store="system2_execution">System 2: Execution (system2.db)</button>
+      <button class="store-tab-btn" data-store="telemetry_timescale">Telemetry &amp; TimescaleDB</button>
+      <button class="store-tab-btn" data-store="artifacts">Shared JSON Artifacts</button>
+    </div>
+
+    <!-- Quick Search Bar -->
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px;">
+      <div style="flex:1; max-width:400px; display:flex; align-items:center; gap:8px; background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:6px 12px;">
+        <span>🔍</span>
+        <input type="text" id="column-search" placeholder="Search tables or columns (e.g. risk_at_sl, outcome)…" style="border:0; background:transparent; font-family:inherit; font-size:0.86rem; color:var(--text); outline:none; width:100%;">
+      </div>
+      <div id="table-summary-count" style="font-family:var(--mono); font-size:0.8rem; color:var(--text-faint);"></div>
+    </div>
+
+    <!-- Two-Column Layout (Sticky Left Nav + Content Table) -->
+    <div class="dict-layout">
+      <!-- Sticky Table Nav -->
+      <aside class="table-nav" id="table-nav">
+        <div style="font-family:var(--mono); font-size:0.7rem; font-weight:700; text-transform:uppercase; color:var(--text-faint); margin-bottom:8px; padding-left:6px;">
+          Tables in Store
+        </div>
+        <div id="table-nav-list"></div>
+      </aside>
+
+      <!-- Tables Content View -->
+      <section id="tables-container">
+        <div style="padding:40px; text-align:center; color:var(--text-faint); font-family:var(--mono);">Loading data dictionary…</div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<footer id="site-footer"></footer>
+
+<script type="module" src="assets/js/data-dictionary.js"></script>
+</body>
+</html>

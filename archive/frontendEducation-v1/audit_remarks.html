@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Independent Auditor Remarks: Database & Storage Architecture | Scalable Brain</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #15212d;
+            --ink-soft: #4c6072;
+            --ink-muted: #8295a5;
+            --bg: #f4f7fb;
+            --card: #ffffff;
+            --line: #d9e2ec;
+            --brand: #0f5ea8;
+            --brand-deep: #083a67;
+            --brand-light: #e8f2ff;
+            --accent: #0d8d7a;
+            --accent-light: #edf8f5;
+            --danger: #d9383a;
+            --danger-light: #fdf2f2;
+            --warning: #e67e22;
+            --warning-light: #fef8f0;
+            --success: #27ae60;
+            --success-light: #edfbf3;
+            --shadow: 0 10px 30px rgba(9, 30, 66, 0.08);
+            --shadow-sm: 0 2px 8px rgba(9, 30, 66, 0.06);
+            --radius: 14px;
+            --radius-sm: 10px;
+            --max: 1200px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: "Source Sans 3", Arial, sans-serif;
+            color: var(--ink);
+            background: radial-gradient(1200px 600px at 10% -10%, #dfeeff 0%, rgba(223,238,255,0) 60%),
+                        radial-gradient(900px 500px at 100% 0%, #e3f6f2 0%, rgba(227,246,242,0) 55%),
+                        var(--bg);
+            line-height: 1.65;
+            font-size: 16px;
+        }
+
+        a { color: var(--brand); text-decoration: none; }
+        a:hover { color: var(--brand-deep); text-decoration: underline; }
+
+        .container {
+            width: min(var(--max), calc(100% - 48px));
+            margin: 0 auto;
+        }
+
+        /* Banner */
+        .swing-trading-banner {
+            background: linear-gradient(90deg, #0f5ea8 0%, #0d8d7a 100%);
+            color: white;
+            padding: 12px 24px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.92rem;
+            border-bottom: 3px solid #ff6b35;
+        }
+
+        /* Topbar */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            background: rgba(244, 247, 251, 0.9);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .topbar-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 0;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            font-family: "Space Grotesk", sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .brand-mark {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--brand), var(--brand-deep));
+            color: #fff;
+            display: grid;
+            place-items: center;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .nav {
+            display: flex;
+            gap: 20px;
+            font-size: 0.95rem;
+            color: var(--ink-soft);
+        }
+
+        .nav a:hover { color: var(--brand); text-decoration: none; }
+
+        /* Page Header */
+        .page-header {
+            margin-top: 36px;
+            background: linear-gradient(135deg, var(--brand-light), var(--accent-light));
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 40px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .eyebrow {
+            display: inline-block;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 1.4px;
+            color: var(--brand);
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .page-header h1 {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: clamp(2rem, 3.2vw, 2.8rem);
+            line-height: 1.15;
+            margin-bottom: 16px;
+            letter-spacing: -0.3px;
+        }
+
+        .page-header p {
+            color: var(--ink-soft);
+            font-size: 1.1rem;
+            max-width: 80ch;
+        }
+
+        .audit-meta-bar {
+            margin-top: 24px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(21, 33, 45, 0.1);
+            font-size: 0.92rem;
+            color: var(--ink-soft);
+        }
+
+        .meta-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 4px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+        }
+
+        /* Scorecard Grid */
+        .scorecard-grid {
+            margin-top: 32px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+        }
+
+        .score-card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-sm);
+            padding: 22px;
+            box-shadow: var(--shadow-sm);
+            text-align: center;
+        }
+
+        .score-card .val {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .score-card .lbl {
+            font-size: 0.88rem;
+            color: var(--ink-soft);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-weight: 600;
+        }
+
+        /* Sections */
+        .section {
+            margin-top: 40px;
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 36px;
+        }
+
+        .section h2 {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 1.55rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-desc {
+            color: var(--ink-soft);
+            font-size: 1.02rem;
+            margin-bottom: 24px;
+        }
+
+        /* Data Journey Flow */
+        .journey-flow {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 14px;
+            margin-top: 24px;
+            position: relative;
+        }
+
+        .journey-step {
+            background: #f8faff;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-sm);
+            padding: 18px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .journey-step.active {
+            border-color: #93c5fd;
+            background: #eff6ff;
+        }
+
+        .step-num {
+            display: inline-block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--brand);
+            margin-bottom: 6px;
+        }
+
+        .step-title {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .step-tables {
+            font-family: "JetBrains Mono", monospace;
+            font-size: 0.78rem;
+            background: #fff;
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--line);
+            color: var(--brand-deep);
+            margin-bottom: 8px;
+        }
+
+        .step-desc {
+            font-size: 0.85rem;
+            color: var(--ink-soft);
+            line-height: 1.4;
+        }
+
+        /* Finding Card */
+        .finding-card {
+            border: 1px solid var(--line);
+            border-radius: var(--radius-sm);
+            padding: 22px;
+            margin-bottom: 18px;
+            background: #fff;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .finding-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .finding-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .finding-title {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+
+        .badge-critical { background: var(--danger-light); color: var(--danger); border: 1px solid #fecaca; }
+        .badge-high { background: var(--warning-light); color: var(--warning); border: 1px solid #fed7aa; }
+        .badge-medium { background: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
+        .badge-confirmed { background: var(--success-light); color: var(--success); border: 1px solid #bbf7d0; }
+        .badge-refuted { background: var(--brand-light); color: var(--brand); border: 1px solid #bfdbfe; }
+
+        .finding-body {
+            color: var(--ink-soft);
+            font-size: 0.95rem;
+            line-height: 1.55;
+        }
+
+        .finding-body strong { color: var(--ink); }
+
+        .code-box {
+            margin-top: 12px;
+            background: #1e293b;
+            color: #f1f5f9;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-family: "JetBrains Mono", monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+        }
+
+        /* Database Table */
+        .table-responsive {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table.auditor-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.92rem;
+            text-align: left;
+        }
+
+        table.auditor-table th {
+            background: #f8faff;
+            padding: 12px 14px;
+            font-weight: 600;
+            color: var(--brand-deep);
+            border-bottom: 2px solid var(--line);
+            white-space: nowrap;
+        }
+
+        table.auditor-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--line);
+            color: var(--ink-soft);
+        }
+
+        table.auditor-table tr:hover td {
+            background: #fbfdff;
+        }
+
+        table.auditor-table td strong {
+            color: var(--ink);
+            font-family: "JetBrains Mono", monospace;
+            font-size: 0.88rem;
+        }
+
+        .num { text-align: right; font-family: "JetBrains Mono", monospace; }
+
+        /* Recommendation Grid */
+        .rec-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-top: 24px;
+        }
+
+        .rec-card {
+            background: #fcfdfe;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-sm);
+            padding: 22px;
+        }
+
+        .rec-card h3 {
+            font-family: "Space Grotesk", sans-serif;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: var(--brand);
+        }
+
+        .rec-card ul {
+            padding-left: 20px;
+            font-size: 0.92rem;
+            color: var(--ink-soft);
+        }
+
+        .rec-card li { margin-bottom: 8px; }
+
+        /* Footer */
+        .footer {
+            margin: 50px 0 30px;
+            text-align: center;
+            font-size: 0.88rem;
+            color: var(--ink-muted);
+            border-top: 1px solid var(--line);
+            padding-top: 24px;
+        }
+
+        @media (max-width: 992px) {
+            .scorecard-grid { grid-template-columns: repeat(2, 1fr); }
+            .journey-flow { grid-template-columns: 1fr; }
+            .rec-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="swing-trading-banner">
+        <strong>INDEPENDENT AUDIT REPORT</strong> | Database Architecture, Schema Integrity & Storage Journey Verification
+    </div>
+
+    <header class="topbar">
+        <div class="container topbar-inner">
+            <a class="brand" href="index.html">
+                <span class="brand-mark">SB</span>
+                <span>Scalable Brain Frontend Hub</span>
+            </a>
+            <nav class="nav">
+                <a href="index.html">Hub Home</a>
+                <a href="architecture.html">Architecture</a>
+                <a href="data_dictionary_updated.html">Data Dictionary</a>
+                <a href="erd_interactive.html">Interactive ERD</a>
+                <a href="strategy-catalog.html">Strategies</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <!-- Page Header -->
+        <header class="page-header">
+            <span class="eyebrow">Independent Engineering Audit</span>
+            <h1>Database Design & Data Journey Audit Remarks</h1>
+            <p>
+                An exhaustive audit of Scalable Brain's relational schema (PostgreSQL 16), file-based operational state contracts,
+                and end-to-end data pipelines. Evaluated by an independent auditor following the live host verification of Gate v2 on Computer 4.
+            </p>
+            <div class="audit-meta-bar">
+                <span class="meta-tag"><strong>Target Store:</strong> PostgreSQL 16 (ForexBrainDB)</span>
+                <span class="meta-tag"><strong>Audit Host:</strong> Computer 4 (Windows Host)</span>
+                <span class="meta-tag"><strong>Overall Footprint:</strong> 5,984 MB (24 Public Tables)</span>
+                <span class="meta-tag"><strong>Audit Opinion:</strong> QUALIFIED WITH RESERVATIONS</span>
+            </div>
+        </header>
+
+        <!-- Scorecard Grid -->
+        <section class="scorecard-grid">
+            <div class="score-card">
+                <div class="val" style="color: var(--brand);">14.34M</div>
+                <div class="lbl">Market Price Ticks</div>
+            </div>
+            <div class="score-card">
+                <div class="val" style="color: var(--accent);">5.13M</div>
+                <div class="lbl">Regime Classifications</div>
+            </div>
+            <div class="score-card">
+                <div class="val" style="color: var(--warning);">1.35M</div>
+                <div class="lbl">Backtest Trade Outcomes</div>
+            </div>
+            <div class="score-card">
+                <div class="val" style="color: var(--danger);">B-</div>
+                <div class="lbl">Audit Architectural Grade</div>
+            </div>
+        </section>
+
+        <!-- Section 1: End-to-End Data Journey -->
+        <section class="section" id="journey">
+            <h2>Data Journey: From Tick Ingestion to Broker Execution</h2>
+            <p class="section-desc">
+                How price data enters the host, transforms into market regimes, generates backtest outcomes,
+                undergoes empirical qualification, and serializes into fail-closed live execution orders.
+            </p>
+
+            <div class="journey-flow">
+                <div class="journey-step active">
+                    <div>
+                        <span class="step-num">Stage 01</span>
+                        <div class="step-title">Market Ingestion</div>
+                        <div class="step-tables">fact_market_prices</div>
+                        <p class="step-desc">
+                            OANDA broker API ingests 1-hour, 4-hour, and daily candles for 15 currency pairs. 14.34M rows stored in PostgreSQL.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="journey-step">
+                    <div>
+                        <span class="step-num">Stage 02</span>
+                        <div class="step-title">Regime Synthesis</div>
+                        <div class="step-tables">fact_regime_structural</div>
+                        <p class="step-desc">
+                            Point-in-time ATR/ADX indicators compute 4 structural regimes (Trending-Up/Down, Ranging, High-Vol). 2.56M rows indexed.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="journey-step">
+                    <div>
+                        <span class="step-num">Stage 03</span>
+                        <div class="step-title">Backtesting & Outcomes</div>
+                        <div class="step-tables">fact_trade_outcomes</div>
+                        <p class="step-desc">
+                            125 strategy code files execute across walk-forward folds, recording 111.6k OOS/holdout trades with ATR geometry.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="journey-step">
+                    <div>
+                        <span class="step-num">Stage 04</span>
+                        <div class="step-title">Attribution & Vetting</div>
+                        <div class="step-tables">fact_strategy_regime_attribution</div>
+                        <p class="step-desc">
+                            Statistical gates (v1 or Gate v2 lab_qualify) compute shrinkage & PSR per run_id, emitting regime_strategy_map.json.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="journey-step active">
+                    <div>
+                        <span class="step-num">Stage 05</span>
+                        <div class="step-title">Live Signal Routing</div>
+                        <div class="step-tables">fact_signals -> .ndjson</div>
+                        <p class="step-desc">
+                            Signals generated via build.py are checked against map_contract.py expiry and streamed to Computer 2 for execution.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Auditor Remarks & Key Deficiencies -->
+        <section class="section" id="remarks">
+            <h2>Auditor Remarks: Structural Storage Deficiencies</h2>
+            <p class="section-desc">
+                Detailed verification of findings from the storage assessment, ranked by severity to operational integrity.
+            </p>
+
+            <!-- Finding 1 -->
+            <div class="finding-card">
+                <div class="finding-header">
+                    <div class="finding-title">
+                        <span>1. Unversioned Outcome Overwrites Prevent Past Decision Auditing</span>
+                    </div>
+                    <span class="badge badge-critical">Critical Integrity Risk</span>
+                </div>
+                <div class="finding-body">
+                    <p>
+                        <strong>Audit Finding:</strong> In <code>src/outcomes/persist_all.py:55</code>, backtest runs execute
+                        <code>ON CONFLICT ("timestamp", asset_id, strategy_id, granularity, leg_index) DO UPDATE SET</code>,
+                        and line 390 executes <code>DELETE FROM fact_trade_outcomes WHERE strategy_id = ANY(%s)</code>.
+                        Backtest outcome rows carry zero run identifier (<code>run_id</code>), no code Git SHA, and no configuration hash.
+                    </p>
+                    <p style="margin-top: 8px;">
+                        <strong>Auditor Impact:</strong> When a strategy backtest is re-run with modified parameters or logic, the old trade
+                        history is erased in place. While <code>fact_strategy_regime_attribution</code> preserves run-level metrics per
+                        <code>qualification_run_id</code>, the underlying trades that justified past live allocations are permanently lost.
+                        For example, Strategy 50's live designation cited 59 OOS trades, whereas today's table contains 191 trades.
+                    </p>
+                    <div class="code-box">
+-- Prescribed Fix: Append-only run versioning with canonical views
+ALTER TABLE fact_trade_outcomes ADD COLUMN backtest_run_id UUID REFERENCES dim_backtest_run(run_id);
+ALTER TABLE fact_trade_outcomes ADD COLUMN code_git_sha VARCHAR(40);
+CREATE VIEW v_canonical_trade_outcomes AS
+SELECT DISTINCT ON (strategy_id, asset_id, granularity, "timestamp", leg_index) *
+FROM fact_trade_outcomes ORDER BY strategy_id, asset_id, granularity, "timestamp", leg_index, created_at DESC;
+                    </div>
+                </div>
+            </div>
+
+            <!-- Finding 2 -->
+            <div class="finding-card">
+                <div class="finding-header">
+                    <div class="finding-title">
+                        <span>2. Dual-Identity Tables with Divergent Foreign Key Dependencies</span>
+                    </div>
+                    <span class="badge badge-high">High Architecture Risk</span>
+                </div>
+                <div class="finding-body">
+                    <p>
+                        <strong>Audit Finding:</strong> Strategy identity is duplicated across two 67-row tables:
+                        <code>dim_strategy</code> (rich metadata: <code>strategy_key</code>, <code>engine</code>, <code>universe</code>, <code>family</code>)
+                        and <code>dim_strategy_registry</code> (thin: <code>strategy_name</code>, <code>is_qualified</code>).
+                        Crucially, the foreign keys on <code>fact_trade_outcomes</code>, <code>fact_signals</code>, and <code>fact_live_trades</code>
+                        reference <code>dim_strategy_registry</code> rather than the canonical <code>dim_strategy</code>.
+                    </p>
+                    <p style="margin-top: 8px;">
+                        <strong>Auditor Impact:</strong> In <code>dim_strategy_registry</code>, the <code>is_qualified</code> flag is set to
+                        <code>true</code> for strategies 17, 22, 26, 41, and 50—yet strategies 26, 41, and 50 failed production gates and are
+                        owner-designated. Storing qualification status as a static database flag rather than deriving it from the published
+                        <code>regime_strategy_map.json</code> misrepresents production readiness.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Finding 3 -->
+            <div class="finding-card">
+                <div class="finding-header">
+                    <div class="finding-title">
+                        <span>3. Strategy Hyperparameters Embedded in Code Rather Than Schema</span>
+                    </div>
+                    <span class="badge badge-medium">Medium Maintenance Risk</span>
+                </div>
+                <div class="finding-body">
+                    <p>
+                        <strong>Audit Finding:</strong> Across <code>src/layer0/strategies/**</code>, <strong>125 Python files</strong>
+                        hardcode strategy parameters (ATR multipliers, indicator lookbacks, stop-loss ratios) directly in class declarations.
+                        Although a proper versioned configuration table exists (<code>dim_strategy_config</code> with <code>config_hash</code>,
+                        <code>effective_from</code>, <code>effective_to</code>), it contains only <strong>3 rows</strong> (strategies 7, 8, 10).
+                    </p>
+                    <p style="margin-top: 8px;">
+                        <strong>Auditor Impact:</strong> Parameter optimization requires a Git commit and code deploy rather than a configuration
+                        update, and it is impossible to determine from database records alone which parameter set generated a specific historical trade.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Finding 4 -->
+            <div class="finding-card">
+                <div class="finding-header">
+                    <div class="finding-title">
+                        <span>4. Gatekeeper Holdout Leakage Audit Refinement</span>
+                    </div>
+                    <span class="badge badge-refuted">Confirmed Clean in Trainer</span>
+                </div>
+                <div class="finding-body">
+                    <p>
+                        <strong>Audit Verification:</strong> The initial storage assessment raised a concern that because 40,690 trade outcomes
+                        have <code>is_holdout = true</code> and <code>gatekeeper.train.build_frame()</code> does not filter them, the machine learning
+                        gatekeeper might be training on untouched holdout data.
+                    </p>
+                    <p style="margin-top: 8px;">
+                        <strong>Auditor Finding:</strong> Detailed code inspection of <code>src/gatekeeper/train.py:run()</code> lines 742–743 proves
+                        that the training pipeline explicitly applies:
+                        <code>frame = frame[frame["entry_time"] < cut_dt].copy()</code>.
+                        Only 101 boundary trades opened before 2023-01-01 and closed after it crossed into the training set.
+                        <strong>The gatekeeper does NOT train on the 40.6k post-2023 holdout trades.</strong>
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Database Table Inventory -->
+        <section class="section" id="inventory">
+            <h2>Complete PostgreSQL Schema Inventory (ForexBrainDB)</h2>
+            <p class="section-desc">
+                Verified table metrics, storage footprint, and constraint topology across all 24 public tables.
+            </p>
+
+            <div class="table-responsive">
+                <table class="auditor-table">
+                    <thead>
+                        <tr>
+                            <th>Table Name</th>
+                            <th>Layer / Purpose</th>
+                            <th class="num">Row Count</th>
+                            <th class="num">Total Size</th>
+                            <th class="num">Data Size</th>
+                            <th class="num">Index Size</th>
+                            <th>Key Constraints</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>fact_market_prices</strong></td>
+                            <td>Market History (H1, H4, D1)</td>
+                            <td class="num">14,342,088</td>
+                            <td class="num">3,008 MB</td>
+                            <td class="num">2,150 MB</td>
+                            <td class="num">858 MB</td>
+                            <td>PK (timestamp, asset_id, granularity)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>fact_market_regime_v2</strong></td>
+                            <td>HMM & Volatility Regimes</td>
+                            <td class="num">2,563,093</td>
+                            <td class="num">1,658 MB</td>
+                            <td class="num">889 MB</td>
+                            <td class="num">769 MB</td>
+                            <td>PK (timestamp, asset_id, granularity)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>fact_regime_structural</strong></td>
+                            <td>Structural Regimes</td>
+                            <td class="num">2,564,638</td>
+                            <td class="num">456 MB</td>
+                            <td class="num">341 MB</td>
+                            <td class="num">115 MB</td>
+                            <td>PK (asset_id, granularity, bar_time_utc)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>fact_regime_trial_outcomes</strong></td>
+                            <td>12-Week Regime Trial</td>
+                            <td class="num">1,244,139</td>
+                            <td class="num">489 MB</td>
+                            <td class="num">334 MB</td>
+                            <td class="num">155 MB</td>
+                            <td>PK (run_id, strategy_key, asset_id, timestamp...)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>fact_market_regime_v2_exp_atrpct</strong></td>
+                            <td>ATR Expansion Pre-computation</td>
+                            <td class="num">847,666</td>
+                            <td class="num">289 MB</td>
+                            <td class="num">190 MB</td>
+                            <td class="num">100 MB</td>
+                            <td>PK (timestamp, asset_id, granularity)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>fact_trade_outcomes</strong></td>
+                            <td>Canonical Backtest Trades</td>
+                            <td class="num">111,593</td>
+                            <td class="num">60 MB</td>
+                            <td class="num">31 MB</td>
+                            <td class="num">29 MB</td>
+                            <td>PK outcome_id; UQ (timestamp, asset, strat, gran, leg)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>fact_signals</strong></td>
+                            <td>Emitted Production Signals</td>
+                            <td class="num">28,750</td>
+                            <td class="num">15 MB</td>
+                            <td class="num">8,256 KB</td>
+                            <td class="num">6,720 KB</td>
+                            <td>PK (timestamp, asset_id, granularity, strategy_id)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>fact_regime_structural_live</strong></td>
+                            <td>Point-In-Time Live Regimes</td>
+                            <td class="num">21,365</td>
+                            <td class="num">8,712 KB</td>
+                            <td class="num">6,840 KB</td>
+                            <td class="num">1,872 KB</td>
+                            <td>PK id; UQ (asset_id, granularity, bar_time, computed_at)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>fact_strategy_regime_attribution</strong></td>
+                            <td>Vetting Qualification Runs</td>
+                            <td class="num">7,649</td>
+                            <td class="num">2,672 KB</td>
+                            <td class="num">1,752 KB</td>
+                            <td class="num">920 KB</td>
+                            <td>PK attribution_id; UQ (strat, regime, gran, run_id)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>fact_job_runs</strong></td>
+                            <td>Pipeline Job Orchestration</td>
+                            <td class="num">2,505</td>
+                            <td class="num">800 KB</td>
+                            <td class="num">448 KB</td>
+                            <td class="num">352 KB</td>
+                            <td>PK job_run_id</td>
+                        </tr>
+                        <tr>
+                            <td><strong>fact_market_prices_quarantine</strong></td>
+                            <td>Quarantined Price Anomalies</td>
+                            <td class="num">184</td>
+                            <td class="num">80 KB</td>
+                            <td class="num">40 KB</td>
+                            <td class="num">40 KB</td>
+                            <td>PK quarantine_id</td>
+                        </tr>
+                        <tr>
+                            <td><strong>dim_strategy</strong></td>
+                            <td>Canonical Strategy Engine</td>
+                            <td class="num">67</td>
+                            <td class="num">88 KB</td>
+                            <td class="num">16 KB</td>
+                            <td class="num">72 KB</td>
+                            <td>PK strategy_id; UQ strategy_key</td>
+                        </tr>
+                        <tr>
+                            <td><strong>dim_strategy_registry</strong></td>
+                            <td>Legacy Identity & Qualified Flag</td>
+                            <td class="num">67</td>
+                            <td class="num">64 KB</td>
+                            <td class="num">16 KB</td>
+                            <td class="num">48 KB</td>
+                            <td>PK strategy_id</td>
+                        </tr>
+                        <tr>
+                            <td><strong>fact_live_trades</strong></td>
+                            <td>Broker Executions (Demo)</td>
+                            <td class="num">37</td>
+                            <td class="num">256 KB</td>
+                            <td class="num">16 KB</td>
+                            <td class="num">240 KB</td>
+                            <td>PK trade_id; UQ (order_id, timestamp, asset, strat)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>dim_strategy_asset_mapping</strong></td>
+                            <td>Allowed Asset Universes</td>
+                            <td class="num">17</td>
+                            <td class="num">40 KB</td>
+                            <td class="num">8 KB</td>
+                            <td class="num">32 KB</td>
+                            <td>PK mapping_id; UQ (strategy_id, asset_id, granularity)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>dim_asset</strong></td>
+                            <td>Currency Pairs (15 Pairs)</td>
+                            <td class="num">15</td>
+                            <td class="num">56 KB</td>
+                            <td class="num">8 KB</td>
+                            <td class="num">48 KB</td>
+                            <td>PK asset_id; UQ symbol</td>
+                        </tr>
+                        <tr>
+                            <td><strong>dim_strategy_config</strong></td>
+                            <td>Versioned Config Hashes</td>
+                            <td class="num">3</td>
+                            <td class="num">64 KB</td>
+                            <td class="num">8 KB</td>
+                            <td class="num">56 KB</td>
+                            <td>PK config_id; UQ (strat, hash, version, gran)</td>
+                        </tr>
+                        <tr style="background: rgba(254, 243, 199, 0.4);">
+                            <td><strong style="color: #b45309;">dim_indicator_library</strong> <span class="badge badge-medium" style="font-size:0.7rem;padding:2px 6px;">ORPHANED</span></td>
+                            <td>Indicator Definitions (Underutilized)</td>
+                            <td class="num" style="color: #b45309; font-weight:700;">1</td>
+                            <td class="num">48 KB</td>
+                            <td class="num">8 KB</td>
+                            <td class="num">40 KB</td>
+                            <td>PK indicator_id; UQ indicator_key</td>
+                        </tr>
+                        <!-- DEAD / DEPRECATED TABLES (0 ROWS) -->
+                        <tr style="background: rgba(254, 242, 242, 0.6);">
+                            <td><strong style="color: #b91c1c;">fact_execution_log</strong> <span class="badge badge-critical" style="font-size:0.7rem;padding:2px 6px;">DEAD</span></td>
+                            <td>Execution Telemetry (Bypassed)</td>
+                            <td class="num" style="color: #dc2626; font-weight: 700;">0</td>
+                            <td class="num">16 KB</td>
+                            <td class="num">8 KB</td>
+                            <td class="num">8 KB</td>
+                            <td>PK log_id; FK live_trades</td>
+                        </tr>
+                        <tr style="background: rgba(254, 242, 242, 0.6);">
+                            <td><strong style="color: #b91c1c;">fact_market_prices_d1</strong> <span class="badge badge-critical" style="font-size:0.7rem;padding:2px 6px;">DEAD</span></td>
+                            <td>Legacy Daily Bar Store (Abandoned)</td>
+                            <td class="num" style="color: #dc2626; font-weight: 700;">0</td>
+                            <td class="num">16 KB</td>
+                            <td class="num">8 KB</td>
+                            <td class="num">8 KB</td>
+                            <td>PK (timestamp, asset_id)</td>
+                        </tr>
+                        <tr style="background: rgba(254, 242, 242, 0.6);">
+                            <td><strong style="color: #b91c1c;">fact_market_prices_h4</strong> <span class="badge badge-critical" style="font-size:0.7rem;padding:2px 6px;">DEAD</span></td>
+                            <td>Legacy 4-Hour Bar Store (Abandoned)</td>
+                            <td class="num" style="color: #dc2626; font-weight: 700;">0</td>
+                            <td class="num">16 KB</td>
+                            <td class="num">8 KB</td>
+                            <td class="num">8 KB</td>
+                            <td>PK (timestamp, asset_id)</td>
+                        </tr>
+                        <tr style="background: rgba(254, 242, 242, 0.6);">
+                            <td><strong style="color: #b91c1c;">fact_market_regime</strong> <span class="badge badge-critical" style="font-size:0.7rem;padding:2px 6px;">DEAD</span></td>
+                            <td>Regime Store v1 (Superseded by v2)</td>
+                            <td class="num" style="color: #dc2626; font-weight: 700;">0</td>
+                            <td class="num">16 KB</td>
+                            <td class="num">8 KB</td>
+                            <td class="num">8 KB</td>
+                            <td>PK (timestamp, asset_id)</td>
+                        </tr>
+                        <tr style="background: rgba(254, 242, 242, 0.6);">
+                            <td><strong style="color: #b91c1c;">fact_macro_events</strong> <span class="badge badge-critical" style="font-size:0.7rem;padding:2px 6px;">DEAD</span></td>
+                            <td>Economic Calendar (Never Ingested)</td>
+                            <td class="num" style="color: #dc2626; font-weight: 700;">0</td>
+                            <td class="num">24 KB</td>
+                            <td class="num">8 KB</td>
+                            <td class="num">16 KB</td>
+                            <td>PK event_id</td>
+                        </tr>
+                        <tr style="background: rgba(254, 242, 242, 0.6);">
+                            <td><strong style="color: #b91c1c;">fact_signal_processing_log</strong> <span class="badge badge-critical" style="font-size:0.7rem;padding:2px 6px;">DEAD</span></td>
+                            <td>Signal Diagnostic Log (Bypassed)</td>
+                            <td class="num" style="color: #dc2626; font-weight: 700;">0</td>
+                            <td class="num">32 KB</td>
+                            <td class="num">8 KB</td>
+                            <td class="num">24 KB</td>
+                            <td>PK log_id</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Finding: Dead & Unused Tables Assessment -->
+            <div class="finding-card" style="border-left: 5px solid #ef4444; margin-top: 24px;">
+                <div class="finding-header">
+                    <div class="finding-title">
+                        <span>Schema Hygiene Audit: 6 Dead Tables (0 Rows) & 2 Orphaned Tables Identified</span>
+                    </div>
+                    <span class="badge badge-critical">Immediate Cleanup Targets</span>
+                </div>
+                <div class="finding-body">
+                    <p>
+                        <strong>Auditor Inventory Verification:</strong> A full scan of all 24 public relations in <code>ForexBrainDB</code> reveals that 
+                        <strong>6 tables contain exactly 0 rows</strong> (occupying 120 KB of dead disk space and unneeded catalog entries), and 
+                        <strong>2 tables are severely underutilized / orphaned</strong>. These dead relations represent abandoned pipeline branches, legacy schema iterations, 
+                        and bypassed logging paths:
+                    </p>
+
+                    <div style="margin: 14px 0;">
+                        <ul style="padding-left: 20px; line-height: 1.7; color: var(--ink-soft);">
+                            <li><strong><code>fact_execution_log</code> (0 rows | 16 KB):</strong> Designed as a staging table for execution latency and fill telemetry. The production order executor bypasses this table and writes fills directly into <code>fact_live_trades</code>.</li>
+                            <li><strong><code>fact_market_prices_d1</code> (0 rows | 16 KB):</strong> Abandoned daily price partition. Ingestion was refactored into the unified <code>fact_market_prices</code> table with <code>granularity = 'D'</code>.</li>
+                            <li><strong><code>fact_market_prices_h4</code> (0 rows | 16 KB):</strong> Abandoned 4-hour price partition. Ingestion was refactored into <code>fact_market_prices</code> with <code>granularity = 'H4'</code>.</li>
+                            <li><strong><code>fact_market_regime</code> (0 rows | 16 KB):</strong> Deprecated v1 market regime store. Superseded by <code>fact_market_regime_v2</code> (2.56M rows) and <code>fact_regime_structural</code> (2.56M rows).</li>
+                            <li><strong><code>fact_macro_events</code> (0 rows | 24 KB):</strong> Economic calendar table created during early architecture planning. No external economic data feed was ever integrated into the pipeline.</li>
+                            <li><strong><code>fact_signal_processing_log</code> (0 rows | 32 KB):</strong> Intended for signal generation diagnostics. The active signal pipeline writes diagnostics directly to rotating file streams (<code>signals/YYYY-MM-DD.ndjson</code>).</li>
+                            <li><strong><code>dim_indicator_library</code> (1 row | 48 KB) [ORPHANED]:</strong> Contains only a single indicator definition (ATR). All remaining 124 indicators used across the platform are hardcoded in Python code.</li>
+                            <li><strong><code>dim_strategy_config</code> (3 rows | 64 KB) [ORPHANED]:</strong> Contains parameter hashes for only 3 strategies (strategies 7, 8, 10). The remaining 64 strategies hardcode their parameters in 125 Python files.</li>
+                        </ul>
+                    </div>
+
+                    <p style="margin-top: 10px;">
+                        <strong>Auditor Recommendation:</strong> Execute immediate <code>DROP TABLE</code> operations for the 6 completely dead tables. 
+                        They have zero active foreign key incoming references, zero application dependencies, and deleting them eliminates developer confusion and catalog bloat.
+                    </p>
+
+                    <div class="code-box">
+-- Recommended DDL Cleanup Script (Safe Execution: 0 Rows / No Inward FK Dependencies)
+BEGIN;
+
+DROP TABLE IF EXISTS fact_execution_log;
+DROP TABLE IF EXISTS fact_market_prices_d1;
+DROP TABLE IF EXISTS fact_market_prices_h4;
+DROP TABLE IF EXISTS fact_market_regime;
+DROP TABLE IF EXISTS fact_macro_events;
+DROP TABLE IF EXISTS fact_signal_processing_log;
+
+COMMIT;
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Schema Architectural Modeling Analysis -->
+        <section class="section" id="schema-modeling">
+            <h2>Schema Modeling Analysis: Fact Constellation (Galaxy) vs. Snowflake vs. Star Schema</h2>
+            <p class="section-desc">
+                Rigorous dimensional analysis evaluating how the Scalable Brain PostgreSQL 16 database emulates 
+                established data warehouse design patterns, where it diverges, and how relationship arrows govern data integrity.
+            </p>
+
+            <div class="finding-card" style="border-left: 5px solid var(--brand);">
+                <div class="finding-header">
+                    <div class="finding-title">
+                        <span>Architectural Classification: Fact Constellation (Galaxy Schema) with Snowflake Branching</span>
+                    </div>
+                    <span class="badge badge-confirmed">Pattern Verified</span>
+                </div>
+                <div class="finding-body">
+                    <p>
+                        A foundational architectural question is whether Scalable Brain's database is a <strong>Star Schema</strong>, 
+                        a <strong>Snowflake Schema</strong>, or a <strong>Fact Constellation (Galaxy Schema)</strong>. Based on rigorous structural 
+                        and constraint audit across all 24 PostgreSQL tables, the system is classified as follows:
+                    </p>
+
+                    <div style="overflow-x:auto; margin: 18px 0;">
+                        <table class="auditor-table">
+                            <thead>
+                                <tr>
+                                    <th>Schema Pattern</th>
+                                    <th>Theoretical Definition</th>
+                                    <th>Scalable Brain Implementation</th>
+                                    <th>Audit Verdict</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Star Schema</strong></td>
+                                    <td>Single centralized fact table surrounded by completely denormalized, single-tier dimension tables.</td>
+                                    <td>The database maintains <strong>8 independent fact tables</strong> across distinct analytical grains rather than a single unified fact table. Furthermore, strategy dimensions are normalized into configs and bridge tables.</td>
+                                    <td><span class="badge badge-refuted">Not a Star Schema</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Fact Constellation<br>(Galaxy Schema)</strong></td>
+                                    <td>Multiple fact tables sharing common <strong>conformed dimensions</strong>, allowing cross-fact analytical querying across different business processes.</td>
+                                    <td><strong>Primary Active Architecture:</strong> Central conformed dimensions (<code>dim_asset</code> and <code>dim_strategy</code>) are shared across multiple fact tables: <code>fact_market_prices</code>, <code>fact_regime_structural</code>, <code>fact_trade_outcomes</code>, <code>fact_signals</code>, and <code>fact_live_trades</code>.</td>
+                                    <td><span class="badge badge-confirmed">Primary Architecture</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Snowflake Schema</strong></td>
+                                    <td>Dimensional hierarchy where dimension tables are normalized into sub-dimension levels rather than flattened.</td>
+                                    <td><strong>Emulated in Strategy Hierarchy:</strong> <code>dim_strategy</code> (Master) ──(1:N)──► <code>dim_strategy_config</code> (Parameter Hashes/JSON) ──(1:N)──► <code>dim_strategy_asset_mapping</code> (N:M Bridge) ──(N:1)──► <code>dim_asset</code>. This exhibits textbook snowflake normalization.</td>
+                                    <td><span class="badge badge-confirmed">Snowflake Sub-Branch</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Operational 3NF Layer</strong></td>
+                                    <td>Third Normal Form operational transactional and audit ledger tables outside the analytical OLAP cube.</td>
+                                    <td>Tables like <code>fact_job_runs</code> (scheduler cron heartbeats), <code>fact_market_prices_quarantine</code> (tick quality filter), and <code>fact_regime_structural_live</code> (streaming live bar buffer) function as transactional operational state.</td>
+                                    <td><span class="badge badge-confirmed">Operational Extension</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.15rem;margin:20px 0 10px;color:var(--brand-deep);">
+                        Entity Relationships & Cardinality Lineage Diagram
+                    </h3>
+                    <p style="margin-bottom:12px;">
+                        The directional arrows below trace foreign key dependencies (source ──► target) and data transformation lineage across the galaxy schema:
+                    </p>
+
+                    <div class="code-box" style="line-height:1.45;">
+                                  [ CONFORMED DIMENSIONS & SNOWFLAKE HIERARCHY ]
+                                  
+     dim_asset (15 rows) ◄────────────── (N:1 Bridge) ────────────── dim_strategy_asset_mapping (17 rows)
+           │                                                                     ▲
+           │ (1:N)                                                               │ (1:N)
+           ├──────────────────────────────┬─────────────────────────────── dim_strategy (67 rows)
+           │                              │                                      │
+           │ (1:N)                        │ (1:N)                                │ (1:N Snowflake)
+           ▼                              ▼                                      ▼
+  fact_market_prices             fact_regime_structural                dim_strategy_config (3 rows)
+  (14.34M rows / 3.0GB)          (2.56M rows / 456MB)
+           │                              │
+           │ (1:1 Bar Join)               │ (1:N Regime Context)
+           ▼                              ▼
+  [Data Quality Guard]          fact_trade_outcomes (111,593 rows) ◄────── (N:1) ── dim_strategy_registry
+  fact_market_prices_quarantine           │                                           (Legacy Hub: 67 rows)
+                                          │ (N:1 Qualification Run)                           │
+                                          ▼                                                   │ (1:N)
+                                fact_strategy_regime_attribution (7,649 rows)                 │
+                                          │                                                   │
+                                          │ (Gate v2 Vetting: lab_qualify)                    │
+                                          ▼                                                   ▼
+                                  fact_signals (28,750 rows) ──────── (1:N) ────────► fact_live_trades (37 rows)
+                                          │                                                   │
+                                          ▼                                                   ▼
+                                 signals/*.ndjson (File Stream)                      fact_job_runs (2,505 rows)
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Auditor Recommendations -->
+        <section class="section" id="recommendations">
+            <h2>Auditor Remediation Roadmap</h2>
+            <p class="section-desc">
+                Strategic recommendations to transition Scalable Brain from a single-machine prototype
+                to an institutional multi-run quantitative research and execution platform.
+            </p>
+
+            <div class="rec-grid">
+                <div class="rec-card">
+                    <h3>1. Outcome Provenance</h3>
+                    <ul>
+                        <li>Create <code>dim_backtest_run</code> table recording run UUID, code commit SHA, and timestamp.</li>
+                        <li>Add <code>run_id</code> and <code>config_hash</code> to <code>fact_trade_outcomes</code>.</li>
+                        <li>Stop destructive <code>DELETE</code> and <code>DO UPDATE</code> in backtest writers.</li>
+                        <li>Deploy <code>v_canonical_trade_outcomes</code> view for legacy pipeline readers.</li>
+                    </ul>
+                </div>
+
+                <div class="rec-card">
+                    <h3>2. Identity Consolidation</h3>
+                    <ul>
+                        <li>Merge <code>dim_strategy_registry</code> into <code>dim_strategy</code>.</li>
+                        <li>Repoint foreign keys on <code>fact_trade_outcomes</code>, <code>fact_signals</code>, and <code>fact_live_trades</code>.</li>
+                        <li>Deprecate <code>is_qualified</code> boolean; replace with dynamic map resolution.</li>
+                        <li>Key <code>strategy-notes.json</code> by stable <code>strategy_key</code>.</li>
+                    </ul>
+                </div>
+
+                <div class="rec-card">
+                    <h3>3. Metric Hygiene & Config</h3>
+                    <ul>
+                        <li>Relabel <code>fact_strategy_regime_attribution.avg_r</code> to <code>payoff_ratio</code> to prevent misinterpretation.</li>
+                        <li>Extract hardcoded parameters from the 125 Python files into versioned JSON configs synced to <code>dim_strategy_config</code>.</li>
+                        <li>Flatten <code>src/layer0/strategies/</code> folders and track lifecycle status via database enums.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <p>Scalable Brain Independent Verification Audit | Host: Computer 4 | Generated: 2026-10-16</p>
+        </footer>
+
+    </main>
+
+</body>
+</html>

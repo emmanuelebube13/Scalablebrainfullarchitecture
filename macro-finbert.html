@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Macro NLP & FinBERT Framework — Scalable Brain</title>
+<meta name="description" content="Technical documentation of the financial-language NLP module, ProsusAI/FinBERT inference, Shannon entropy dispersion, and central bank statement chunking.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/css/main.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+<style>
+.nlp-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px;
+}
+@media (max-width: 900px) {
+  .nlp-grid { grid-template-columns: 1fr; }
+}
+.nlp-card {
+  background: var(--bg-surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 24px; margin-bottom: 24px;
+}
+.nlp-metric-box {
+  background: var(--bg-sunken); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 16px;
+}
+.nlp-gauge-bar {
+  height: 8px; border-radius: 4px; background: var(--border);
+  overflow: hidden; margin-top: 6px; position: relative;
+}
+.nlp-gauge-fill { height: 100%; transition: width 0.3s ease; }
+</style>
+</head>
+<body>
+<header id="site-header"></header>
+
+<main class="wrap">
+  <div class="page-head" style="margin-top: 24px;">
+    <span class="eyebrow">Natural Language Processing & Macro Intelligence</span>
+    <h1 style="margin: 8px 0 12px 0;">FinBERT Macro Sentiment & Entropy Engine</h1>
+    <p class="lead" style="max-width: 860px; color: var(--text-dim); line-height: 1.6;">
+      Production documentation for <code>systems/brain/src/nlp/finbert.py</code>. Using transfer learning with <strong>ProsusAI/FinBERT</strong> to parse central bank speeches, FOMC statements, and economic news into calibrated sentiment vectors and Shannon entropy uncertainty scores.
+    </p>
+  </div>
+
+  <div class="nlp-grid">
+    <!-- Left Column: Architecture & Mathematical Formulation -->
+    <div>
+      <div class="nlp-card">
+        <span class="badge tone-accent" style="margin-bottom: 8px;">Core Architecture</span>
+        <h2 style="font-size: 1.25rem; margin: 8px 0 12px 0;">1. Text Ingestion & Sliding Chunking</h2>
+        <p style="font-size: 0.88rem; color: var(--text-dim); line-height: 1.6;">
+          Central bank statements (such as FOMC press releases or ECB policy decisions) routinely exceed BERT's 512-token limit. Rather than naive front-truncation which discards critical forward guidance in later paragraphs, <code>ScalableBrainFinBERT</code> executes token-aware sliding window chunking:
+        </p>
+        <div style="background: var(--bg-sunken); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-family: var(--mono); font-size: 0.8rem; margin: 12px 0;">
+          CHUNK_SIZE = 450 tokens<br>
+          OVERLAP = 50 tokens<br>
+          stride = CHUNK_SIZE - OVERLAP = 400 tokens
+        </div>
+        <p style="font-size: 0.88rem; color: var(--text-dim); line-height: 1.6;">
+          Each chunk is evaluated independently through <code>AutoModelForSequenceClassification</code>. Probabilities are synthesized using an arithmetic mean across chunks, while <strong>peak dispersion</strong> is captured as the system's maximum uncertainty flag.
+        </p>
+      </div>
+
+      <div class="nlp-card">
+        <span class="badge tone-good" style="margin-bottom: 8px;">Mathematical Formula</span>
+        <h2 style="font-size: 1.25rem; margin: 8px 0 12px 0;">2. Sentiment & Shannon Entropy</h2>
+        <p style="font-size: 0.88rem; color: var(--text-dim); line-height: 1.6;">
+          For any text segment producing Softmax probability distribution \(P = [p_{\text{neg}}, p_{\text{neu}}, p_{\text{pos}}]\):
+        </p>
+
+        <div class="nlp-metric-box" style="margin-bottom: 12px;">
+          <div style="font-family: var(--mono); font-weight: 700; color: var(--text); font-size: 0.95rem;">
+            Net Sentiment: \(S = p_{\text{pos}} - p_{\text{neg}}\)
+          </div>
+          <div style="font-size: 0.82rem; color: var(--text-dim); margin-top: 4px;">
+            Bounded in \([-1.0, +1.0]\). Neutral probability dampens extreme swings without skewing directional bias.
+          </div>
+        </div>
+
+        <div class="nlp-metric-box">
+          <div style="font-family: var(--mono); font-weight: 700; color: var(--text); font-size: 0.95rem;">
+            Normalized Dispersion: \(H(P) = -\sum_{i} p_i \log_2(p_i) \;/\; \log_2(3)\)
+          </div>
+          <div style="font-size: 0.82rem; color: var(--text-dim); margin-top: 4px;">
+            Bounded in \([0.0, 1.0]\). \(H \approx 0\) represents total model certainty (unanimous consensus). \(H > 0.85\) flags maximum semantic conflict / ambiguous central bank signals.
+          </div>
+        </div>
+      </div>
+
+      <div class="nlp-card">
+        <span class="badge tone-warn" style="margin-bottom: 8px;">System 3 Guardian Link</span>
+        <h2 style="font-size: 1.25rem; margin: 8px 0 12px 0;">3. Risk Gate Integration (Stage G)</h2>
+        <p style="font-size: 0.88rem; color: var(--text-dim); line-height: 1.6;">
+          When FinBERT detects an active high-impact macro event with high dispersion (\(H > 0.85\)), System 3 AMS Guardian enacts an automated policy defense:
+        </p>
+        <ul style="padding-left: 20px; font-size: 0.88rem; color: var(--text-dim); line-height: 1.6;">
+          <li><strong>Pre-Event Freeze:</strong> Blocks all new breakout entries 15 minutes prior to scheduled Tier-1 release (CPI, NFP, Rate Decision).</li>
+          <li><strong>Spread Buffer Expansion:</strong> Doubles stop-loss slippage buffer to protect against liquidity vacuum wicks.</li>
+          <li><strong>Half-Kelly Sizing:</strong> Clamps unit sizing by 50% on existing trend continuation signals until post-release candle close.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Right Column: Interactive Simulator & Code Reference -->
+    <div>
+      <div class="nlp-card">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px;">
+          <h2 style="font-size: 1.25rem; margin: 0;">Interactive Inference Simulator</h2>
+          <span class="badge tone-accent">Client-Side Sim</span>
+        </div>
+        <p style="font-size: 0.86rem; color: var(--text-dim); margin-bottom: 14px;">
+          Select a sample central bank dispatch or enter custom text to test sentiment scoring and Shannon entropy calculations:
+        </p>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;">
+          <button type="button" class="erd-pill-btn" onclick="loadSample(0)">Dovish FOMC</button>
+          <button type="button" class="erd-pill-btn" onclick="loadSample(1)">Hawkish ECB</button>
+          <button type="button" class="erd-pill-btn" onclick="loadSample(2)">Conflicted / Ambiguous</button>
+        </div>
+
+        <textarea id="sim-text" rows="5" style="width: 100%; padding: 10px; font-family: var(--sans); font-size: 0.88rem; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); resize: vertical; box-sizing: border-box;"></textarea>
+
+        <button type="button" id="sim-run-btn" style="width: 100%; margin-top: 10px; padding: 10px; background: var(--accent); color: var(--on-accent); border: none; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer;">
+          Score Text & Calculate Dispersion
+        </button>
+
+        <div id="sim-results" style="margin-top: 18px; display: flex; flex-direction: column; gap: 10px;">
+          <div class="nlp-metric-box">
+            <div style="display: flex; justify-content: space-between; font-size: 0.84rem;">
+              <span>Net Sentiment Score:</span>
+              <strong id="res-score" style="font-family: var(--mono); font-size: 1rem;">+0.7420</strong>
+            </div>
+            <div class="nlp-gauge-bar">
+              <div id="res-gauge-sent" class="nlp-gauge-fill" style="width: 87%; background: var(--good);"></div>
+            </div>
+          </div>
+
+          <div class="nlp-metric-box">
+            <div style="display: flex; justify-content: space-between; font-size: 0.84rem;">
+              <span>Shannon Entropy (Dispersion):</span>
+              <strong id="res-disp" style="font-family: var(--mono); font-size: 1rem;">0.2140 (Certain)</strong>
+            </div>
+            <div class="nlp-gauge-bar">
+              <div id="res-gauge-disp" class="nlp-gauge-fill" style="width: 21%; background: var(--info);"></div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; margin-top: 6px;">
+            <div style="background: var(--bg-sunken); padding: 8px; border-radius: 4px; border: 1px solid var(--border);">
+              <div style="font-size: 0.7rem; color: var(--text-faint);">POSITIVE</div>
+              <div id="res-pos" style="font-family: var(--mono); font-weight: 700; color: var(--good); margin-top: 2px;">0.81</div>
+            </div>
+            <div style="background: var(--bg-sunken); padding: 8px; border-radius: 4px; border: 1px solid var(--border);">
+              <div style="font-size: 0.7rem; color: var(--text-faint);">NEUTRAL</div>
+              <div id="res-neu" style="font-family: var(--mono); font-weight: 700; color: var(--text-dim); margin-top: 2px;">0.12</div>
+            </div>
+            <div style="background: var(--bg-sunken); padding: 8px; border-radius: 4px; border: 1px solid var(--border);">
+              <div style="font-size: 0.7rem; color: var(--text-faint);">NEGATIVE</div>
+              <div id="res-neg" style="font-family: var(--mono); font-weight: 700; color: var(--bad); margin-top: 2px;">0.07</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nlp-card">
+        <h2 style="font-size: 1.15rem; margin: 0 0 10px 0;">Python Source Implementation</h2>
+        <p style="font-size: 0.82rem; color: var(--text-dim); margin-bottom: 10px;">
+          Direct excerpt from <code>systems/brain/src/nlp/finbert.py</code>:
+        </p>
+        <pre style="background: var(--bg-sunken); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; font-size: 0.76rem; overflow-x: auto; color: var(--text);"><code class="language-python"># Shannon entropy calculation normalized by log2(3)
+@staticmethod
+def _shannon_entropy(probs: np.ndarray) -> float:
+    probs = np.clip(probs, 1e-12, 1.0)
+    entropy = -np.sum(probs * np.log2(probs))
+    return entropy / MAX_ENTROPY
+
+# Sliding-window token chunking
+@staticmethod
+def _chunk_text(text: str, chunk_size: int = 450, overlap: int = 50) -> List[str]:
+    tokens = tokenizer.encode(text, add_special_tokens=False)
+    if len(tokens) <= chunk_size:
+        return [text]
+    chunks = []
+    for i in range(0, len(tokens), chunk_size - overlap):
+        chunk_tokens = tokens[i : i + chunk_size]
+        chunks.append(tokenizer.decode(chunk_tokens, skip_special_tokens=True))
+    return chunks</code></pre>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer id="site-footer"></footer>
+
+<script type="module">
+  import { mountChrome } from './assets/js/core.js';
+  mountChrome('finbert');
+
+  const SAMPLES = [
+    "Federal Reserve officials agreed that inflation has continued to cool toward the 2 percent target, creating scope for a reduction in the benchmark policy rate at coming meetings as labor market risks become more balanced.",
+    "The Governing Council remains determined to ensure inflation returns to its 2% medium-term target promptly, noting persistent underlying domestic wage pressures and rising commodity volatility that require elevated borrowing rates.",
+    "While recent economic indicators exhibit signs of decelerating aggregate demand, stubborn service-sector price momentum creates significant uncertainty regarding the appropriate policy path over the intermediate horizon."
+  ];
+
+  window.loadSample = function(idx) {
+    document.getElementById('sim-text').value = SAMPLES[idx];
+    runSim();
+  };
+
+  function runSim() {
+    const text = document.getElementById('sim-text').value.toLowerCase();
+    let pos = 0.1, neg = 0.1, neu = 0.8;
+
+    if (text.includes("cool") || text.includes("reduction") || text.includes("balanced") || text.includes("growth")) {
+      pos = 0.82; neg = 0.06; neu = 0.12;
+    } else if (text.includes("determined") || text.includes("pressures") || text.includes("elevated") || text.includes("stubborn")) {
+      pos = 0.08; neg = 0.79; neu = 0.13;
+    } else if (text.includes("uncertainty") || text.includes("decelerating") || text.includes("momentum")) {
+      pos = 0.35; neg = 0.40; neu = 0.25;
+    }
+
+    const sum = pos + neg + neu;
+    pos = pos / sum; neg = neg / sum; neu = neu / sum;
+
+    const sent = pos - neg;
+    const maxEnt = Math.log2(3);
+    const ent = -(pos * Math.log2(pos) + neg * Math.log2(neg) + neu * Math.log2(neu)) / maxEnt;
+
+    document.getElementById('res-score').textContent = (sent >= 0 ? "+" : "") + sent.toFixed(4);
+    document.getElementById('res-disp').textContent = ent.toFixed(4) + (ent > 0.75 ? " (Ambiguous ⚠️)" : " (Certain ✅)");
+    document.getElementById('res-pos').textContent = pos.toFixed(2);
+    document.getElementById('res-neu').textContent = neu.toFixed(2);
+    document.getElementById('res-neg').textContent = neg.toFixed(2);
+
+    const sentPct = Math.round(((sent + 1) / 2) * 100);
+    document.getElementById('res-gauge-sent').style.width = sentPct + "%";
+    document.getElementById('res-gauge-sent').style.background = sent >= 0 ? "var(--good)" : "var(--bad)";
+    document.getElementById('res-gauge-disp').style.width = Math.round(ent * 100) + "%";
+  }
+
+  document.getElementById('sim-run-btn')?.addEventListener('click', runSim);
+  loadSample(0);
+</script>
+</body>
+</html>
