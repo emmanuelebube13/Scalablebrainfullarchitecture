@@ -98,6 +98,8 @@ try {
     main.append(section('Deep-dive reading & research hubs', 'Complete system architecture at a glance',
       'Engineered for long-session reading and quantitative inspection across mobile, laptop, and desktop viewports.',
       el('div', { class: 'grid grid-3' },
+        link('telemetry-manual.html', 'Telemetry Operator Manual', 'Operations guide for Dashboard Cockpit, Strategy Panel, Incubator, Strategy House, and Risk Gate.'),
+        link('strategy-mechanics.html', 'Strategy Mechanics Manual', 'How each strategy works in general: math formulas, entry triggers, stop brackets, and regimes across 67 strategies.'),
         link('strategies.html', '67-Strategy Catalogue', 'Complete quantitative strategy pool with timeframe filters, indicators, win rates, and regime qualifications.'),
         link('data-dictionary.html', 'Data Dictionary v2', 'Detailed table schemas, column types, primary keys, and storage footprints across ams.db, system2.db, and Postgres.'),
         link('erd.html', 'Interactive ERD & Lineage', 'Visual schema canvas with pan/zoom, directed relationship flows, and entity details inspector.'),

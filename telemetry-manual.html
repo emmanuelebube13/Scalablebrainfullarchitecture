@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Telemetry Operator Manual — Scalable Brain</title>
+<meta name="description" content="Comprehensive operator manual for the Scalable Brain Telemetry Dashboard, covering the Dashboard Cockpit, Strategy Panel, Incubator, Strategy House, and Risk Gate.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/css/main.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕹️</text></svg>">
+<style>
+.manual-nav-sticky {
+  position: sticky; top: 60px; z-index: 30; background: var(--bg);
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between;
+}
+.manual-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.manual-pill {
+  padding: 6px 12px; border-radius: 9999px; background: var(--bg-surface);
+  border: 1px solid var(--border); color: var(--text-dim); font-size: 0.82rem;
+  font-weight: 600; text-decoration: none; transition: 0.15s ease;
+}
+.manual-pill:hover { color: var(--text); background: var(--bg-raised); border-color: var(--border-strong); text-decoration: none; }
+.manual-pill.active { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+
+.manual-card {
+  background: var(--bg-surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 24px; margin-bottom: 24px;
+}
+.manual-kpi-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 14px 0;
+}
+.manual-kpi-box {
+  background: var(--bg-sunken); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 14px;
+}
+.manual-kpi-label {
+  font-family: var(--mono); font-size: 0.72rem; text-transform: uppercase; color: var(--text-faint); letter-spacing: 0.05em;
+}
+.manual-kpi-val {
+  font-family: var(--mono); font-size: 1.05rem; font-weight: 700; color: var(--text); margin-top: 2px;
+}
+.manual-table {
+  width: 100%; border-collapse: collapse; font-size: 0.84rem; margin-top: 12px;
+}
+.manual-table th {
+  text-align: left; padding: 8px 10px; background: var(--bg-sunken);
+  border-bottom: 2px solid var(--border); font-family: var(--mono); font-size: 0.74rem; color: var(--text-faint);
+}
+.manual-table td {
+  padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top;
+}
+</style>
+</head>
+<body>
+<header id="site-header"></header>
+
+<main class="wrap">
+  <div class="page-head" style="margin-top: 24px;">
+    <span class="eyebrow">Operator Flight Manual · Layer 5 Telemetry</span>
+    <h1 style="margin: 8px 0 12px 0;">Telemetry Dashboard Operator Manual</h1>
+    <p class="lead" style="max-width: 860px; color: var(--text-dim); line-height: 1.6;">
+      Master reference manual for navigating and operating the Scalable Brain Telemetry trading console (Port 8050). Detailed breakdowns of the <strong>Dashboard Cockpit</strong>, <strong>Strategy Panel</strong>, <strong>Incubator Panel</strong>, <strong>Strategy House</strong>, and <strong>Risk Gate Console</strong>.
+    </p>
+  </div>
+
+  <!-- Sticky Nav Filter -->
+  <div class="manual-nav-sticky">
+    <div class="manual-pills">
+      <a href="#cockpit" class="manual-pill">1. Dashboard Cockpit</a>
+      <a href="#strategy-panel" class="manual-pill">2. Strategy Panel</a>
+      <a href="#incubator" class="manual-pill">3. Incubator Panel</a>
+      <a href="#strategy-house" class="manual-pill">4. Strategy House</a>
+      <a href="#risk-gate" class="manual-pill">5. Risk Gate Console</a>
+      <a href="#ops-checklist" class="manual-pill">6. Daily Runbook</a>
+    </div>
+    <div style="min-width: 220px;">
+      <input type="text" id="manual-search-input" placeholder="Search manual (e.g. FP-70, Kelly, Live Error)..." style="width: 100%; padding: 6px 12px; font-size: 0.84rem; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text);">
+    </div>
+  </div>
+
+  <!-- SECTION 1: DASHBOARD COCKPIT -->
+  <section id="cockpit" style="margin-top: 24px;">
+    <div class="manual-card">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
+        <h2 style="font-size: 1.35rem; margin: 0;">1. Dashboard Cockpit (`Overview.tsx`)</h2>
+        <span class="badge tone-accent">Active Trading Desk</span>
+      </div>
+      <p style="font-size: 0.88rem; color: var(--text-dim); line-height: 1.6; margin: 8px 0 16px 0;">
+        The primary operational screen. Acts as a low-scroll high-density cockpit displaying live positions, floating risk, execution progress, and direct 1-click candlestick charting without page reloads.
+      </p>
+
+      <h3 style="font-size: 1.05rem; margin: 16px 0 8px 0;">Key Elements & Controls:</h3>
+      <table class="manual-table">
+        <thead>
+          <tr>
+            <th style="width: 22%;">Component</th>
+            <th style="width: 38%;">Function & Meaning</th>
+            <th style="width: 40%;">Operator Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="font-weight: 700; color: var(--text);">Open Positions (Active Book)</td>
+            <td style="color: var(--text-dim);">Live inventory from <code>ams_open_positions</code> joined with S1 attribution. Shows Trade #, Pair, Dir, Strategy, Regime, Units, Entry/Current, SL↔TP progress, Risk @ SL, Live R, floating P&L, Financing, and Age.</td>
+            <td style="color: var(--text-dim);">Click <strong>&gt;</strong> to expand the 6-card inspector; click <strong>📈</strong> or Pair badge to open in-context candlestick chart modal.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 700; color: var(--text);">SL ↔ TP Progress Gauge</td>
+            <td style="color: var(--text-dim);">Compact visual progress bar tracking current mid-price relative to Stop Loss (left, red) and Take Profit (right, green).</td>
+            <td style="color: var(--text-dim);">If price approaches SL (&gt;85% to stop), monitor for potential stop slippage or impending exit.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 700; color: var(--text);">RISK AT SL Currency Toggle</td>
+            <td style="color: var(--text-dim);">Header toggle pill <code>[CAD | CCY | %]</code>. Converts quote currency stop distance into account base currency (CAD) using live mid rates.</td>
+            <td style="color: var(--text-dim);">Default to <strong>CAD</strong> to directly compare risk against floating P&L. Switch to <strong>%</strong> to verify that no position exceeds 1.5% NAV risk.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 700; color: var(--text);">Recent Trades (De-duplicated)</td>
+            <td style="color: var(--text-dim);">Execution history from <code>fact_live_trades</code>. Defaults to <strong>Closed</strong> trades only (with <code>[Closed | All]</code> toggle) so active inventory is not duplicated.</td>
+            <td style="color: var(--text-dim);">Inspect realized R-multiples, execution slippage, broker fees, and final exit reasons.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 700; color: var(--text);">6-Card Trade Inspector</td>
+            <td style="color: var(--text-dim);">Six diagnostic panels revealed upon expanding any row: <code>SIG</code> (Signal), <code>PLN</code> (Plan), <code>EXE</code> (Execution), <code>MKT</code> (Inline Chart), <code>P&L</code> (Live state), <code>GOV</code> (Active governance rules).</td>
+            <td style="color: var(--text-dim);">Use <code>GOV</code> to check if the trade is subject to the Friday 20:55 UTC weekend freeze or maximum age decay (&gt;5 days).</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 2: STRATEGY PANEL -->
+  <section id="strategy-panel" style="margin-top: 24px;">
+    <div class="manual-card">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
+        <h2 style="font-size: 1.35rem; margin: 0;">2. Strategy Panel (`Strategies.tsx`)</h2>
+        <span class="badge tone-s1">Model Roster vs Live Delta</span>
+      </div>
+      <p style="font-size: 0.88rem; color: var(--text-dim); line-height: 1.6; margin: 8px 0 16px 0;">
+        The Strategy Panel answers: <strong>How is each strategy performing in live broker execution compared to its out-of-sample backtest qualification?</strong>
+      </p>
+
+      <div class="manual-kpi-grid">
+        <div class="manual-kpi-box">
+          <div class="manual-kpi-label">MODEL SET ID</div>
+          <div class="manual-kpi-val" style="font-size: 0.9rem;">2026-08-24T01:34:06</div>
+          <div style="font-size: 0.76rem; color: var(--text-dim); margin-top: 4px;">Published model set currently running in System 1.</div>
+        </div>
+        <div class="manual-kpi-box">
+          <div class="manual-kpi-label">QUALIFICATION RUN ID</div>
+          <div class="manual-kpi-val" style="font-size: 0.9rem;">run_20260824_oos</div>
+          <div style="font-size: 0.76rem; color: var(--text-dim); margin-top: 4px;">Out-of-sample backtest identifier used to reconcile figures.</div>
+        </div>
+        <div class="manual-kpi-box">
+          <div class="manual-kpi-label">ROSTER DATA SOURCE</div>
+          <div class="manual-kpi-val" style="color: var(--good); font-size: 0.9rem;">GCS Model Store</div>
+          <div style="font-size: 0.76rem; color: var(--text-dim); margin-top: 4px;">System 1 published model artifact.</div>
+        </div>
+        <div class="manual-kpi-box">
+          <div class="manual-kpi-label">LIVE DATA SOURCE</div>
+          <div class="manual-kpi-val" style="color: var(--info); font-size: 0.9rem;">PostgreSQL / fact_live_trades</div>
+          <div style="font-size: 0.76rem; color: var(--text-dim); margin-top: 4px;">Broker execution ledger in active regime.</div>
+        </div>
+      </div>
+
+      <h3 style="font-size: 1.05rem; margin: 20px 0 8px 0;">How to Read the Strategy Cards:</h3>
+      <table class="manual-table">
+        <thead>
+          <tr>
+            <th style="width: 25%;">Column / Indicator</th>
+            <th style="width: 45%;">What It Measures</th>
+            <th style="width: 30%;">Operator Interpretation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="font-weight: 700; color: var(--text);">Backtest Column</td>
+            <td style="color: var(--text-dim);">Out-of-sample performance: Win Rate, Profit Factor (PF), Sharpe, Max Drawdown, and Sample Size ($N$).</td>
+            <td style="color: var(--text-dim);">Represents baseline mathematical expectation under historical walk-forward testing.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 700; color: var(--text);">Live Column</td>
+            <td style="color: var(--text-dim);">Actual demo/live performance in `fact_live_trades` filtered by that card's specific market regime. Shows net P&L per trade in CAD and initial risk $R$.</td>
+            <td style="color: var(--text-dim);">If $N < 10$, live sample size is too small for statistical certainty.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 700; color: var(--text);">Delta Indicator (Live vs OOS)</td>
+            <td style="color: var(--text-dim);">Percentage lift or decay between live expectancy and out-of-sample baseline.</td>
+            <td style="color: var(--text-dim);"><span style="color:var(--good); font-weight:700;">Green:</span> Outperforming backtest.<br><span style="color:var(--bad); font-weight:700;">Red:</span> Decay detected; candidate for quarantine.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 700; color: var(--warn);">Live Column Unavailable Banner</td>
+            <td style="color: var(--text-dim);">Displays when the database query to `fact_live_trades` fails while the GCS model set succeeds.</td>
+            <td style="color: var(--text-dim);">A database connection drop must never look like "zero live trades". Check PostgreSQL / SQLite service status.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 700; color: var(--bad);">Withdrawn Status</td>
+            <td style="color: var(--text-dim);">System 1 has explicitly retracted the model set due to an expired map or structural retraining.</td>
+            <td style="color: var(--text-dim);">Indicates an intentional decision, not an error. S1 will republish upon completion of weekly retraining.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 3: INCUBATOR PANEL -->
+  <section id="incubator" style="margin-top: 24px;">
+    <div class="manual-card">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
+        <h2 style="font-size: 1.35rem; margin: 0;">3. Incubator Panel (`Incubator.tsx`)</h2>
+        <span class="badge tone-s3">Shadow Forward-Testing Engine</span>
+      </div>
+      <p style="font-size: 0.88rem; color: var(--text-dim); line-height: 1.6; margin: 8px 0 16px 0;">
+        The Incubator tracks the <strong>Shadow Incubation Store (`shadow_incubator.db`)</strong>. New strategies and experimental variants execute in real-time simulation against streaming market data without risking account capital.
+      </p>
+
+      <h3 style="font-size: 1.05rem; margin: 16px 0 8px 0;">The Contender Tier Classification:</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 18px;">
+        <div style="background: var(--bg-sunken); padding: 14px; border-radius: var(--radius-sm); border-left: 4px solid var(--good);">
+          <div style="display: flex; justify-content: space-between;">
+            <strong style="color: var(--good);">Tier 1: Production Ready</strong>
+            <span class="badge tone-good">Graduation Candidate</span>
+          </div>
+          <p style="font-size: 0.82rem; color: var(--text-dim); margin: 6px 0 0 0; line-height: 1.4;">
+            $N \ge 30$ forward trades, Win Rate &gt; 50%, Expectancy $E[R] \ge +0.15\text{ R}$, $p_{\text{random}} &lt; 0.05$, and FP-70% &gt; 55%. Ready to be promoted into System 1 Factory.
+          </p>
+        </div>
+
+        <div style="background: var(--bg-sunken); padding: 14px; border-radius: var(--radius-sm); border-left: 4px solid var(--warn);">
+          <div style="display: flex; justify-content: space-between;">
+            <strong style="color: var(--warn);">Tier 2: Watchlist / Incubating</strong>
+            <span class="badge tone-warn">Collecting Evidence</span>
+          </div>
+          <p style="font-size: 0.82rem; color: var(--text-dim); margin: 6px 0 0 0; line-height: 1.4;">
+            Positive edge metrics but insufficient sample size ($N &lt; 30$) or slightly elevated p-value ($0.05 \le p &lt; 0.10$). Continues shadow execution.
+          </p>
+        </div>
+
+        <div style="background: var(--bg-sunken); padding: 14px; border-radius: var(--radius-sm); border-left: 4px solid var(--bad);">
+          <div style="display: flex; justify-content: space-between;">
+            <strong style="color: var(--bad);">Tier 3: Failing / Reject</strong>
+            <span class="badge tone-bad">Quarantined</span>
+          </div>
+          <p style="font-size: 0.82rem; color: var(--text-dim); margin: 6px 0 0 0; line-height: 1.4;">
+            Negative expectancy, $p_{\text{random}} \ge 0.10$, or FP-70% &lt; 40%. Quarantined or scheduled for deletion from the research lab.
+          </p>
+        </div>
+      </div>
+
+      <h3 style="font-size: 1.05rem; margin: 16px 0 8px 0;">Specialized Incubator Statistical Metrics:</h3>
+      <table class="manual-table">
+        <thead>
+          <tr>
+            <th style="width: 25%;">Metric Name</th>
+            <th style="width: 50%;">Mathematical Definition</th>
+            <th style="width: 25%;">Passing Threshold</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="font-weight: 700; color: var(--text);">FP-70% Rate (First Profit 70%)</td>
+            <td style="color: var(--text-dim);">Percentage of trades where floating profit touches at least <strong>+0.70 R</strong> before price touches the initial stop-loss barrier.</td>
+            <td style="font-family: var(--mono); color: var(--good); font-weight: 700;">&ge; 52.0%</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 700; color: var(--text);">p_random (Random Walk p-value)</td>
+            <td style="color: var(--text-dim);">Statistical hypothesis test measuring the probability that the observed win rate and profit distribution arose purely by random chance.</td>
+            <td style="font-family: var(--mono); color: var(--good); font-weight: 700;">&lt; 0.05 (95% confidence)</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 700; color: var(--text);">e_ratio_12b (12-Bar Edge Ratio)</td>
+            <td style="color: var(--text-dim);">Ratio of Maximum Favorable Excursion (MFE) to Maximum Adverse Excursion (MAE) measured across the first 12 bars after trade entry.</td>
+            <td style="font-family: var(--mono); color: var(--good); font-weight: 700;">&gt; 1.30</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 700; color: var(--text);">Locked Expectancy R</td>
+            <td style="color: var(--text-dim);">Theoretical expectancy if a trailing rule moved the stop-loss to breakeven immediately upon touching +1.0 R.</td>
+            <td style="font-family: var(--mono); color: var(--good); font-weight: 700;">&gt; +0.20 R</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 4: STRATEGY HOUSE -->
+  <section id="strategy-house" style="margin-top: 24px;">
+    <div class="manual-card">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
+        <h2 style="font-size: 1.35rem; margin: 0;">4. Strategy House (`StrategyHouse.tsx`)</h2>
+        <span class="badge tone-good">Repository & Architectural Reasoning</span>
+      </div>
+      <p style="font-size: 0.88rem; color: var(--text-dim); line-height: 1.6; margin: 8px 0 16px 0;">
+        Strategy House is the platform's definitive encyclopedia answering: <strong>What does each strategy do? How does it enter and exit? And why isn't it trading?</strong>
+      </p>
+
+      <h3 style="font-size: 1.05rem; margin: 16px 0 8px 0;">The Three Inviolable Design Rules:</h3>
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px;">
+        <div class="callout t-info">
+          <h4 style="margin: 0 0 4px 0;">Rule 1: An Empty List is Not an Answer</h4>
+          <p style="font-size: 0.85rem; line-height: 1.4; margin: 0;">
+            Rendering an empty list as a blank space asserts that "this strategy uses no indicators", which is a claim the code never made. Every absence names itself: <em>"no v2 module"</em>, <em>"not reported in registry"</em>, or <em>"no docstring available"</em>.
+          </p>
+        </div>
+        <div class="callout t-warn">
+          <h4 style="margin: 0 0 4px 0;">Rule 2: Sample Size Travels With the Headline</h4>
+          <p style="font-size: 0.85rem; line-height: 1.4; margin: 0;">
+            A strategy reporting Profit Factor 13.58 on 5 out-of-sample trades is statistical noise. Trade count ($N$) is rendered with equal visual weight beside Profit Factor and Win Rate.
+          </p>
+        </div>
+        <div class="callout t-good">
+          <h4 style="margin: 0 0 4px 0;">Rule 3: Age is a Reading, Not an Alarm</h4>
+          <p style="font-size: 0.85rem; line-height: 1.4; margin: 0;">
+            The catalogue republishes on vetting and retrain runs, not on an arbitrary clock. Catalogue age is displayed neutrally in gray, never flashing red as an alarm.
+          </p>
+        </div>
+      </div>
+
+      <h3 style="font-size: 1.05rem; margin: 16px 0 8px 0;">Operating Sub-Panels:</h3>
+      <table class="manual-table">
+        <thead>
+          <tr>
+            <th style="width: 25%;">Sub-Panel</th>
+            <th style="width: 45%;">Information Surfaced</th>
+            <th style="width: 30%;">Operator Benefit</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="font-weight: 700; color: var(--text);">Strategy Detail Drawer</td>
+            <td style="color: var(--text-dim);">Exact Python class, parameters (lookbacks, multipliers), indicators list, entry logic, exit logic, and qualified regimes.</td>
+            <td style="color: var(--text-dim);">Zero-ambiguity verification of mathematical rules without digging through Git repositories.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 700; color: var(--text);">Regime Coverage Matrix</td>
+            <td style="color: var(--text-dim);">Cross-tabulation showing which strategies are approved for each of the 4 structural regimes (Trending-Up, Trending-Down, Ranging, High-Vol).</td>
+            <td style="color: var(--text-dim);">Reveals portfolio blind spots (e.g., if no strategies are active during High-Vol chop).</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 700; color: var(--text);">Passed vs Failed Cells</td>
+            <td style="color: var(--text-dim);">Detailed log of why specific asset/timeframe pairings were rejected during out-of-sample vetting (e.g. max drawdown exceeded, trade count &lt; 10).</td>
+            <td style="color: var(--text-dim);">Prevents re-testing parameters that already failed empirical OOS gates.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 700; color: var(--text);">Parameter Lab</td>
+            <td style="color: var(--text-dim);">Interactive research tool simulating parameter tweaks (ATR multipliers, EMA spans) across historical bars.</td>
+            <td style="color: var(--text-dim);">Explore edge sensitivity and curve-fitting risks before staging into the Incubator.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 5: RISK GATE CONSOLE -->
+  <section id="risk-gate" style="margin-top: 24px;">
+    <div class="manual-card">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
+        <h2 style="font-size: 1.35rem; margin: 0;">5. Risk Gate Console (`Risk.tsx` / S3 Guardian)</h2>
+        <span class="badge tone-bad">Autonomous Capital Protection</span>
+      </div>
+      <p style="font-size: 0.88rem; color: var(--text-dim); line-height: 1.6; margin: 8px 0 16px 0;">
+        The Risk Gate Console monitors the 10-stage Guardian pipeline (Stages P&rarr;J). It enforces hard portfolio limits, True Net Currency Exposure, and circuit breaker health.
+      </p>
+
+      <h3 style="font-size: 1.05rem; margin: 16px 0 8px 0;">The 6 Compact KPI Cards (Row 1):</h3>
+      <div class="manual-kpi-grid">
+        <div class="manual-kpi-box">
+          <div class="manual-kpi-label">TOTAL RISK @ STOP (HEAT)</div>
+          <div class="manual-kpi-val" style="color: var(--warn);">CAD 818.45 (1.02% NAV)</div>
+          <div style="font-size: 0.76rem; color: var(--text-dim); margin-top: 4px;">Max cap: 30% NAV. Subtext: CHF 259 &bull; USD 162 &bull; JPY 17.3k.</div>
+        </div>
+        <div class="manual-kpi-box">
+          <div class="manual-kpi-label">OPEN SLOTS & STOP COVERAGE</div>
+          <div class="manual-kpi-val" style="color: var(--good);">10 / 10 Active (100% Covered)</div>
+          <div style="font-size: 0.76rem; color: var(--text-dim); margin-top: 4px;">Every open position has an immutable broker stop-loss in place.</div>
+        </div>
+        <div class="manual-kpi-box">
+          <div class="manual-kpi-label">NET EXPOSURE & MARGIN</div>
+          <div class="manual-kpi-val">9.1% Margin Used (1.66x Gross)</div>
+          <div style="font-size: 0.76rem; color: var(--text-dim); margin-top: 4px;">CAD 7,274 used margin &bull; CAD 132.4k notional exposure.</div>
+        </div>
+        <div class="manual-kpi-box">
+          <div class="manual-kpi-label">CIRCUIT BREAKER DISTANCE</div>
+          <div class="manual-kpi-val" style="color: var(--good);">-0.37% Today (Normal)</div>
+          <div style="font-size: 0.76rem; color: var(--text-dim); margin-top: 4px;">-CAD 294 realized vs -2.0% Soft Pause / -3.0% Hard Halt.</div>
+        </div>
+        <div class="manual-kpi-box">
+          <div class="manual-kpi-label">DRAWDOWN (NOW / MAX)</div>
+          <div class="manual-kpi-val">1.04% Now / 9.5% Max DD</div>
+          <div style="font-size: 0.76rem; color: var(--text-dim); margin-top: 4px;">High water mark: CAD 80,771 &bull; 11 max losing streak.</div>
+        </div>
+        <div class="manual-kpi-box">
+          <div class="manual-kpi-label">OPEN FINANCING DRAG</div>
+          <div class="manual-kpi-val" style="color: var(--text-dim);">-CAD 40.62</div>
+          <div style="font-size: 0.76rem; color: var(--text-dim); margin-top: 4px;">Cumulative overnight swap drag on active book.</div>
+        </div>
+      </div>
+
+      <h3 style="font-size: 1.05rem; margin: 20px 0 8px 0;">True Net Currency Exposure Panel:</h3>
+      <p style="font-size: 0.86rem; color: var(--text-dim); line-height: 1.5;">
+        Decomposes every position into base and quote components converted into account currency (CAD) to enforce a hard <strong>20% max correlated exposure limit</strong> (<code>max_correlated_exposure_pct</code>). Prevents hidden directional clusters (e.g. 6 Long-CHF positions).
+      </p>
+    </div>
+  </section>
+
+  <!-- SECTION 6: DAILY OPERATOR RUNBOOK -->
+  <section id="ops-checklist" style="margin-top: 24px; margin-bottom: 60px;">
+    <div class="manual-card">
+      <h2 style="font-size: 1.35rem; margin: 0 0 12px 0;">6. Operator Daily Rhythm & Runbook Checklist</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px;">
+        <div style="background: var(--bg-sunken); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+          <strong style="color: var(--accent);">Morning Inspection (07:00 UTC · London Open)</strong>
+          <ol style="margin: 8px 0 0 0; padding-left: 18px; font-size: 0.84rem; color: var(--text-dim); line-height: 1.5;">
+            <li>Check Dashboard Cockpit for open slot count (e.g. 8/10 or 10/10).</li>
+            <li>Verify all open positions have active Stop Loss coverage (100%).</li>
+            <li>Inspect Circuit Breaker distance (must be &gt; -1.5% NAV).</li>
+            <li>Review overnight swap charges in Financing column.</li>
+          </ol>
+        </div>
+
+        <div style="background: var(--bg-sunken); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+          <strong style="color: var(--good);">Midday Review (13:00 UTC · NY Overlap)</strong>
+          <ol style="margin: 8px 0 0 0; padding-left: 18px; font-size: 0.84rem; color: var(--text-dim); line-height: 1.5;">
+            <li>Verify live candle streaming in inline <code>MKT</code> panel.</li>
+            <li>Inspect True Net Currency Exposure for CHF, EUR, and USD clusters.</li>
+            <li>Review recent fills in Recent Trades for slippage anomalies (&gt;1.5 pips).</li>
+            <li>Check FinBERT calendar for impending high-impact FOMC/CPI releases.</li>
+          </ol>
+        </div>
+
+        <div style="background: var(--bg-sunken); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+          <strong style="color: var(--bad);">Friday Close Routine (20:45 UTC · Pre-Close)</strong>
+          <ol style="margin: 8px 0 0 0; padding-left: 18px; font-size: 0.84rem; color: var(--text-dim); line-height: 1.5;">
+            <li>Confirm Guardian enters FROZEN state at 20:55 UTC (zero new entries).</li>
+            <li>Verify swing positions carrying over the weekend have wide SL brackets.</li>
+            <li>Take manual backup snapshot of <code>ams.db</code> and <code>system2.db</code>.</li>
+            <li>Confirm supervisor daemon logs have rotated properly (&lt;50MB).</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer id="site-footer"></footer>
+
+<script type="module">
+  import { mountChrome } from './assets/js/core.js';
+  mountChrome('telemetry-manual');
+
+  const input = document.getElementById('manual-search-input');
+  if (input) {
+    input.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      document.querySelectorAll('.manual-card').forEach(card => {
+        card.style.display = card.textContent.toLowerCase().includes(q) ? '' : 'none';
+      });
+    });
+  }
+</script>
+</body>
+</html>

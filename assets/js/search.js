@@ -299,6 +299,8 @@ async function buildIndex() {
 
   /* Modernized Architecture Pages */
   const KEY_PAGES = [
+    { title: 'Telemetry Operator Manual', detail: 'Operations manual for Dashboard Cockpit, Strategy Panel, Incubator, Strategy House, and Risk Gate', url: 'telemetry-manual.html', search: 'telemetry manual cockpit strategy panel incubator strategy house risk gate fp-70 locked expectancy model set qualification run' },
+    { title: 'Strategy Mechanics & Behavior Manual', detail: 'How each strategy works in general, indicators, entry triggers, SL/TP brackets, and regimes across 67 strategies', url: 'strategy-mechanics.html', search: 'strategy mechanics behavior trend following mean reversion breakout liquidity sweep carry donchian precision swing' },
     { title: 'Interactive ERD & Lineage Canvas', detail: 'Visual schema topology, 17 production tables, and live execution lineage', url: 'erd.html', search: 'erd entity relationship data lineage schema tables foreign keys' },
     { title: 'FinBERT Macro Sentiment & Entropy Engine', detail: 'ProsusAI/FinBERT inference, Shannon entropy dispersion, and calendar gating', url: 'macro-finbert.html', search: 'finbert nlp sentiment shannon entropy chunking prosusai feds ecb macro' },
     { title: 'Forex Sessions & Guardian Time Rules', detail: 'Live UTC session clock, overlaps, Friday 20:55 freeze, Sunday buffer', url: 'market-sessions.html', search: 'forex sessions timezone utc hours sydney tokyo london new york rollover friday cutoff' },

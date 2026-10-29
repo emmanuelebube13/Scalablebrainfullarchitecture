@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Strategy Mechanics & Behavior Manual — Scalable Brain</title>
+<meta name="description" content="Comprehensive quantitative strategy manual explaining how each strategy works in general, indicator formulas, entry triggers, stop-loss bracketing, and regime qualification across the 67-strategy catalog.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/css/main.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+<style>
+.strat-nav-sticky {
+  position: sticky; top: 60px; z-index: 30; background: var(--bg);
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between;
+}
+.family-filter-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.fam-pill {
+  padding: 6px 12px; border-radius: 9999px; background: var(--bg-surface);
+  border: 1px solid var(--border); color: var(--text-dim); font-size: 0.82rem;
+  font-weight: 600; cursor: pointer; transition: 0.15s ease;
+}
+.fam-pill:hover { color: var(--text); background: var(--bg-raised); border-color: var(--border-strong); }
+.fam-pill.active { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+
+.strat-card {
+  background: var(--bg-surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 22px 24px; margin-bottom: 20px;
+}
+.strat-badge-grid {
+  display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 14px 0;
+}
+.rule-box {
+  background: var(--bg-sunken); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 14px; margin-top: 10px;
+}
+.rule-title {
+  font-family: var(--mono); font-size: 0.72rem; text-transform: uppercase; color: var(--text-faint); letter-spacing: 0.05em; margin-bottom: 4px;
+}
+.rule-content {
+  font-size: 0.85rem; color: var(--text); line-height: 1.5; font-family: var(--sans);
+}
+</style>
+</head>
+<body>
+<header id="site-header"></header>
+
+<main class="wrap">
+  <div class="page-head" style="margin-top: 24px;">
+    <span class="eyebrow">Quantitative Engine · 67 Strategies</span>
+    <h1 style="margin: 8px 0 12px 0;">Strategy Mechanics & Behavior Manual</h1>
+    <p class="lead" style="max-width: 860px; color: var(--text-dim); line-height: 1.6;">
+      Authoritative manual documenting <strong>how each strategy works in general</strong>. Detailed breakdowns of mathematical indicators, entry trigger logic, dynamic stop-loss/take-profit bracketing, and regime qualification across the six quantitative strategy families.
+    </p>
+  </div>
+
+  <!-- Sticky Family Nav & Instant Filter -->
+  <div class="strat-nav-sticky">
+    <div class="family-filter-pills" id="family-pills">
+      <button type="button" class="fam-pill active" data-family="all">All Families (67)</button>
+      <button type="button" class="fam-pill" data-family="trend">Trend-Following (31)</button>
+      <button type="button" class="fam-pill" data-family="mean-reversion">Mean-Reversion (9)</button>
+      <button type="button" class="fam-pill" data-family="breakout">Volatility Breakout (15)</button>
+      <button type="button" class="fam-pill" data-family="liquidity">Liquidity Sweeps (6)</button>
+      <button type="button" class="fam-pill" data-family="macro">Macro & Calendar (3)</button>
+      <button type="button" class="fam-pill" data-family="momentum">Momentum Divergence (3)</button>
+    </div>
+    <div style="min-width: 220px;">
+      <input type="text" id="strat-search" placeholder="Search strategy or indicator (e.g. ATR, EMA, RSI)..." style="width: 100%; padding: 6px 12px; font-size: 0.84rem; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text);">
+    </div>
+  </div>
+
+  <!-- FAMILY 1: TREND-FOLLOWING & DIRECTIONAL MOMENTUM -->
+  <section class="family-section" data-family="trend" style="margin-top: 24px;">
+    <div class="strat-card" style="border-left: 4px solid var(--good);">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
+        <h2 style="font-size: 1.35rem; margin: 0;">Family 1: Trend-Following & Directional Momentum (31 Strategies)</h2>
+        <span class="badge tone-good">Live Qualified Core</span>
+      </div>
+      <p style="font-size: 0.88rem; color: var(--text-dim); line-height: 1.6; margin: 8px 0 12px 0;">
+        <strong>The Economic Edge:</strong> FX exchange rates exhibit significant medium-term autocorrelation driven by macroeconomic interest-rate differentials and central bank monetary policy cycles. Trend strategies do not predict reversals; they capture the sustained meat of a multi-week macroeconomic move.
+      </p>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin: 14px 0;">
+        <div class="rule-box">
+          <div class="rule-title">MATHEMATICAL INDICATORS</div>
+          <div class="rule-content">
+            &bull; <strong>Fast/Slow Exponential Moving Averages:</strong> \(\text{EMA}_{50}\) and \(\text{EMA}_{200}\).<br>
+            &bull; <strong>Average Directional Index:</strong> \(\text{ADX}(14) > 25\) (ensures directional trend, filters chop).<br>
+            &bull; <strong>Average True Range (ATR):</strong> \(\text{ATR}(14)\) volatility normalization.
+          </div>
+        </div>
+        <div class="rule-box">
+          <div class="rule-title">ENTRY & BRACKETING MECHANICS</div>
+          <div class="rule-content">
+            &bull; <strong>Entry:</strong> Price pulls back to touch \(\text{EMA}_{50}\) while remaining strictly above \(\text{EMA}_{200}\) with bullish candle close.<br>
+            &bull; <strong>Stop Loss:</strong> Set structurally at \(\text{Swing Low} - 1.5 \times \text{ATR}(14)\).<br>
+            &bull; <strong>Take Profit:</strong> Trailed dynamically at \(2.5 \times \text{ATR}(14)\) or \(\text{EMA}_{200}\) touch.
+          </div>
+        </div>
+      </div>
+
+      <h4 style="font-size: 0.95rem; margin: 16px 0 8px 0;">Flagship Strategies in this Family:</h4>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <details class="rule-box" style="cursor: pointer;" open>
+          <summary style="font-weight: 700; color: var(--text);">#41 Precision Swing (`precision_swing@H4`) · Qualified Live ⭐</summary>
+          <div style="margin-top: 10px; font-size: 0.85rem; color: var(--text-dim); line-height: 1.5;">
+            <strong>Edge Thesis:</strong> Sweeps minor intraday swing highs/lows in the direction of the dominant H4 trend. Enters on structural retests with a strict 1.5x ATR stop.<br>
+            <strong>Regimes Approved:</strong> <code>Trending-Up</code>, <code>Trending-Down</code>.<br>
+            <strong>OOS Metrics:</strong> Win Rate 56.4%, Profit Factor 2.18, Max DD 8.2%.
+          </div>
+        </details>
+
+        <details class="rule-box" style="cursor: pointer;">
+          <summary style="font-weight: 700; color: var(--text);">#50 Strong/Weak Analysis (`strong_weak_analysis@H4`) · Qualified Live ⭐</summary>
+          <div style="margin-top: 10px; font-size: 0.85rem; color: var(--text-dim); line-height: 1.5;">
+            <strong>Edge Thesis:</strong> Decomposes the entire 8-currency universe (USD, EUR, GBP, JPY, AUD, CAD, CHF, NZD) and computes relative strength index rank. Systematically buys the strongest currency paired against the weakest currency.<br>
+            <strong>OOS Metrics:</strong> Win Rate 58.1%, Profit Factor 2.34.
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAMILY 2: MEAN-REVERSION & OSCILLATOR EXHAUSTION -->
+  <section class="family-section" data-family="mean-reversion" style="margin-top: 24px;">
+    <div class="strat-card" style="border-left: 4px solid var(--info);">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
+        <h2 style="font-size: 1.35rem; margin: 0;">Family 2: Mean-Reversion & Statistical Arbitrage (9 Strategies)</h2>
+        <span class="badge tone-info">Range-Bound Specialist</span>
+      </div>
+      <p style="font-size: 0.88rem; color: var(--text-dim); line-height: 1.6; margin: 8px 0 12px 0;">
+        <strong>The Economic Edge:</strong> Approximately 70% of foreign exchange trading sessions occur in non-trending, range-bound states. In these periods, price deviations beyond 2.0 standard deviations reflect transient liquidity exhaustion rather than genuine structural repricing.
+      </p>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin: 14px 0;">
+        <div class="rule-box">
+          <div class="rule-title">MATHEMATICAL INDICATORS</div>
+          <div class="rule-content">
+            &bull; <strong>Bollinger Bands:</strong> 20-period Simple Moving Average with \(\pm 2.2\) standard deviation bands.<br>
+            &bull; <strong>Relative Strength Index (RSI):</strong> \(\text{RSI}(14)\) with overbought (&gt;70) and oversold (&lt;30) zones.<br>
+            &bull; <strong>Stochastic Oscillator:</strong> \(\%K(14, 3, 3)\) crossover confirmation.
+          </div>
+        </div>
+        <div class="rule-box">
+          <div class="rule-title">ENTRY & BRACKETING MECHANICS</div>
+          <div class="rule-content">
+            &bull; <strong>Entry:</strong> Price pierces the outer Bollinger Band (\(+2.2\sigma\)), then prints a reversal candle closing back inside the band with RSI hook.<br>
+            &bull; <strong>Stop Loss:</strong> Fixed tight barrier at \(1.2 \times \text{ATR}(14)\) beyond the extreme wick.<br>
+            &bull; <strong>Take Profit:</strong> 20-period SMA Midline touch (high win-rate, quick turnover).
+          </div>
+        </div>
+      </div>
+
+      <h4 style="font-size: 0.95rem; margin: 16px 0 8px 0;">Flagship Strategies in this Family:</h4>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <details class="rule-box" style="cursor: pointer;" open>
+          <summary style="font-weight: 700; color: var(--text);">#13 Bollinger Midline Break (`bb_midline_break@H1`) · Qualified Live ⭐</summary>
+          <div style="margin-top: 10px; font-size: 0.85rem; color: var(--text-dim); line-height: 1.5;">
+            <strong>Edge Thesis:</strong> Enters after an overextended outer band pierce when momentum shifts and breaks the 20-period midline with volume expansion.<br>
+            <strong>Regimes Approved:</strong> <code>Ranging</code>, <code>Mean-Reverting</code>.<br>
+            <strong>OOS Metrics:</strong> Win Rate 64.2%, Profit Factor 1.84, Average Holding Time 6.4 hours.
+          </div>
+        </details>
+
+        <details class="rule-box" style="cursor: pointer;">
+          <summary style="font-weight: 700; color: var(--text);">#37 NZDJPY Median MA Retrace (`nzdjpy_median_ma_retrace@H1`) · Qualified Live ⭐</summary>
+          <div style="margin-top: 10px; font-size: 0.85rem; color: var(--text-dim); line-height: 1.5;">
+            <strong>Edge Thesis:</strong> Pair-specific statistical arbitrage exploiting NZD/JPY mean-reverting tendencies during the Asian and early London sessions.<br>
+            <strong>OOS Metrics:</strong> Win Rate 61.8%, Profit Factor 2.05.
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAMILY 3: VOLATILITY & RANGE BREAKOUT -->
+  <section class="family-section" data-family="breakout" style="margin-top: 24px;">
+    <div class="strat-card" style="border-left: 4px solid var(--accent);">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
+        <h2 style="font-size: 1.35rem; margin: 0;">Family 3: Volatility & Range Breakout (15 Strategies)</h2>
+        <span class="badge tone-accent">Expansion Specialist</span>
+      </div>
+      <p style="font-size: 0.88rem; color: var(--text-dim); line-height: 1.6; margin: 8px 0 12px 0;">
+        <strong>The Economic Edge:</strong> Volatility is cyclical. Protracted periods of tight price consolidation (low volatility compression) inevitably transition into explosive directional breakouts as resting order liquidity is triggered.
+      </p>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin: 14px 0;">
+        <div class="rule-box">
+          <div class="rule-title">MATHEMATICAL INDICATORS</div>
+          <div class="rule-content">
+            &bull; <strong>Donchian Channels:</strong> Highest High and Lowest Low over 20 and 55 periods.<br>
+            &bull; <strong>Keltner Channels & Bollinger Squeeze:</strong> BB width inside Keltner band signals compression.<br>
+            &bull; <strong>Historical Volatility Ratio:</strong> \(\frac{\text{ATR}(5)}{\text{ATR}(20)} < 0.70\) (identifies coiling).
+          </div>
+        </div>
+        <div class="rule-box">
+          <div class="rule-title">ENTRY & BRACKETING MECHANICS</div>
+          <div class="rule-content">
+            &bull; <strong>Entry:</strong> Price closes above the 20-period Donchian Upper Channel with ATR expansion.<br>
+            &bull; <strong>Stop Loss:</strong> Opposite 20-period Lower Channel or \(2.0 \times \text{ATR}(14)\).<br>
+            &bull; <strong>Take Profit:</strong> Asymmetric \(3.0 \times \text{ATR}(14)\) or parabolic trailing stop.
+          </div>
+        </div>
+      </div>
+
+      <h4 style="font-size: 0.95rem; margin: 16px 0 8px 0;">Flagship Strategies in this Family:</h4>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <details class="rule-box" style="cursor: pointer;" open>
+          <summary style="font-weight: 700; color: var(--text);">#17 Donchian Breakout (`donchian_breakout@H1`) · Active Shadow</summary>
+          <div style="margin-top: 10px; font-size: 0.85rem; color: var(--text-dim); line-height: 1.5;">
+            <strong>Edge Thesis:</strong> Classical trend-following breakout model updated with volatility filters. Enters on 20-period price extremes with trailing stops.<br>
+            <strong>Regimes Approved:</strong> <code>High-Vol</code>, <code>Trending-Up</code>, <code>Trending-Down</code>.<br>
+            <strong>OOS Metrics:</strong> Win Rate 44.5%, Profit Factor 1.95 (High R:R asymmetric payoff).
+          </div>
+        </details>
+
+        <details class="rule-box" style="cursor: pointer;">
+          <summary style="font-weight: 700; color: var(--text);">#26 Inside Bar Continuation (`inside_bar_continuation@H4`) · Pre-Registered Candidate</summary>
+          <div style="margin-top: 10px; font-size: 0.85rem; color: var(--text-dim); line-height: 1.5;">
+            <strong>Edge Thesis:</strong> Detects multi-bar compression where candle high and low remain completely submerged inside the previous mother candle range, then fires on directional break.<br>
+            <strong>OOS Metrics:</strong> Win Rate 52.0%, Profit Factor 1.88.
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAMILY 4: LIQUIDITY SWEEPS & STRUCTURAL LEVELS -->
+  <section class="family-section" data-family="liquidity" style="margin-top: 24px;">
+    <div class="strat-card" style="border-left: 4px solid var(--warn);">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
+        <h2 style="font-size: 1.35rem; margin: 0;">Family 4: Liquidity Sweeps & Structural Levels (6 Strategies)</h2>
+        <span class="badge tone-warn">Institutional Flow</span>
+      </div>
+      <p style="font-size: 0.88rem; color: var(--text-dim); line-height: 1.6; margin: 8px 0 12px 0;">
+        <strong>The Economic Edge:</strong> Retail breakout orders place clustered stop-losses just above obvious swing highs and below swing lows. Institutional market makers engineer liquidity sweeps through these levels to fill large institutional orders, followed by immediate price rejection.
+      </p>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin: 14px 0;">
+        <div class="rule-box">
+          <div class="rule-title">MATHEMATICAL INDICATORS</div>
+          <div class="rule-content">
+            &bull; <strong>Rolling High/Low Pivots:</strong> Prior 48-hour session highs and lows.<br>
+            &bull; <strong>Wick-to-Body Ratio:</strong> Candle wick must exceed 65% of total candle range.<br>
+            &bull; <strong>Volume Exhaustion:</strong> Tick volume spike exceeding \(1.8 \times \text{MA}(20)\).
+          </div>
+        </div>
+        <div class="rule-box">
+          <div class="rule-title">ENTRY & BRACKETING MECHANICS</div>
+          <div class="rule-content">
+            &bull; <strong>Entry:</strong> Price pierces prior 48h high by 5–15 pips, fails to close above, and prints a reversal pinbar closing back inside the range.<br>
+            &bull; <strong>Stop Loss:</strong> Placed 3 pips above the extreme rejection wick tip.<br>
+            &bull; <strong>Take Profit:</strong> Opposite side liquidity pool (previous swing low).
+          </div>
+        </div>
+      </div>
+
+      <h4 style="font-size: 0.95rem; margin: 16px 0 8px 0;">Flagship Strategies in this Family:</h4>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <details class="rule-box" style="cursor: pointer;" open>
+          <summary style="font-weight: 700; color: var(--text);">#30 Liquidity Sweep Reversal (`liquidity_sweep_reversal@H1`)</summary>
+          <div style="margin-top: 10px; font-size: 0.85rem; color: var(--text-dim); line-height: 1.5;">
+            <strong>Edge Thesis:</strong> Turtle Soup reversal pattern capitalizing on false breakout traps at London and NY session opens.<br>
+            <strong>Regimes Approved:</strong> <code>Ranging</code>, <code>High-Vol</code>.<br>
+            <strong>OOS Metrics:</strong> Win Rate 57.5%, Profit Factor 2.12.
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAMILY 5: MACRO, CARRY & CALENDAR ANOMALIES -->
+  <section class="family-section" data-family="macro" style="margin-top: 24px; margin-bottom: 60px;">
+    <div class="strat-card" style="border-left: 4px solid var(--s3);">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px;">
+        <h2 style="font-size: 1.35rem; margin: 0;">Family 5: Macro, Carry & Calendar Anomalies (3 Strategies)</h2>
+        <span class="badge tone-s3">Macro Intelligence</span>
+      </div>
+      <p style="font-size: 0.88rem; color: var(--text-dim); line-height: 1.6; margin: 8px 0 12px 0;">
+        <strong>The Economic Edge:</strong> Structural flows driven by central bank interest rate spreads (Carry Trade), post-FOMC policy drift, and month-end institutional portfolio rebalancing rules.
+      </p>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin: 14px 0;">
+        <div class="rule-box">
+          <div class="rule-title">MATHEMATICAL INDICATORS</div>
+          <div class="rule-content">
+            &bull; <strong>FinBERT Sentiment Score:</strong> \(S = p_{\text{pos}} - p_{\text{neg}} \in [-1, +1]\).<br>
+            &bull; <strong>Shannon Entropy Dispersion:</strong> \(H < 0.70\) (ensures high policy clarity).<br>
+            &bull; <strong>Interest Rate Differential:</strong> Yield spread between base and quote central banks.
+          </div>
+        </div>
+        <div class="rule-box">
+          <div class="rule-title">ENTRY & BRACKETING MECHANICS</div>
+          <div class="rule-content">
+            &bull; <strong>Entry:</strong> Fires 30 minutes after central bank statement release if FinBERT score confirms hawkish/dovish surprise with low dispersion.<br>
+            &bull; <strong>Holding Time:</strong> 24 to 48 hours to ride post-decision institutional asset allocation drift.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer id="site-footer"></footer>
+
+<script type="module">
+  import { mountChrome } from './assets/js/core.js';
+  mountChrome('strategy-mechanics');
+
+  // Filter Pills logic
+  const pills = document.querySelectorAll('.fam-pill');
+  const sections = document.querySelectorAll('.family-section');
+
+  pills.forEach(p => {
+    p.addEventListener('click', () => {
+      pills.forEach(b => b.classList.remove('active'));
+      p.classList.add('active');
+      const fam = p.dataset.family;
+
+      sections.forEach(sec => {
+        if (fam === 'all' || sec.dataset.family === fam) {
+          sec.style.display = '';
+        } else {
+          sec.style.display = 'none';
+        }
+      });
+    });
+  });
+
+  // Search logic
+  const searchInput = document.getElementById('strat-search');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      document.querySelectorAll('.rule-box, .strat-card').forEach(box => {
+        box.style.display = box.textContent.toLowerCase().includes(q) ? '' : 'none';
+      });
+    });
+  }
+</script>
+</body>
+</html>
