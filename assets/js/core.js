@@ -186,6 +186,7 @@ const NAV_GROUPS = [
     label: 'Strategies',
     items: [
       ['strategies.html',           '67-Strategy Catalog','strategies'],
+      ['strategy-mechanics.html',   'Strategy Mechanics', 'strategy-mechanics'],
       ['research.html',             'Research & Kelly',  'research'],
       ['macro-finbert.html',        'FinBERT Macro NLP', 'finbert'],
       ['edge-exploration.html',     'Edge Exploration',  'edge'],
@@ -202,6 +203,7 @@ const NAV_GROUPS = [
   {
     label: 'Operations',
     items: [
+      ['telemetry-manual.html',     'Telemetry Manual',  'telemetry-manual'],
       ['market-sessions.html',      'Forex Sessions',    'sessions'],
       ['week.html',                 'Weekly Plan',       'week'],
       ['goals.html',                'Goals & Tasks',     'goals'],
