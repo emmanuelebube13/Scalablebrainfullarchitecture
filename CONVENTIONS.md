@@ -7,7 +7,8 @@
 ---
 
 > **Design:** every page — and every screen in any ScalableBrain codebase — follows
-> [`DESIGN-SYSTEM.md`](DESIGN-SYSTEM.md) (fonts, colour tokens, components, mobile rules).
+> the design governance in [`design/`](design/README.md): the rule book, the interaction and
+> honesty rules, and the definition of done.
 
 ## 0. The one rule
 

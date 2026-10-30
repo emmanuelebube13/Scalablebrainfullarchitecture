@@ -297,8 +297,10 @@
         {
           "id": "W44-FRI-16",
           "system": "ops",
-          "status": "todo",
-          "title": "Owner, elevated PowerShell: `taskkill /F /T /PID 7296` (the orphaned downloader) — then the supervisor's own copy starts within 2 min and the bell posts 'Resolved'."
+          "status": "done",
+          "title": "Owner, elevated PowerShell: `taskkill /F /T /PID 7296` (the orphaned downloader) — then the supervisor's own copy starts within 2 min and the bell posts 'Resolved'.",
+          "done_at": "2026-10-30",
+          "note": "Owner ran it; the supervisor's own downloader started 07:59 local and has stayed up."
         },
         {
           "id": "W44-FRI-17",
