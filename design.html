@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design system — Scalable Brain</title>
+<meta name="description" content="The ScalableBrain design system, rendered from the live tokens: colours in both themes, the type scale and the shared components.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/css/main.css">
+<link rel="stylesheet" href="assets/css/design.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header id="site-header"></header>
+
+<main id="main">
+  <section class="hero">
+    <div class="wrap">
+      <div class="eyebrow">Design governance</div>
+      <h1>Design system</h1>
+      <p class="lede">One set of rules for the dashboard, the control panel and this site. Every colour below is read
+        from the live <code>tokens.css</code> at the moment you view it, so if a swatch is wrong here, it is wrong everywhere.
+        Switch the theme in the header: every swatch changes with it.</p>
+      <p>The rules themselves: <a href="design/DESIGN-SYSTEM.md">the rule book</a> ·
+        <a href="design/DECISIONS.md">decisions log</a> · <a href="design/README.md">governance index</a>.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker">Colour</span>
+        <h2>Meaning: one meaning per colour</h2>
+        <p>Never colour alone: every status is icon + word + colour. Direction (long / short) is not an outcome and is
+          shown as a glyph and word in text colour.</p>
+      </div>
+      <div class="ds-swatches" data-group="meaning"></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker">Colour</span>
+        <h2>Surfaces, text and lines</h2>
+      </div>
+      <div class="ds-swatches" data-group="surfaces"></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker">Colour</span>
+        <h2>System identity</h2>
+        <p>A small dot or 2 px bar beside the system's name, never a status.</p>
+      </div>
+      <div class="ds-swatches" data-group="identity"></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker">Type</span>
+        <h2>IBM Plex Sans and IBM Plex Mono, nothing else</h2>
+        <p>Numbers, prices, ids and times are always Plex Mono with tabular figures. 11 px is the floor.</p>
+      </div>
+      <div class="ds-type">
+        <div><span class="ds-meta">Page title · 24 / 32 · 600</span><p class="ds-t-page">Risk gate paused</p></div>
+        <div><span class="ds-meta">Section title · 18 / 26 · 600</span><p class="ds-t-section">Recent decisions</p></div>
+        <div><span class="ds-meta">Card title · 14 / 20 · 600</span><p class="ds-t-card">System 2 · execution</p></div>
+        <div><span class="ds-meta">Body · 14 / 20 · 400</span><p class="ds-t-body">System 3 paused by operator at 22:07 UTC. Resume when ready.</p></div>
+        <div><span class="ds-meta">Small / meta · 12 / 16 · 500</span><p class="ds-t-small">updated 4 s ago</p></div>
+        <div><span class="ds-meta">KPI value · Plex Mono 28 / 34 · 500</span><p class="ds-t-kpi">79,724.48 CAD</p></div>
+        <div><span class="ds-meta">Numbers · Plex Mono, tabular</span><p class="ds-t-mono">1.11655 · −0.67R · 2026-10-30 17:19 UTC</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="kicker">Components</span>
+        <h2>The same building blocks everywhere</h2>
+      </div>
+      <div class="ds-components">
+        <div class="ds-card">
+          <h4>Status pills</h4>
+          <p class="ds-row">
+            <span class="ds-pill good">● OK</span>
+            <span class="ds-pill warn">▲ Warn</span>
+            <span class="ds-pill bad">✕ Fault</span>
+            <span class="ds-pill neutral">○ Unknown</span>
+          </p>
+        </div>
+        <div class="ds-card">
+          <h4>KPI tile</h4>
+          <div class="ds-kpi">
+            <span class="ds-meta">Risk at stop</span>
+            <span class="ds-t-kpi">401.93 CAD</span>
+            <span class="ds-meta">0.50% of NAV · 4 open</span>
+          </div>
+        </div>
+        <div class="ds-card">
+          <h4>A red state with its fix</h4>
+          <p class="ds-row"><span class="ds-pill bad">✕ Fault</span> Execution: exec_mode is HALTED</p>
+          <p><a class="ds-fix" href="#">Resume in control panel →</a></p>
+          <p class="ds-meta">Rule 6: every red state says how to fix it.</p>
+        </div>
+        <div class="ds-card">
+          <h4>Absent is absent</h4>
+          <p class="ds-row"><span class="ds-t-mono">—</span> <span class="ds-meta">System 3 has not reported today's P&amp;L</span></p>
+          <p class="ds-meta">A missing number is "—" with the reason, never 0 and never a default.</p>
+        </div>
+        <div class="ds-card">
+          <h4>Direction vs outcome</h4>
+          <p class="ds-row ds-t-mono"><span>▲ LONG</span> <span class="ds-good">+124.33 CAD</span></p>
+          <p class="ds-row ds-t-mono"><span>▼ SHORT</span> <span class="ds-bad">−33.90 CAD</span></p>
+          <p class="ds-meta">Only the result is coloured (DD-003); money is code-after with a true minus (DD-009).</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer id="site-footer"></footer>
+<script type="module" src="assets/js/design.js"></script>
+</body>
+</html>

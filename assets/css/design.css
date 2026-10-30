@@ -1,0 +1,40 @@
+/* design.html: the design system rendered from the live tokens. Colours come only from
+   tokens.css (read as rgb(var(--token)) on :root names or through main.css's body aliases). */
+
+.ds-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+.ds-swatch { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--panel); }
+.ds-chip { height: 56px; border-bottom: 1px solid var(--border); }
+.ds-swatch-body { padding: 10px 12px; display: grid; gap: 2px; }
+.ds-swatch-name { font-family: var(--mono); font-size: 0.85rem; font-weight: 500; color: var(--text); }
+.ds-swatch-value { font-family: var(--mono); font-size: 0.75rem; color: var(--text-dim); }
+.ds-swatch-use { font-size: 0.8rem; color: var(--text-dim); }
+
+.ds-type { display: grid; gap: 14px; }
+.ds-type p { margin: 2px 0 0; }
+.ds-meta { font-size: 12px; line-height: 16px; font-weight: 500; color: var(--text-dim); }
+.ds-t-page { font-size: 24px; line-height: 32px; font-weight: 600; }
+.ds-t-section { font-size: 18px; line-height: 26px; font-weight: 600; }
+.ds-t-card { font-size: 14px; line-height: 20px; font-weight: 600; }
+.ds-t-body { font-size: 14px; line-height: 20px; }
+.ds-t-small { font-size: 12px; line-height: 16px; font-weight: 500; color: var(--text-dim); }
+.ds-t-kpi { font-family: var(--mono); font-size: 28px; line-height: 34px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.ds-t-mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+.ds-components { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.ds-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+.ds-card h4 { margin-bottom: 10px; }
+.ds-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 6px; }
+.ds-kpi { display: grid; gap: 2px; }
+
+.ds-pill { display: inline-flex; align-items: center; gap: 4px; border: 1px solid; border-radius: 999px;
+  padding: 1px 10px; font-size: 12px; font-weight: 600; }
+.ds-pill.good    { color: var(--good); background: color-mix(in srgb, var(--good) 10%, transparent); border-color: color-mix(in srgb, var(--good) 30%, transparent); }
+.ds-pill.warn    { color: var(--warn); background: color-mix(in srgb, var(--warn) 10%, transparent); border-color: color-mix(in srgb, var(--warn) 30%, transparent); }
+.ds-pill.bad     { color: var(--bad);  background: color-mix(in srgb, var(--bad) 10%, transparent);  border-color: color-mix(in srgb, var(--bad) 30%, transparent); }
+.ds-pill.neutral { color: var(--text-dim); background: var(--bg-raised); border-color: var(--border); }
+.ds-good { color: var(--good); }
+.ds-bad { color: var(--bad); }
+.ds-fix { display: inline-flex; align-items: center; min-height: 36px; padding: 0 12px; border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent); color: var(--accent); font-weight: 600; }
+.ds-fix:hover { text-decoration: none; background: color-mix(in srgb, var(--accent) 20%, transparent); }

@@ -17,9 +17,10 @@ const BRANCH = 'main';
 const TOKEN_KEY = 'sb.ghToken';
 
 const SYSTEM_TAGS = {
-  'system-1': { label: 'S1 Brain',    color: '#e8a830' },
-  'system-2': { label: 'S2 Hand',     color: '#52c97e' },
-  'system-3': { label: 'S3 Guardian', color: '#a078f0' },
+  // System identity colours from the design tokens (DESIGN-SYSTEM.md §3.3), so they follow the theme.
+  'system-1': { label: 'S1 Brain',    color: 'var(--s1)' },
+  'system-2': { label: 'S2 Hand',     color: 'var(--s2)' },
+  'system-3': { label: 'S3 Guardian', color: 'var(--s3)' },
   ops:        { label: 'Ops',         color: 'var(--text-dim)' },
 };
 const STATUS_LABEL = { blocked: 'Blocked', moved: 'Moved' };

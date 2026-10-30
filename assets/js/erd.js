@@ -554,9 +554,9 @@ function renderCanvas() {
       <rect x="${x}" y="${y}" width="230" height="30" rx="8" fill="${c.header}"/>
       <text x="${x + 10}" y="${y + 20}" font-family="'JetBrains Mono', monospace" font-size="11.5" font-weight="700" fill="var(--text)">${t.name}</text>
       <rect x="${x + 155}" y="${y + 6}" width="65" height="18" rx="4" fill="${c.stroke}"/>
-      <text x="${x + 187}" y="${y + 18}" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5" font-weight="700" fill="#ffffff">${tag}</text>
+      <text x="${x + 187}" y="${y + 18}" text-anchor="middle" font-family="'IBM Plex Sans', sans-serif" font-size="8.5" font-weight="700" fill="#ffffff">${tag}</text>
       <text x="${x + 10}" y="${y + 50}" font-family="'JetBrains Mono', monospace" font-size="10" fill="var(--text-dim)">PK: ${pkPreview}</text>
-      <text x="${x + 10}" y="${y + 70}" font-family="'Plus Jakarta Sans', sans-serif" font-size="10" fill="var(--text-faint)">${t.stageLabel}</text>
+      <text x="${x + 10}" y="${y + 70}" font-family="'IBM Plex Sans', sans-serif" font-size="10" fill="var(--text-faint)">${t.stageLabel}</text>
       <text x="${x + 10}" y="${y + 92}" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="700" fill="${c.stroke}">${t.rows.toLocaleString()} rows · ${t.size}</text>
     `;
     svgGroup.appendChild(g);
