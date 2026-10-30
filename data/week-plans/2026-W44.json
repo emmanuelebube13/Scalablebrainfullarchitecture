@@ -133,8 +133,9 @@
         {
           "id": "W44-WED-2",
           "system": "system-1",
-          "status": "todo",
-          "title": "Collect past FOMC statements (free, from the Fed) and score them: hawk/dove plus probabilities"
+          "status": "done",
+          "title": "Collect past FOMC statements (free, from the Fed) and score them: hawk/dove plus probabilities",
+          "done_at": "2026-10-30"
         },
         {
           "id": "W44-WED-3",
