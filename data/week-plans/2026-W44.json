@@ -126,8 +126,9 @@
         {
           "id": "W44-WED-1",
           "system": "system-1",
-          "status": "todo",
-          "title": "Download the FinBERT weights and run it from `venv-s1` (no pip installs)"
+          "status": "done",
+          "title": "Download the FinBERT weights and run it from `venv-s1` (no pip installs)",
+          "done_at": "2026-10-30"
         },
         {
           "id": "W44-WED-2",
