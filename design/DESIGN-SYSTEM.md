@@ -61,7 +61,13 @@ pass is [`DEFINITION-OF-DONE.md`](DEFINITION-OF-DONE.md); why each choice was ma
 | Numbers, prices, ids, times | IBM Plex Mono | same as context | 400–500 | Always `font-variant-numeric: tabular-nums` |
 | KPI value | IBM Plex Mono | 28 / 34 px | 500 | One per tile |
 
-- Load once: `https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap`
+- **Self-hosted, not Google Fonts** (DD-012): the control panel must work with no internet, so
+  both apps ship the font files. Each app has a byte-identical `src/styles/plex.css` (three
+  `@font-face` rules) and `src/styles/fonts/` (Plex Sans variable 400–600 + Plex Mono 400 and
+  500, Latin subset, about 75 KB in total). Import `plex.css`, never a Google Fonts URL. The
+  reading site may keep the Google URL
+  `https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap`
+  because it is only ever read online.
 - Fallback stacks: `"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif` and
   `"IBM Plex Mono", ui-monospace, "Cascadia Code", Consolas, monospace`.
 - **Banned:** Inter, Space Grotesk, Instrument Serif, JetBrains Mono, any serif, `font-style: italic`
