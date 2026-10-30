@@ -95,30 +95,34 @@
         {
           "id": "W44-TUE-2",
           "system": "system-1",
-          "status": "todo",
+          "status": "done",
           "title": "Register inside_bar_continuation as a fresh pre-registered test, not a candidate",
-          "note": "Done: card H-20261027-01 REGISTERED (locked rules, 5 majors, H4, trend-gated). No backtest yet - correct for this task."
+          "note": "Done: card H-20261027-01 REGISTERED (locked rules, 5 majors, H4, trend-gated). No backtest yet - correct for this task.",
+          "done_at": "2026-10-30"
         },
         {
           "id": "W44-TUE-3",
           "system": "system-1",
-          "status": "todo",
+          "status": "done",
           "title": "Prepare the month-end card (H-04) to observe Friday's month-end",
-          "note": "Card H-04 registered (trial #35). The observer only printed a prediction; fixed 10-30 (dev 344e72c): --measure reads OANDA M1 bid/ask after the event, one-off task runs 18:30 local tonight. Test on 09-30: prediction wrong (USD +14.9 bps), no fix-spread spike."
+          "note": "Card H-04 registered (trial #35). The observer only printed a prediction; fixed 10-30 (dev 344e72c): --measure reads OANDA M1 bid/ask after the event, one-off task runs 18:30 local tonight. Test on 09-30: prediction wrong (USD +14.9 bps), no fix-spread spike.",
+          "done_at": "2026-10-30"
         },
         {
           "id": "W44-TUE-4",
           "system": "system-1",
-          "status": "todo",
+          "status": "done",
           "title": "Pre-register exactly what post_fomc_drift should do after Wednesday's decision",
-          "note": "Not a valid pre-registration: written after the 10-28 decision and contains the outcome. Correction appended: hold is 48 h (card + code), not 23 h. Describes the trade; the locked rule is card H-20261023-13."
+          "note": "Not a valid pre-registration: written after the 10-28 decision and contains the outcome. Correction appended: hold is 48 h (card + code), not 23 h. Describes the trade; the locked rule is card H-20261023-13.",
+          "done_at": "2026-10-30"
         },
         {
           "id": "W44-TUE-5",
           "system": "system-1",
-          "status": "todo",
+          "status": "done",
           "title": "Brief: \"making an edge\" — a diversified book of weak signals, and what it can realistically show by December",
-          "note": "Done: BRIEF-making-an-edge-by-december.md - weak-signal book, matches ADR-003."
+          "note": "Done: BRIEF-making-an-edge-by-december.md - weak-signal book, matches ADR-003.",
+          "done_at": "2026-10-30"
         }
       ]
     },
