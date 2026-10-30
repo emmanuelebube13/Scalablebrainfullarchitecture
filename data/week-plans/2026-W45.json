@@ -237,6 +237,13 @@
           "title": "Tone strategy hold: apply W45-D1",
           "done_at": "2026-10-30",
           "note": "Card H-20261018-14 clarified by an appended, dated section (dev b50ae6a); frozen fields untouched."
+        },
+        {
+          "id": "W45-FRI-6",
+          "system": "ops",
+          "status": "todo",
+          "title": "Owner: review ADR-004 (trade health) and answer D1 (overdue trades get a notice?) and D2 (hide verdict where the rule does not help?)",
+          "note": "dev systems/brain docs/design/ADR-004-trade-health-keep-or-close.md"
         }
       ]
     },
@@ -312,11 +319,11 @@
     },
     {
       "week": "2026-W46",
-      "target": "Timed exits on prod practice; FOMC intraday scorer live; asset-chart audit fixes; private phone-push channel"
+      "target": "Timed exits on prod practice; FOMC intraday scorer live; asset-chart audit fixes; private phone-push channel; trade health P1-P2 (continuation tables from backtest paths; advice rule registered and backtested)"
     },
     {
       "week": "2026-W47",
-      "target": "LLM operator phase 1 (message the system from anywhere); two weeks of clean parity; design sweep complete; demo-to-live checklist closed"
+      "target": "LLM operator phase 1 (message the system from anywhere); two weeks of clean parity; design sweep complete; demo-to-live checklist closed; trade health P3-P4 (bridge engine on per-strategy plans, Trades-view panel, advice log)"
     },
     {
       "week": "2026-W48",

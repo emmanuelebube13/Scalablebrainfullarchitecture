@@ -324,6 +324,46 @@
           "status": "done",
           "title": "Design rule book (DESIGN-SYSTEM.md) and the redesign brief for a UI agent (dev-umbrella/docs/design/REDESIGN-BRIEF-2026-10-30.md).",
           "done_at": "2026-10-30"
+        },
+        {
+          "id": "W44-FRI-18",
+          "system": "system-2",
+          "status": "done",
+          "title": "Trade-health engine (bridge/trade_diagnostics.py) switched to ADVICE ONLY - bell notices, no automatic close/tighten (owner decision)",
+          "done_at": "2026-10-30",
+          "note": "Live 17:34 UTC: TRADE_DIAG_AUTO_COMMANDS unset = advise. Test test_default_is_advise_only. Engine file is another session's, still uncommitted in prod/repo."
+        },
+        {
+          "id": "W44-FRI-19",
+          "system": "ops",
+          "status": "done",
+          "title": "Incubator: remove made-up numbers; promoted expectancy/lift/cells computed from the scorecard",
+          "done_at": "2026-10-30",
+          "note": "Were constants +0.161 R / +30.7% / 4; the scorecard says -0.168 R / -1.9% / 22. Umbrella 335c51a; ships with the next dashboard build + restart (design agent is building in prod)."
+        },
+        {
+          "id": "W44-FRI-20",
+          "system": "ops",
+          "status": "done",
+          "title": "Open positions: no diagnosis shows a dash, not 'HEALTHY 100'",
+          "done_at": "2026-10-30",
+          "note": "Umbrella 335c51a; same deploy note."
+        },
+        {
+          "id": "W44-FRI-21",
+          "system": "ops",
+          "status": "done",
+          "title": "Lock break-even approved by owner; endpoint refuses to widen a stop or invent risk",
+          "done_at": "2026-10-30",
+          "note": "CLAUDE.md invariant 8; umbrella 4abf856."
+        },
+        {
+          "id": "W44-FRI-22",
+          "system": "system-1",
+          "status": "done",
+          "title": "ADR-004 trade health: judge an open trade against its own strategy's history (proposed)",
+          "done_at": "2026-10-30",
+          "note": "dev 480e226. P1-P4 scheduled W46-W47."
         }
       ]
     },
