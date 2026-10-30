@@ -66,6 +66,13 @@
           "title": "Confirm the S2 downloader crash loop is gone (after the elevated kill) and the bell posted 'Resolved'",
           "done_at": "2026-10-30",
           "note": "Verified 2026-10-30 after the owner's elevated kill: downloader up since 07:59 local, no exits."
+        },
+        {
+          "id": "W45-MON-6",
+          "system": "system-1",
+          "status": "todo",
+          "title": "Read the 10-30 month-end measurement (results/research/month_end/2026-10-30.json) and append it to card H-04's results; check vol_managed_carry's first rebalance (10-30 close) appeared in replay and the post_fomc_drift GBP/JPY timed exits closed in research.forward_trade",
+          "note": "Follow-up from the W44 Tuesday review (dev 344e72c). Then delete the one-off task 'SB research - month-end measure 2026-10-30'."
         }
       ]
     },

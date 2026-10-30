@@ -89,31 +89,36 @@
           "system": "system-1",
           "status": "done",
           "title": "Review the SHADOW forward records for carry, post-FOMC drift and the committee",
-          "done_at": "2026-10-30"
+          "done_at": "2026-10-30",
+          "note": "Corrected 10-30 (dev 344e72c): the record (research.forward_trade) replaces the report's replay numbers. post_fomc_drift -2.02 R on 2 closed legs (2 open to 10-30 19:00 UTC); weak_voters_committee +1.21 R (1 open). vol_managed_carry has no trades yet: it is a month-end basket, first rebalance 10-30."
         },
         {
           "id": "W44-TUE-2",
           "system": "system-1",
           "status": "todo",
-          "title": "Register inside_bar_continuation as a fresh pre-registered test, not a candidate"
+          "title": "Register inside_bar_continuation as a fresh pre-registered test, not a candidate",
+          "note": "Done: card H-20261027-01 REGISTERED (locked rules, 5 majors, H4, trend-gated). No backtest yet - correct for this task."
         },
         {
           "id": "W44-TUE-3",
           "system": "system-1",
           "status": "todo",
-          "title": "Prepare the month-end card (H-04) to observe Friday's month-end"
+          "title": "Prepare the month-end card (H-04) to observe Friday's month-end",
+          "note": "Card H-04 registered (trial #35). The observer only printed a prediction; fixed 10-30 (dev 344e72c): --measure reads OANDA M1 bid/ask after the event, one-off task runs 18:30 local tonight. Test on 09-30: prediction wrong (USD +14.9 bps), no fix-spread spike."
         },
         {
           "id": "W44-TUE-4",
           "system": "system-1",
           "status": "todo",
-          "title": "Pre-register exactly what post_fomc_drift should do after Wednesday's decision"
+          "title": "Pre-register exactly what post_fomc_drift should do after Wednesday's decision",
+          "note": "Not a valid pre-registration: written after the 10-28 decision and contains the outcome. Correction appended: hold is 48 h (card + code), not 23 h. Describes the trade; the locked rule is card H-20261023-13."
         },
         {
           "id": "W44-TUE-5",
           "system": "system-1",
           "status": "todo",
-          "title": "Brief: \"making an edge\" — a diversified book of weak signals, and what it can realistically show by December"
+          "title": "Brief: \"making an edge\" — a diversified book of weak signals, and what it can realistically show by December",
+          "note": "Done: BRIEF-making-an-edge-by-december.md - weak-signal book, matches ADR-003."
         }
       ]
     },
@@ -149,7 +154,8 @@
           "system": "system-1",
           "status": "done",
           "title": "Hypothesis card: central-bank tone → pair drift; backtest on 2007–2022 only",
-          "done_at": "2026-10-30"
+          "done_at": "2026-10-30",
+          "note": "Weaker than the t suggests: t +1.44 counts 140 legs = ~35 meetings x 4 correlated pairs; CI spans zero, DSR 0.21 < 0.95. Hold is 10 calendar days (W45-D1)."
         },
         {
           "id": "W44-WED-5",
