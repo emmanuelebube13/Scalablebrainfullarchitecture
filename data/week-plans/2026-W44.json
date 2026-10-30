@@ -140,8 +140,9 @@
         {
           "id": "W44-WED-3",
           "system": "system-1",
-          "status": "todo",
-          "title": "Score today's statement within minutes of its release"
+          "status": "done",
+          "title": "Score today's statement within minutes of its release",
+          "done_at": "2026-10-30"
         },
         {
           "id": "W44-WED-4",
