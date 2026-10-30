@@ -110,9 +110,10 @@
         {
           "id": "W45-TUE-5",
           "system": "ops",
-          "status": "todo",
+          "status": "done",
           "title": "Commit or settle the prod umbrella drift (~250 paths incl. the bell fix) — the redesign cannot be deployed safely before this",
-          "note": "Carried from W44-FRI-3 if not done."
+          "note": "Done early 10-30 (owner: go with recommendation). Prod committed as-is on branch prod-snapshot-2026-10-30 (da5e720, 356 files, no file changed on disk). Merged with the design branch on sync/prod-into-design-2026-10-30 (865173c): tsc ok, design-lint ok, tests 287/288 - the red one (golive-display) was already red in prod. Design agent merges it into feat/design-system when their tree is clean. Not pushed.",
+          "done_at": "2026-10-30"
         }
       ]
     },
