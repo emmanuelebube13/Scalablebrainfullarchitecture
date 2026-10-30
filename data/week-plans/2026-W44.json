@@ -154,8 +154,9 @@
         {
           "id": "W44-WED-5",
           "system": "system-1",
-          "status": "todo",
-          "title": "Decide whether the ECB and BoE come next"
+          "status": "done",
+          "title": "Decide whether the ECB and BoE come next",
+          "done_at": "2026-10-30"
         }
       ]
     },
