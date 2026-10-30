@@ -251,6 +251,61 @@
           "system": "system-1",
           "status": "todo",
           "title": "Optional: permanent `vet.DESIGNATED` fix via dev and the deploy gate"
+        },
+        {
+          "id": "W44-FRI-10",
+          "system": "ops",
+          "status": "done",
+          "title": "Diagnose 'signals published, no trades': S3 was PAUSED 22:07–23:50 by the control panel during the test flatten; the 3 signals at 22:18 were refused (state_not_trading). No fault; S3 ACTIVE, all services up.",
+          "done_at": "2026-10-30"
+        },
+        {
+          "id": "W44-FRI-11",
+          "system": "ops",
+          "status": "done",
+          "title": "Bell made real: the notifications API was never mounted (every poll 404). Mounted it; watchdog problems and every S3 notification now land in the bell every 5 min (bell_relay.py). ntfy push default (public topic) switched off.",
+          "done_at": "2026-10-30"
+        },
+        {
+          "id": "W44-FRI-12",
+          "system": "ops",
+          "status": "done",
+          "title": "Watchdog's 'telemetry publisher stale' was a false alarm (it read an old path since 10-15). Pointed it at the live snapshot; dashboard data confirmed fresh.",
+          "done_at": "2026-10-30"
+        },
+        {
+          "id": "W44-FRI-13",
+          "system": "ops",
+          "status": "done",
+          "title": "Manual broker trades: the trade sync now records trades not placed by System 2 as manual (no strategy) and rings the bell. The two USD_CAD test trades are recorded.",
+          "done_at": "2026-10-30"
+        },
+        {
+          "id": "W44-FRI-14",
+          "system": "ops",
+          "status": "done",
+          "title": "Storage: daily hygiene job at 04:40 (rotate+gzip logs >25 MB, keep 5; prune old S2 model sets, keep active+last_good+5). Backups were already capped at 14 daily + 8 weekly.",
+          "done_at": "2026-10-30"
+        },
+        {
+          "id": "W44-FRI-15",
+          "system": "ops",
+          "status": "done",
+          "title": "S2 downloader crash loop (190 restarts): an orphan from 10-27 held its log file. Supervisor now kills a leftover downloader on start.",
+          "done_at": "2026-10-30"
+        },
+        {
+          "id": "W44-FRI-16",
+          "system": "ops",
+          "status": "todo",
+          "title": "Owner, elevated PowerShell: `taskkill /F /T /PID 7296` (the orphaned downloader) — then the supervisor's own copy starts within 2 min and the bell posts 'Resolved'."
+        },
+        {
+          "id": "W44-FRI-17",
+          "system": "ops",
+          "status": "done",
+          "title": "Design rule book (DESIGN-SYSTEM.md) and the redesign brief for a UI agent (dev-umbrella/docs/design/REDESIGN-BRIEF-2026-10-30.md).",
+          "done_at": "2026-10-30"
         }
       ]
     },

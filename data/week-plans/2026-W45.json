@@ -1,0 +1,297 @@
+{
+  "schema_version": "1.0",
+  "week": "2026-W45",
+  "task_folder": "2026-November-week1",
+  "start": "2026-11-02",
+  "end": "2026-11-07",
+  "as_of": "2026-10-30",
+  "goal": "Put the timed-exit book into DEV shadow with a daily parity check, make every red state fixable from the screen (bell, fix actions, an LLM operator you can message), and start the one-design-everywhere rebuild.",
+  "context": [
+    "Built and committed on dev (ADR-003 P1–P4): contracts carry exit_by and an optional TP; S3 sizes 'research' signals at a fixed 0.10%; S2 closes timed trades at exit_by; the bridge refuses timed orders until BRIDGE_FORWARD_TIMED_EXITS=true; the research emitter's decisions matched the paper ledger exactly in a dry run.",
+    "Nothing of that is running yet. DEV services still run code from 10-24; restarting them pulls a week of everyone's commits.",
+    "Forward ledger: 6 rows, 3 open, 0 divergences. Book for December: FOMC tone, post-FOMC drift, weak-voters committee (carry deferred, D2).",
+    "Alerts now reach the dashboard bell (they reached nobody since 10-15). Phone push needs a private ntfy topic (W45-D4).",
+    "This week is deliberately overloaded; finishing early days early is fine."
+  ],
+  "fixed_dates": [
+    {
+      "date": "2026-11-01",
+      "text": "US clocks change (Sun) — NY-aligned H4 bars shift by 1 h in UTC; the emitter's exit_by already steps in NY time"
+    },
+    {
+      "date": "2026-11-06",
+      "text": "US jobs report 08:30 New York"
+    },
+    {
+      "date": "2026-11-07",
+      "text": "Weekly research job 10:00 · weekly backup copy to Computer 1"
+    }
+  ],
+  "days": [
+    {
+      "date": "2026-11-02",
+      "theme": "Timed exits into DEV shadow",
+      "goal": "The research book trades in DEV shadow, end to end, and is checked against the paper record every day.",
+      "plan": "Deploy in the safe order (S2, then S3 + bridge, then the flag), schedule the emitter, read the first parity report. DEV only — prod untouched.",
+      "tasks": [
+        {
+          "id": "W45-MON-1",
+          "system": "ops",
+          "status": "todo",
+          "title": "Restart DEV S2, S3 and bridge on current dev code (they run 10-24 code; this pulls a week of everyone's commits)",
+          "note": "Order: S2 first, then S3 + bridge."
+        },
+        {
+          "id": "W45-MON-2",
+          "system": "system-2",
+          "status": "todo",
+          "title": "Set BRIDGE_FORWARD_TIMED_EXITS=true in DEV only"
+        },
+        {
+          "id": "W45-MON-3",
+          "system": "system-1",
+          "status": "todo",
+          "title": "Schedule `live_emit --publish` hourly in DEV (SB_ENV=dev, QUEUE_PROVIDER=sqlite, QUEUE_LOCAL_PATH=C:/SB/devenv/queue/queue.db)"
+        },
+        {
+          "id": "W45-MON-4",
+          "system": "system-1",
+          "status": "todo",
+          "title": "Schedule the daily parity report (`live_emit --parity`): live decisions vs the forward ledger; any mismatch rings the bell"
+        },
+        {
+          "id": "W45-MON-5",
+          "system": "ops",
+          "status": "todo",
+          "title": "Confirm the S2 downloader crash loop is gone (after the elevated kill) and the bell posted 'Resolved'"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-03",
+      "theme": "Fix it from the screen",
+      "goal": "Every red or amber state in the dashboard and control panel says what is wrong and offers the fix.",
+      "plan": "Inventory the red states, map each to a guarded action or an exact step, and design the LLM operator you can message from anywhere.",
+      "tasks": [
+        {
+          "id": "W45-TUE-1",
+          "system": "ops",
+          "status": "todo",
+          "title": "Inventory every red/amber state (verdict chain, S1 health, services, risk gate, reconciliation) and give each a fix action: resume risk gate, restart a service (supervisor run\\<svc>.restart), rerun the signal job, reconcile broker, clear a stale halt"
+        },
+        {
+          "id": "W45-TUE-2",
+          "system": "ops",
+          "status": "todo",
+          "title": "LLM operator design: phase 1 = Claude Code Remote Control on Computer 4 (message it from the Claude app anywhere while the PC is on), with an operator runbook and hard guardrails (never open/enlarge positions, never flip mode or go_live); phase 2 = chat inside the control panel",
+          "note": "Decision W45-D2."
+        },
+        {
+          "id": "W45-TUE-3",
+          "system": "ops",
+          "status": "todo",
+          "title": "Trades view: label manual broker trades 'Manual' (order_id manual:<id>, no strategy) instead of blank attribution"
+        },
+        {
+          "id": "W45-TUE-4",
+          "system": "system-3",
+          "status": "todo",
+          "title": "Reconciliation: a manual trade the owner opened should raise one 'manual trade' notice, not a repeating divergence every minute"
+        },
+        {
+          "id": "W45-TUE-5",
+          "system": "ops",
+          "status": "todo",
+          "title": "Commit or settle the prod umbrella drift (~250 paths incl. the bell fix) — the redesign cannot be deployed safely before this",
+          "note": "Carried from W44-FRI-3 if not done."
+        }
+      ]
+    },
+    {
+      "date": "2026-11-04",
+      "theme": "One design — foundation",
+      "goal": "Tokens, fonts and the shell are consistent; light mode changes every surface, including the sidebar.",
+      "plan": "A UI agent runs phases P0 and P1 of the redesign brief; review its plans for Market Assets, Risk Gate and System Settings before it builds them.",
+      "tasks": [
+        {
+          "id": "W45-WED-1",
+          "system": "ops",
+          "status": "todo",
+          "title": "P0: tokens.css (rule book §3), IBM Plex only, data-theme toggle, design-lint script"
+        },
+        {
+          "id": "W45-WED-2",
+          "system": "ops",
+          "status": "todo",
+          "title": "P1: shell on tokens — sidebar, top bar, mobile nav, dialogs, bell; verdict pill with fix actions"
+        },
+        {
+          "id": "W45-WED-3",
+          "system": "ops",
+          "status": "todo",
+          "title": "Review the agent's half-page plans for Market Assets, Risk Gate, System Settings and the control panel"
+        },
+        {
+          "id": "W45-WED-4",
+          "system": "system-1",
+          "status": "todo",
+          "title": "Intraday FOMC statement fetch + FinBERT score within minutes of release (the tone strategy decides 60 min after; needed before 9 Dec)"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-05",
+      "theme": "One design — the weak views",
+      "goal": "Market Assets, Risk Gate, System Settings and the control panel rebuilt to the rule book, phone-first.",
+      "plan": "Build P2 from the approved plans; P3 restyles the architecture site and adds design.html.",
+      "tasks": [
+        {
+          "id": "W45-THU-1",
+          "system": "ops",
+          "status": "todo",
+          "title": "Market Assets rebuild"
+        },
+        {
+          "id": "W45-THU-2",
+          "system": "ops",
+          "status": "todo",
+          "title": "Risk Gate rebuild (state + fix action on top)"
+        },
+        {
+          "id": "W45-THU-3",
+          "system": "ops",
+          "status": "todo",
+          "title": "System Settings rebuild (one card per service, restart/log actions, storage + backups)"
+        },
+        {
+          "id": "W45-THU-4",
+          "system": "ops",
+          "status": "todo",
+          "title": "Control panel onto the same tokens and shell, with light mode"
+        },
+        {
+          "id": "W45-THU-5",
+          "system": "ops",
+          "status": "todo",
+          "title": "Architecture site: Plex fonts, no italic serif, shared tokens; add design.html"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-06",
+      "theme": "Close the timed-exit review items",
+      "goal": "The three open review items are decided or fixed, and the prod practice rollout has a dated plan.",
+      "plan": "Settle STOP vs timed exits, the outbox gap and the account netting question, then write the prod practice rollout.",
+      "tasks": [
+        {
+          "id": "W45-FRI-1",
+          "system": "system-2",
+          "status": "todo",
+          "title": "Decide STOP vs timed exits (W45-D3)"
+        },
+        {
+          "id": "W45-FRI-2",
+          "system": "system-2",
+          "status": "todo",
+          "title": "Close-after-outbox-failure: a timed close whose fill event fails to publish must still reach S3"
+        },
+        {
+          "id": "W45-FRI-3",
+          "system": "system-2",
+          "status": "todo",
+          "title": "Verify the OANDA account's hedging/netting mode against how timed exits close trades"
+        },
+        {
+          "id": "W45-FRI-4",
+          "system": "ops",
+          "status": "todo",
+          "title": "Prod practice rollout plan for timed exits (S2 → S3 + bridge → flag), with the parity numbers from the week"
+        },
+        {
+          "id": "W45-FRI-5",
+          "system": "system-1",
+          "status": "todo",
+          "title": "Tone strategy hold: apply W45-D1"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-07",
+      "theme": "Scorecard and W46",
+      "goal": "A scorecard for the week and the W46 plan.",
+      "plan": "Check the weekly jobs, review the parity record, record verdicts, draft W46.",
+      "tasks": [
+        {
+          "id": "W45-SAT-1",
+          "system": "ops",
+          "status": "todo",
+          "title": "Weekly research job output; storage hygiene summary (C:\\SB\\prod\\state\\storage_hygiene.json)"
+        },
+        {
+          "id": "W45-SAT-2",
+          "system": "ops",
+          "status": "todo",
+          "title": "Weekly backup copy to Computer 1"
+        },
+        {
+          "id": "W45-SAT-3",
+          "system": "ops",
+          "status": "todo",
+          "title": "Week's parity record: any live-vs-ledger mismatch explained"
+        },
+        {
+          "id": "W45-SAT-4",
+          "system": "ops",
+          "status": "todo",
+          "title": "Update task/OPEN.md and draft the 2026-W46 plan"
+        }
+      ]
+    }
+  ],
+  "decisions": [
+    {
+      "id": "W45-D1",
+      "question": "FOMC tone hold: the code (and so the backtest and paper record) holds 10 calendar days; the card says 10 trading days. Which is right?",
+      "options": "(a) fix the card text to calendar days; (b) change the code and register a new card (the record restarts).",
+      "recommendation": "(a) — the evidence we have is for calendar days.",
+      "status": "open"
+    },
+    {
+      "id": "W45-D2",
+      "question": "LLM operator you can message from anywhere: how?",
+      "options": "(a) Claude Code Remote Control on Computer 4 — exists today, runs under your Claude subscription, needs the PC on; (b) a custom chat in the control panel calling an LLM API — more work, paid per use (W44-D1 rule).",
+      "recommendation": "(a) now with written guardrails; (b) later if (a) is not enough.",
+      "status": "open"
+    },
+    {
+      "id": "W45-D3",
+      "question": "Emergency STOP is absolute today: a timed exit that falls due during STOP waits until STOP is cleared. Keep that, or let timed closes run under STOP?",
+      "recommendation": "Keep STOP absolute; the bell already announces a timed exit that is due.",
+      "status": "open"
+    },
+    {
+      "id": "W45-D4",
+      "question": "Phone push for the bell: set a private ntfy topic (a long random name) so alerts reach your phone?",
+      "recommendation": "Yes — the old default topic was public and is now off.",
+      "status": "open"
+    }
+  ],
+  "path_to_december": [
+    {
+      "week": "2026-W45",
+      "target": "Research book in DEV shadow with daily parity; bell + fix actions; design foundation"
+    },
+    {
+      "week": "2026-W46",
+      "target": "Timed exits on prod practice; LLM operator phase 1; FOMC intraday scorer live"
+    },
+    {
+      "week": "2026-W47",
+      "target": "Two weeks of clean parity; design sweep complete; demo-to-live checklist closed"
+    },
+    {
+      "week": "2026-W48",
+      "target": "Go / no-go for small real money in December"
+    }
+  ]
+}

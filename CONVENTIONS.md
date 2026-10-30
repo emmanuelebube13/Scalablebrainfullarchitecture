@@ -6,6 +6,9 @@
 
 ---
 
+> **Design:** every page — and every screen in any ScalableBrain codebase — follows
+> [`DESIGN-SYSTEM.md`](DESIGN-SYSTEM.md) (fonts, colour tokens, components, mobile rules).
+
 ## 0. The one rule
 
 **Content lives in `data/`. Presentation lives in `assets/`.** An agent updating a status,
