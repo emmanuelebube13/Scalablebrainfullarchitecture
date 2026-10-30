@@ -147,8 +147,9 @@
         {
           "id": "W44-WED-4",
           "system": "system-1",
-          "status": "todo",
-          "title": "Hypothesis card: central-bank tone → pair drift; backtest on 2007–2022 only"
+          "status": "done",
+          "title": "Hypothesis card: central-bank tone → pair drift; backtest on 2007–2022 only",
+          "done_at": "2026-10-30"
         },
         {
           "id": "W44-WED-5",
