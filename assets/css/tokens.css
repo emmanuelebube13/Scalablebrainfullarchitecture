@@ -1,0 +1,68 @@
+/*
+ * ScalableBrain design tokens.
+ * Source of truth: Scalablebrainfullarchitecture/DESIGN-SYSTEM.md section 3. Change that file first,
+ * then regenerate this one. Three byte-identical copies must exist:
+ *   telemetry-dashboard/src/styles/tokens.css
+ *   control-panel/web/src/styles/tokens.css
+ *   Scalablebrainfullarchitecture/assets/css/tokens.css
+ *
+ * Values are space-separated RGB channels so a token works at any alpha:
+ *   plain CSS   color: rgb(var(--good));   background: rgb(var(--bad) / 0.12);
+ *   Tailwind    colors: { good: 'rgb(var(--good) / <alpha-value>)' }  ->  text-good, bg-bad/10
+ *
+ * Dark is the default. Light is one attribute on <html>: data-theme="light".
+ */
+
+:root {
+  color-scheme: dark;
+
+  /* 3.1 Surfaces, text, lines */
+  --bg:             11 15 20;    /* #0B0F14  Page background */
+  --surface:        17 22 29;    /* #11161D  Cards, sidebar, top bar, panels */
+  --surface-raised: 23 29 38;    /* #171D26  Hover, nested rows, popovers */
+  --surface-sunken: 8 11 15;     /* #080B0F  Inputs, code blocks, wells */
+  --border:         35 43 54;    /* #232B36  Default 1 px lines */
+  --border-strong:  51 64 80;    /* #334050  Focus-adjacent, dividers that matter */
+  --text:           230 234 240; /* #E6EAF0  Primary text */
+  --text-dim:       167 176 190; /* #A7B0BE  Secondary text */
+  --text-faint:     107 118 134; /* #6B7686  Meta, placeholders (never for numbers that matter) */
+
+  /* 3.2 Meaning (one meaning each) */
+  --good:           52 211 153;  /* #34D399  Healthy, passing, profit */
+  --bad:            248 113 113; /* #F87171  Fault, failing, loss, blocked */
+  --warn:           251 191 36;  /* #FBBF24  Needs attention soon, degraded, stale */
+  --accent:         34 211 238;  /* #22D3EE  Interactive, selected, links, informational */
+  --neutral:        148 163 184; /* #94A3B8  Absent, unknown, market closed, disabled */
+
+  /* 3.3 Identity (labels only, always with the name) */
+  --s1:             129 140 248; /* #818CF8  System 1 - Brain */
+  --s2:             244 114 182; /* #F472B6  System 2 - Hand */
+  --s3:             192 132 252; /* #C084FC  System 3 - Guardian */
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  /* 3.1 Surfaces, text, lines */
+  --bg:             238 241 245; /* #EEF1F5  Page background */
+  --surface:        255 255 255; /* #FFFFFF  Cards, sidebar, top bar, panels */
+  --surface-raised: 246 248 250; /* #F6F8FA  Hover, nested rows, popovers */
+  --surface-sunken: 227 231 237; /* #E3E7ED  Inputs, code blocks, wells */
+  --border:         213 219 227; /* #D5DBE3  Default 1 px lines */
+  --border-strong:  184 193 205; /* #B8C1CD  Focus-adjacent, dividers that matter */
+  --text:           16 24 40;    /* #101828  Primary text */
+  --text-dim:       65 75 90;    /* #414B5A  Secondary text */
+  --text-faint:     93 107 126;  /* #5D6B7E  Meta, placeholders (never for numbers that matter) */
+
+  /* 3.2 Meaning (one meaning each) */
+  --good:           4 120 87;    /* #047857  Healthy, passing, profit */
+  --bad:            220 38 38;   /* #DC2626  Fault, failing, loss, blocked */
+  --warn:           180 83 9;    /* #B45309  Needs attention soon, degraded, stale */
+  --accent:         14 116 144;  /* #0E7490  Interactive, selected, links, informational */
+  --neutral:        100 116 139; /* #64748B  Absent, unknown, market closed, disabled */
+
+  /* 3.3 Identity (labels only, always with the name) */
+  --s1:             67 56 202;   /* #4338CA  System 1 - Brain */
+  --s2:             190 24 93;   /* #BE185D  System 2 - Hand */
+  --s3:             126 34 206;  /* #7E22CE  System 3 - Guardian */
+}
