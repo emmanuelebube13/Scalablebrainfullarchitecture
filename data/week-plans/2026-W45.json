@@ -62,8 +62,10 @@
         {
           "id": "W45-MON-5",
           "system": "ops",
-          "status": "todo",
-          "title": "Confirm the S2 downloader crash loop is gone (after the elevated kill) and the bell posted 'Resolved'"
+          "status": "done",
+          "title": "Confirm the S2 downloader crash loop is gone (after the elevated kill) and the bell posted 'Resolved'",
+          "done_at": "2026-10-30",
+          "note": "Verified 2026-10-30 after the owner's elevated kill: downloader up since 07:59 local, no exits."
         }
       ]
     },
@@ -82,9 +84,9 @@
         {
           "id": "W45-TUE-2",
           "system": "ops",
-          "status": "todo",
+          "status": "moved",
           "title": "LLM operator design: phase 1 = Claude Code Remote Control on Computer 4 (message it from the Claude app anywhere while the PC is on), with an operator runbook and hard guardrails (never open/enlarge positions, never flip mode or go_live); phase 2 = chat inside the control panel",
-          "note": "Decision W45-D2."
+          "note": "Owner 2026-10-30 (W45-D2): later in November — see path_to_december W46/W47."
         },
         {
           "id": "W45-TUE-3",
@@ -136,6 +138,12 @@
           "system": "system-1",
           "status": "todo",
           "title": "Intraday FOMC statement fetch + FinBERT score within minutes of release (the tone strategy decides 60 min after; needed before 9 Dec)"
+        },
+        {
+          "id": "W45-WED-5",
+          "system": "ops",
+          "status": "todo",
+          "title": "Design governance tooling: design-lint, the headless UI-check driver (CDP, one script per view), shared money/time formatters (design/BACKLOG G1, G2, G5)"
         }
       ]
     },
@@ -174,6 +182,12 @@
           "system": "ops",
           "status": "todo",
           "title": "Architecture site: Plex fonts, no italic serif, shared tokens; add design.html"
+        },
+        {
+          "id": "W45-THU-6",
+          "system": "ops",
+          "status": "todo",
+          "title": "Apply the design governance to the telemetry dashboard and this site; update the adoption table in design/README.md"
         }
       ]
     },
@@ -187,7 +201,8 @@
           "id": "W45-FRI-1",
           "system": "system-2",
           "status": "todo",
-          "title": "Decide STOP vs timed exits (W45-D3)"
+          "title": "Bell notice when a timed exit falls due while emergency STOP is on (STOP stays absolute, W45-D3)",
+          "note": "Correction: the W45-D3 recommendation claimed the bell already announced this. It did not — the S2 sweeper only logs it."
         },
         {
           "id": "W45-FRI-2",
@@ -210,8 +225,10 @@
         {
           "id": "W45-FRI-5",
           "system": "system-1",
-          "status": "todo",
-          "title": "Tone strategy hold: apply W45-D1"
+          "status": "done",
+          "title": "Tone strategy hold: apply W45-D1",
+          "done_at": "2026-10-30",
+          "note": "Card H-20261018-14 clarified by an appended, dated section (dev b50ae6a); frozen fields untouched."
         }
       ]
     },
@@ -254,26 +271,30 @@
       "question": "FOMC tone hold: the code (and so the backtest and paper record) holds 10 calendar days; the card says 10 trading days. Which is right?",
       "options": "(a) fix the card text to calendar days; (b) change the code and register a new card (the record restarts).",
       "recommendation": "(a) — the evidence we have is for calendar days.",
-      "status": "open"
+      "status": "decided",
+      "answer": "(a) fix the card. Done 2026-10-30: appended clarification on H-20261018-14 (dev b50ae6a)."
     },
     {
       "id": "W45-D2",
       "question": "LLM operator you can message from anywhere: how?",
       "options": "(a) Claude Code Remote Control on Computer 4 — exists today, runs under your Claude subscription, needs the PC on; (b) a custom chat in the control panel calling an LLM API — more work, paid per use (W44-D1 rule).",
       "recommendation": "(a) now with written guardrails; (b) later if (a) is not enough.",
-      "status": "open"
+      "status": "decided",
+      "answer": "Later — November (W46/W47). Not this week."
     },
     {
       "id": "W45-D3",
       "question": "Emergency STOP is absolute today: a timed exit that falls due during STOP waits until STOP is cleared. Keep that, or let timed closes run under STOP?",
-      "recommendation": "Keep STOP absolute; the bell already announces a timed exit that is due.",
-      "status": "open"
+      "recommendation": "Keep STOP absolute, and add a bell notice when a timed exit falls due during STOP (W45-FRI-1).",
+      "status": "decided",
+      "answer": "STOP stays absolute (owner 2026-10-30)."
     },
     {
       "id": "W45-D4",
       "question": "Phone push for the bell: set a private ntfy topic (a long random name) so alerts reach your phone?",
       "recommendation": "Yes — the old default topic was public and is now off.",
-      "status": "open"
+      "status": "decided",
+      "answer": "Later in November, with the LLM operator."
     }
   ],
   "path_to_december": [
@@ -283,11 +304,11 @@
     },
     {
       "week": "2026-W46",
-      "target": "Timed exits on prod practice; LLM operator phase 1; FOMC intraday scorer live"
+      "target": "Timed exits on prod practice; FOMC intraday scorer live; asset-chart audit fixes; private phone-push channel"
     },
     {
       "week": "2026-W47",
-      "target": "Two weeks of clean parity; design sweep complete; demo-to-live checklist closed"
+      "target": "LLM operator phase 1 (message the system from anywhere); two weeks of clean parity; design sweep complete; demo-to-live checklist closed"
     },
     {
       "week": "2026-W48",
