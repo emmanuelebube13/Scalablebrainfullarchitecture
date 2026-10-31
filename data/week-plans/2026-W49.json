@@ -47,7 +47,7 @@
           "id": "W49-TUE-1",
           "system": "system-1",
           "status": "todo",
-          "title": "ON-01 measure decision delay; ADR-006 bar-close inference design",
+          "title": "ON-01 measure decision delay; ADR-007 bar-close inference design",
           "plan": "plans/ON-01-bar-close-inference.md"
         }
       ]

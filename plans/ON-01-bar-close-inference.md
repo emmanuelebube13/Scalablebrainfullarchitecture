@@ -16,7 +16,7 @@ scope on purpose: the weekly retrain stays.
 1. **Measure today's delay.** For the last 4 weeks of DEV and practice signals, compute
    (signal emitted − bar close) and (bar data landed − bar close). If the p95 delay is
    under 2 minutes, write that down and shrink this task to a watcher.
-2. **Design note** at `docs/design/ADR-006-bar-close-inference.md` (dev brain), covering:
+2. **Design note** at `docs/design/ADR-007-bar-close-inference.md` (dev brain), covering:
    - **Bar-close trigger source.** Options are the OANDA pricing stream (the chart
      upgrade says a price stream exists but isn't fed yet), a poll of the candles
      endpoint at close + 5 s, or `src/signals/watcher.py` if it already does this. Read
@@ -31,7 +31,7 @@ scope on purpose: the weekly retrain stays.
    `results/research/bar_close/<date>.md`.
 
 ## Acceptance
-- The delay is measured, the ADR-006 note exists, and the DEV flag runs one week with a
+- The delay is measured, the ADR-007 note exists, and the DEV flag runs one week with a
   parity report.
 
 ## Guardrails

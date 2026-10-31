@@ -29,7 +29,8 @@
           "system": "system-1",
           "status": "todo",
           "title": "PC-02 triple-barrier labels from rebuilt price paths (TP50 / TP100 / SL / time)",
-          "plan": "plans/PC-02-triple-barrier-labels.md"
+          "plan": "plans/PC-02-triple-barrier-labels.md",
+          "note": "Built early 2026-10-31 (dev 496b7f7). See the Result section in the plan. Awaiting owner tick."
         },
         {
           "id": "W46-MON-2",
