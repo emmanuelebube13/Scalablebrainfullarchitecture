@@ -137,6 +137,9 @@ function bar(p) {
     el('span', { style: { width: `${p.pct}%` } }));
 }
 
+// Plans are Markdown in the repo; GitHub renders them.
+const PLAN_BASE = 'https://github.com/emmanuelebube13/Scalablebrainfullarchitecture/blob/main/';
+
 function taskRow(t) {
   const sys = SYSTEM_TAGS[t.system];
   const done = t.status === 'done';
@@ -154,7 +157,8 @@ function taskRow(t) {
         el('code', { text: t.id }),
         sys ? el('span', { class: 'wk-sys', style: { '--sys': sys.color }, text: sys.label }) : null,
         STATUS_LABEL[t.status] ? el('span', { class: `pill tone-${t.status === 'blocked' ? 'bad' : 'warn'}`, text: STATUS_LABEL[t.status] }) : null,
-        done && t.done_at ? el('span', { class: 'wk-done-at', text: `done ${fmtDay(t.done_at, { day: 'numeric', month: 'short' })}` }) : null),
+        done && t.done_at ? el('span', { class: 'wk-done-at', text: `done ${fmtDay(t.done_at, { day: 'numeric', month: 'short' })}` }) : null,
+        t.plan ? el('a', { class: 'wk-plan', href: `${PLAN_BASE}${t.plan}`, target: '_blank', rel: 'noopener', text: 'Plan' }) : null),
       t.note ? el('span', { class: 'wk-task-note', html: inline(t.note) }) : null));
 }
 

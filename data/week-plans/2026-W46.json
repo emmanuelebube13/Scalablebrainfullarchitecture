@@ -1,0 +1,178 @@
+{
+  "schema_version": "1.0",
+  "week": "2026-W46",
+  "task_folder": "2026-November-week2",
+  "start": "2026-11-09",
+  "end": "2026-11-14",
+  "as_of": "2026-10-31",
+  "goal": "Lay the probability check's foundations (labels, volatility, text, events) and close the first three live-readiness items, while timed exits reach prod practice.",
+  "context": [
+    "Program: plans/README.md (read first). Every task with a Plan link is written so another agent can pick it up cold.",
+    "Rules: DEV first; venv-s1 is read-only (no pip install); no look-ahead; forward ledger untouched; shadow until PC-07; free data only.",
+    "This week is deliberately overloaded; agents pick tasks in order of their dependencies."
+  ],
+  "fixed_dates": [
+    {
+      "date": "2026-11-14",
+      "text": "Weekly research job 10:00 · weekly backup copy to Computer 1"
+    }
+  ],
+  "days": [
+    {
+      "date": "2026-11-09",
+      "theme": "Labels",
+      "goal": "Every backtested trade knows which barrier it hit first.",
+      "plan": "Build and backfill the barrier labeller; verify it against recorded exits. In parallel, verify order idempotency on practice.",
+      "tasks": [
+        {
+          "id": "W46-MON-1",
+          "system": "system-1",
+          "status": "todo",
+          "title": "PC-02 triple-barrier labels from rebuilt price paths (TP50 / TP100 / SL / time)",
+          "plan": "plans/PC-02-triple-barrier-labels.md"
+        },
+        {
+          "id": "W46-MON-2",
+          "system": "system-2",
+          "status": "todo",
+          "title": "LR-01 order idempotency and startup reconcile: verify F-303, crash-inject on practice, close or fix",
+          "plan": "plans/LR-01-order-idempotency.md"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-10",
+      "theme": "Volatility",
+      "goal": "A volatility forecast and a reach probability per signal.",
+      "plan": "HAR-RV against ATR and EWMA out of sample; reach probability from the forecast; post-fill geometry guard in S2.",
+      "tasks": [
+        {
+          "id": "W46-TUE-1",
+          "system": "system-1",
+          "status": "todo",
+          "title": "PC-03 volatility forecaster (HAR-RV) and vol_reach feature",
+          "plan": "plans/PC-03-volatility-forecaster.md"
+        },
+        {
+          "id": "W46-TUE-2",
+          "system": "system-2",
+          "status": "todo",
+          "title": "LR-02 slippage bound (verify) and post-fill geometry check (build)",
+          "plan": "plans/LR-02-slippage-geometry.md"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-11",
+      "theme": "Text and events",
+      "goal": "Choose the central-bank text scorer on evidence; store the event calendar.",
+      "plan": "Bake-off FinBERT vs FinBERT-tone vs CentralBankRoBERTa vs FOMC-RoBERTa vs Claude; collect the calendar hourly.",
+      "tasks": [
+        {
+          "id": "W46-WED-1",
+          "system": "system-1",
+          "status": "todo",
+          "title": "TX-01 text-model bake-off: label accuracy + market relevance, choice by pre-written rule",
+          "plan": "plans/TX-01-text-model-bakeoff.md"
+        },
+        {
+          "id": "W46-WED-2",
+          "system": "system-1",
+          "status": "todo",
+          "title": "TX-02 economic event calendar (point-in-time) and event_risk feature",
+          "plan": "plans/TX-02-event-calendar.md"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-12",
+      "theme": "Plumbing",
+      "goal": "Going live becomes one verified config change; new sources log to the ledger.",
+      "plan": "Execution-mode file + boot preflight; wire vol_reach, event_risk and tone into the evidence hook.",
+      "tasks": [
+        {
+          "id": "W46-THU-1",
+          "system": "system-2",
+          "status": "todo",
+          "title": "LR-03 execution-mode gate (shadow / practice / live) with boot preflight",
+          "plan": "plans/LR-03-execution-mode-gate.md"
+        },
+        {
+          "id": "W46-THU-2",
+          "system": "system-1",
+          "status": "todo",
+          "title": "PC-01 part 2: wire vol_reach, event_risk and tone_* into the evidence ledger",
+          "plan": "plans/PC-01-evidence-ledger.md"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-13",
+      "theme": "December track",
+      "goal": "The items already on the road to December.",
+      "plan": "Carry the existing path_to_december targets; their plans live where noted.",
+      "tasks": [
+        {
+          "id": "W46-FRI-1",
+          "system": "ops",
+          "status": "todo",
+          "title": "Timed exits on prod practice (S2 -> S3 + bridge -> flag), using the W45 parity numbers",
+          "note": "Plan: W45-FRI-4 rollout plan"
+        },
+        {
+          "id": "W46-FRI-2",
+          "system": "system-1",
+          "status": "todo",
+          "title": "FOMC intraday statement fetch + score within minutes of release, live before 9 Dec",
+          "note": "Follow-up of W45-WED-4"
+        },
+        {
+          "id": "W46-FRI-3",
+          "system": "system-1",
+          "status": "todo",
+          "title": "Trade health P1-P2: continuation tables from backtest paths; advice rule registered and backtested",
+          "note": "dev brain docs/design/ADR-004-trade-health-keep-or-close.md; share the path walker with PC-02"
+        },
+        {
+          "id": "W46-FRI-4",
+          "system": "ops",
+          "status": "todo",
+          "title": "Private phone-push channel for the bell (W45-D4)"
+        },
+        {
+          "id": "W46-FRI-5",
+          "system": "ops",
+          "status": "todo",
+          "title": "Asset-chart audit fixes"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-14",
+      "theme": "Scorecard and W47",
+      "goal": "Know what landed and what moved.",
+      "plan": "Weekly job, backup, carry-over.",
+      "tasks": [
+        {
+          "id": "W46-SAT-1",
+          "system": "ops",
+          "status": "todo",
+          "title": "Weekly research job output; storage hygiene summary"
+        },
+        {
+          "id": "W46-SAT-2",
+          "system": "ops",
+          "status": "todo",
+          "title": "Weekly backup copy to Computer 1"
+        },
+        {
+          "id": "W46-SAT-3",
+          "system": "ops",
+          "status": "todo",
+          "title": "Review W46 against plans; carry open tasks to W47 as moved"
+        }
+      ]
+    }
+  ],
+  "decisions": []
+}

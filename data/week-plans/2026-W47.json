@@ -1,0 +1,164 @@
+{
+  "schema_version": "1.0",
+  "week": "2026-W47",
+  "task_folder": "2026-November-week3",
+  "start": "2026-11-16",
+  "end": "2026-11-21",
+  "as_of": "2026-10-31",
+  "goal": "Pick the market-state model honestly, close the remaining live-readiness items, and start the advisory morning briefing.",
+  "context": [
+    "Program: plans/README.md (read first). Every task with a Plan link is written so another agent can pick it up cold.",
+    "Rules: DEV first; venv-s1 is read-only (no pip install); no look-ahead; forward ledger untouched; shadow until PC-07; free data only.",
+    "This week is deliberately overloaded; agents pick tasks in order of their dependencies."
+  ],
+  "fixed_dates": [
+    {
+      "date": "2026-11-21",
+      "text": "Weekly research job 10:00 · weekly backup copy to Computer 1"
+    }
+  ],
+  "days": [
+    {
+      "date": "2026-11-16",
+      "theme": "Gatekeeper v3 — fit",
+      "goal": "Three models, one label, one evaluation scheme.",
+      "plan": "Write the choice rule first, then run LR vs XGBoost vs LightGBM on purged walk-forward folds.",
+      "tasks": [
+        {
+          "id": "W47-MON-1",
+          "system": "system-1",
+          "status": "todo",
+          "title": "PC-04 gatekeeper v3 bake-off: frame, folds, choice rule written, models fitted",
+          "plan": "plans/PC-04-gatekeeper-v3-bakeoff.md"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-17",
+      "theme": "Gatekeeper v3 — decide",
+      "goal": "Open the lockbox once and apply the rule.",
+      "plan": "Calibrate, open the 12-month lockbox, write the report; draft the live risk profile.",
+      "tasks": [
+        {
+          "id": "W47-TUE-1",
+          "system": "system-1",
+          "status": "todo",
+          "title": "PC-04 calibration, lockbox, report and proposed bundle (dry run only)",
+          "plan": "plans/PC-04-gatekeeper-v3-bakeoff.md"
+        },
+        {
+          "id": "W47-TUE-2",
+          "system": "system-3",
+          "status": "todo",
+          "title": "LR-04 risk_config.live.json with the tiny-account table; owner approves the numbers",
+          "plan": "plans/LR-04-risk-config-live.md"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-18",
+      "theme": "Breakers and spreads",
+      "goal": "A trip stays tripped; no order on a wide spread or stale quote.",
+      "plan": "Persistent latch with owner reset; one documented owner of the spread gate.",
+      "tasks": [
+        {
+          "id": "W47-WED-1",
+          "system": "system-3",
+          "status": "todo",
+          "title": "LR-05 circuit-breaker latch that survives restarts, with owner reset",
+          "plan": "plans/LR-05-circuit-breaker-latch.md"
+        },
+        {
+          "id": "W47-WED-2",
+          "system": "system-3",
+          "status": "todo",
+          "title": "LR-06 spread-widening and stale-quote gate (FX and CFDs)",
+          "plan": "plans/LR-06-spread-stale-quote-gate.md"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-19",
+      "theme": "Emit and brief",
+      "goal": "No dropped or doubled signals; a useful morning note.",
+      "plan": "Emit idempotency + dead letter; the 07:00 New York briefing in DEV.",
+      "tasks": [
+        {
+          "id": "W47-THU-1",
+          "system": "system-1",
+          "status": "todo",
+          "title": "LR-07 S1 signal-emit idempotency and dead-letter on both emit paths",
+          "plan": "plans/LR-07-s1-emit-idempotency.md"
+        },
+        {
+          "id": "W47-THU-2",
+          "system": "system-1",
+          "status": "todo",
+          "title": "TX-03 morning briefing bell at 07:00 New York (advisory only)",
+          "plan": "plans/TX-03-morning-briefing.md"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-20",
+      "theme": "December track",
+      "goal": "The items already on the road to December.",
+      "plan": "Carry the existing path_to_december targets.",
+      "tasks": [
+        {
+          "id": "W47-FRI-1",
+          "system": "ops",
+          "status": "todo",
+          "title": "LLM operator phase 1 (message the system from anywhere)",
+          "note": "W45-D2: later in November"
+        },
+        {
+          "id": "W47-FRI-2",
+          "system": "ops",
+          "status": "todo",
+          "title": "Design sweep complete"
+        },
+        {
+          "id": "W47-FRI-3",
+          "system": "ops",
+          "status": "todo",
+          "title": "Trade health P3-P4: engine on per-strategy plans, Trades-view panel, advice log",
+          "note": "ADR-004"
+        },
+        {
+          "id": "W47-FRI-4",
+          "system": "ops",
+          "status": "todo",
+          "title": "Two weeks of clean parity: confirm from the daily reports"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-21",
+      "theme": "Scorecard and W48",
+      "goal": "Know what landed and what moved.",
+      "plan": "Weekly job, backup, carry-over.",
+      "tasks": [
+        {
+          "id": "W47-SAT-1",
+          "system": "ops",
+          "status": "todo",
+          "title": "Weekly research job output; storage hygiene summary"
+        },
+        {
+          "id": "W47-SAT-2",
+          "system": "ops",
+          "status": "todo",
+          "title": "Weekly backup copy to Computer 1"
+        },
+        {
+          "id": "W47-SAT-3",
+          "system": "ops",
+          "status": "todo",
+          "title": "Review W47 against plans; carry open tasks to W48 as moved"
+        }
+      ]
+    }
+  ],
+  "decisions": []
+}

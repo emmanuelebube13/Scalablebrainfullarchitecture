@@ -11,7 +11,8 @@
     "Nothing of that is running yet. DEV services still run code from 10-24; restarting them pulls a week of everyone's commits.",
     "Forward ledger: 6 rows, 3 open, 0 divergences. Book for December: FOMC tone, post-FOMC drift, weak-voters committee (carry deferred, D2).",
     "Alerts now reach the dashboard bell (they reached nobody since 10-15). Phone push needs a private ntfy topic (W45-D4).",
-    "This week is deliberately overloaded; finishing early days early is fine."
+    "This week is deliberately overloaded; finishing early days early is fine.",
+    "2026-10-31 architecture review (owner agreed): the gatekeeper filters a losing pool (-0.087R to -0.060R), is overconfident and mostly learned trade geometry. New program in plans/README.md: probability check (PC), text models (TX), live readiness (LR), online (ON). Every task links its own plan."
   ],
   "fixed_dates": [
     {
@@ -114,6 +115,13 @@
           "title": "Commit or settle the prod umbrella drift (~250 paths incl. the bell fix) — the redesign cannot be deployed safely before this",
           "note": "Done early 10-30 (owner: go with recommendation). Prod committed as-is on branch prod-snapshot-2026-10-30 (da5e720, 356 files, no file changed on disk). Merged with the design branch on sync/prod-into-design-2026-10-30 (865173c): tsc ok, design-lint ok, tests 287/288 - the red one (golive-display) was already red in prod. Design agent merges it into feat/design-system when their tree is clean. Not pushed.",
           "done_at": "2026-10-30"
+        },
+        {
+          "id": "W45-TUE-6",
+          "system": "system-1",
+          "status": "todo",
+          "title": "TX-04 look-ahead guard: text-model registry with training cutoffs; backtests read model scores only through the guard",
+          "plan": "plans/TX-04-lookahead-guard.md"
         }
       ]
     },
@@ -152,6 +160,13 @@
           "system": "ops",
           "status": "todo",
           "title": "Design governance tooling: design-lint, the headless UI-check driver (CDP, one script per view), shared money/time formatters (design/BACKLOG G1, G2, G5)"
+        },
+        {
+          "id": "W45-WED-6",
+          "system": "system-1",
+          "status": "todo",
+          "title": "PC-01 evidence ledger: research.signal_evidence (append-only) + hook on both emit paths; first sources base_rate and gk_v2, shadow only",
+          "plan": "plans/PC-01-evidence-ledger.md"
         }
       ]
     },
@@ -244,6 +259,14 @@
           "status": "todo",
           "title": "Owner: review ADR-004 (trade health) and answer D1 (overdue trades get a notice?) and D2 (hide verdict where the rule does not help?)",
           "note": "dev systems/brain docs/design/ADR-004-trade-health-keep-or-close.md"
+        },
+        {
+          "id": "W45-FRI-7",
+          "system": "ops",
+          "status": "todo",
+          "title": "Owner: review ADR-005 (probability check) and answer W45-D5, D6, D7",
+          "note": "dev systems/brain docs/design/ADR-005-probability-check.md (PROPOSED 2026-10-31)",
+          "plan": "plans/PC-00-adr-005-probability-check.md"
         }
       ]
     },
@@ -310,24 +333,49 @@
       "recommendation": "Yes — the old default topic was public and is now off.",
       "status": "decided",
       "answer": "Later in November, with the LLM operator."
+    },
+    {
+      "id": "W45-D5",
+      "question": "Probability check: when it is promoted (PC-07), may it only scale position size, or also veto trades below an expected-R floor?",
+      "options": "Size only (0.5x-1.5x) · size + veto",
+      "recommendation": "Size only at first: a veto starves the book (goal: at least a couple of trades a week).",
+      "status": "open"
+    },
+    {
+      "id": "W45-D6",
+      "question": "Text scorer for central-bank statements: which candidates may the bake-off (TX-01) use, and may an LLM polish the morning briefing?",
+      "options": "Encoders only (FinBERT, FinBERT-tone, CentralBankRoBERTa) · + FOMC-RoBERTa (CC BY-NC, research only) · + Claude via API (metered)",
+      "recommendation": "All of them in the bake-off; FOMC-RoBERTa for research only; Claude via API on post-cutoff statements, cost logged. Briefing polish off until the deterministic text is trusted.",
+      "status": "open"
+    },
+    {
+      "id": "W45-D7",
+      "question": "CatBoost is not installed and App Control forbids installing into venv-s1. Skip it in the gatekeeper bake-off (PC-04), or arrange an approved install path?",
+      "options": "Skip · approved install",
+      "recommendation": "Skip: LightGBM and XGBoost are installed, and the library is not the bottleneck.",
+      "status": "open"
     }
   ],
   "path_to_december": [
     {
       "week": "2026-W45",
-      "target": "Research book in DEV shadow with daily parity; bell + fix actions; design foundation"
+      "target": "Research book in DEV shadow with daily parity; bell + fix actions; design foundation; evidence ledger + look-ahead guard; ADR-005 reviewed"
     },
     {
       "week": "2026-W46",
-      "target": "Timed exits on prod practice; FOMC intraday scorer live; asset-chart audit fixes; private phone-push channel; trade health P1-P2 (continuation tables from backtest paths; advice rule registered and backtested)"
+      "target": "Timed exits on prod practice; FOMC intraday scorer; trade health P1-P2; barrier labels, volatility forecaster, text bake-off, event calendar; LR-01..03 verified/closed"
     },
     {
       "week": "2026-W47",
-      "target": "LLM operator phase 1 (message the system from anywhere); two weeks of clean parity; design sweep complete; demo-to-live checklist closed; trade health P3-P4 (bridge engine on per-strategy plans, Trades-view panel, advice log)"
+      "target": "LLM operator phase 1; design sweep; trade health P3-P4; gatekeeper v3 bake-off; LR-04..07; morning briefing"
     },
     {
       "week": "2026-W48",
-      "target": "Go / no-go for small real money in December"
+      "target": "Combiner + calibration monitor in shadow; regime router study; demo-to-live checklist closed; go / no-go for small real money"
+    },
+    {
+      "week": "2026-W49",
+      "target": "First small real-money week (if go); bar-close inference; probability check first read (expect: stay in shadow); FOMC 9 Dec prep"
     }
   ]
 }

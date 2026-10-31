@@ -1,0 +1,121 @@
+{
+  "schema_version": "1.0",
+  "week": "2026-W48",
+  "task_folder": "2026-November-week4",
+  "start": "2026-11-23",
+  "end": "2026-11-28",
+  "as_of": "2026-10-31",
+  "goal": "Run the full probability check in shadow, measure the regime router, close the demo-to-live checklist and decide go / no-go.",
+  "context": [
+    "Program: plans/README.md (read first). Every task with a Plan link is written so another agent can pick it up cold.",
+    "Rules: DEV first; venv-s1 is read-only (no pip install); no look-ahead; forward ledger untouched; shadow until PC-07; free data only.",
+    "This week is deliberately overloaded; agents pick tasks in order of their dependencies."
+  ],
+  "fixed_dates": [
+    {
+      "date": "2026-11-26",
+      "text": "US Thanksgiving — thin liquidity"
+    },
+    {
+      "date": "2026-11-28",
+      "text": "Weekly research job 10:00 · weekly backup copy to Computer 1"
+    }
+  ],
+  "days": [
+    {
+      "date": "2026-11-23",
+      "theme": "Combiner",
+      "goal": "One calibrated probability and expected R per signal, in shadow.",
+      "plan": "Stack the source logits out of sample; log combined rows and the suggested size.",
+      "tasks": [
+        {
+          "id": "W48-MON-1",
+          "system": "system-1",
+          "status": "todo",
+          "title": "PC-05 stacking combiner and expected-R output (shadow)",
+          "plan": "plans/PC-05-stacking-combiner.md"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-24",
+      "theme": "Watch it",
+      "goal": "See, live, whether each source still matches outcomes.",
+      "plan": "Resolution job, rolling Brier and drift, Performance-view card.",
+      "tasks": [
+        {
+          "id": "W48-TUE-1",
+          "system": "system-1",
+          "status": "todo",
+          "title": "PC-06 live calibration and drift monitor + dashboard card",
+          "plan": "plans/PC-06-live-calibration-drift.md"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-25",
+      "theme": "Regime study",
+      "goal": "Evidence on routing by regime vs using it as a feature.",
+      "plan": "Three policies, out of sample, trades per week and R per week.",
+      "tasks": [
+        {
+          "id": "W48-WED-1",
+          "system": "system-1",
+          "status": "todo",
+          "title": "ON-02 regime as router vs feature: walk-forward study (recommendation only)",
+          "plan": "plans/ON-02-regime-router-vs-feature.md"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-26",
+      "theme": "Demo-to-live checklist",
+      "goal": "Every live-readiness item is ticked or explicitly waived.",
+      "plan": "Walk DECEMBER-READINESS.md and LR-01..07; list anything open with its risk.",
+      "tasks": [
+        {
+          "id": "W48-THU-1",
+          "system": "ops",
+          "status": "todo",
+          "title": "Close the demo-to-live checklist: LR-01..07 done or owner-waived, register updated",
+          "note": "C:\\SB\\dev\\DECEMBER-READINESS.md"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-27",
+      "theme": "Go / no-go pack",
+      "goal": "The owner has everything needed to decide.",
+      "plan": "One page: plumbing status, forward record, risk profile, what $200 can and cannot prove.",
+      "tasks": [
+        {
+          "id": "W48-FRI-1",
+          "system": "ops",
+          "status": "todo",
+          "title": "Write the go / no-go pack for small real money (honest: December cannot prove an edge)"
+        }
+      ]
+    },
+    {
+      "date": "2026-11-28",
+      "theme": "Decide",
+      "goal": "Go or no-go, written down.",
+      "plan": "Owner decision; weekly job and backup.",
+      "tasks": [
+        {
+          "id": "W48-SAT-1",
+          "system": "ops",
+          "status": "todo",
+          "title": "Owner: go / no-go for small real money in December"
+        },
+        {
+          "id": "W48-SAT-2",
+          "system": "ops",
+          "status": "todo",
+          "title": "Weekly research job; weekly backup copy to Computer 1"
+        }
+      ]
+    }
+  ],
+  "decisions": []
+}
