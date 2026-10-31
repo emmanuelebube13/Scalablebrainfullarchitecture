@@ -79,6 +79,13 @@
           "status": "todo",
           "title": "Close the demo-to-live checklist: LR-01..07 done or owner-waived, register updated",
           "note": "C:\\SB\\dev\\DECEMBER-READINESS.md"
+        },
+        {
+          "id": "W48-THU-2",
+          "system": "system-1",
+          "status": "todo",
+          "title": "PC-08 probability-driven trade management: partial TP / break-even policies per probability band (backtest, owner approves)",
+          "plan": "plans/PC-08-probability-trade-management.md"
         }
       ]
     },

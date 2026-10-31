@@ -45,7 +45,12 @@ model library is not the main lever, so the simplest model that ties wins.
    - (a) L2 logistic regression with spline or binned geometry
    - (b) XGBoost
    - (c) LightGBM, with leaf limits for small noisy data
-   - CatBoost only if the owner approves an install path (D7).
+   - (d) CatBoost 1.2.10. Owner D7: test it, don't replace XGBoost blindly. Run with
+     `PYTHONPATH=C:\SB\lab\pydeps\catboost-1.2.10`. Give strategy family and regime to
+     it as native categoricals.
+   - (e) **Ensemble:** the mean of the calibrated probabilities of (a)–(d), and a stacked
+     LR over their logits fitted on the inner folds. The owner has used ensembles before
+     and found XGBoost usually wins; the ensemble is tested on equal terms.
 5. **Baseline to beat:** a base-rate-only model (strategy family × regime × RR bucket
    from PC-02). It is the "no market-state information" null.
 6. **Metrics**, out-of-sample per fold and pooled:
@@ -57,6 +62,8 @@ model library is not the main lever, so the simplest model that ties wins.
    each training fold. Pick the one with the lower OOS ECE.
 8. **Choice rule, written into the report before the lockbox is opened:**
    - The winner is the simplest model within 1 SE of the best OOS log loss.
+     XGBoost is the incumbent: another model or the ensemble replaces it only if it is
+     better by more than 1 SE.
    - If none beats the base-rate model with a CI excluding zero, the market-state source
      is recorded as **adding nothing**. That is a valid result.
 9. **Write the bundle** as a dry-run `proposed_champion_*` with the calibrator included.
