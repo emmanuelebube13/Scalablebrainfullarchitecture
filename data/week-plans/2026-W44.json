@@ -388,8 +388,9 @@
         {
           "id": "W44-SAT-3",
           "system": "ops",
-          "status": "todo",
-          "title": "Update `task/OPEN.md`"
+          "status": "done",
+          "title": "Update `task/OPEN.md`",
+          "done_at": "2026-10-31"
         },
         {
           "id": "W44-SAT-4",
