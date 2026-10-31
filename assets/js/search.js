@@ -270,15 +270,19 @@ async function buildIndex() {
   }
 
   /* Data Dictionary Tables & Columns */
+  // stores is an object keyed by store id ({ system3_ams: { title, tables: [...] } }), not an array.
   if (dictData?.stores) {
-    for (const store of dictData.stores) {
+    for (const [key, store] of Object.entries(dictData.stores)) {
+      const storeName = store.title || key;
       for (const tbl of store.tables || []) {
+        // An unknown row count stays unknown: no "0 rows".
+        const rows = Number.isFinite(tbl.rows) ? `${tbl.rows.toLocaleString()} rows` : 'rows unknown';
         INDEX.push({
           type: 'table',
-          title: `${tbl.name} (${store.name})`,
-          detail: `${tbl.row_count_estimate?.toLocaleString() || 0} rows · ${tbl.purpose || ''}`,
+          title: `${tbl.name} (${storeName})`,
+          detail: `${rows}${tbl.category ? ` · ${tbl.category}` : ''}`,
           url: `data-dictionary.html`,
-          searchText: `${tbl.name} ${store.name} ${tbl.purpose || ''} ${(tbl.columns || []).map((c) => `${c.name} ${c.type} ${c.description || ''}`).join(' ')}`.toLowerCase(),
+          searchText: `${tbl.name} ${storeName} ${tbl.category || ''} ${(tbl.columns || []).map((c) => `${c.name} ${c.type} ${c.description || ''}`).join(' ')}`.toLowerCase(),
         });
       }
     }
