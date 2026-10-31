@@ -51,7 +51,8 @@
           "system": "system-3",
           "status": "todo",
           "title": "LR-04 risk_config.live.json with the tiny-account table; owner approves the numbers",
-          "plan": "plans/LR-04-risk-config-live.md"
+          "plan": "plans/LR-04-risk-config-live.md",
+          "note": "Code done 2026-10-31 (dev 0599444). OWNER: approve the proposed numbers in the plan's Result table."
         }
       ]
     },

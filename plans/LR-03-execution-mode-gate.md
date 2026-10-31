@@ -42,3 +42,26 @@ live data GET-only.
 
 ## Guardrails
 Never write live credentials. Never set mode = live anywhere in this task.
+
+---
+
+## Result: 2026-10-31 (Claude, dev hand `cc20e12`)
+
+**Done, awaiting owner tick.**
+- **Already there (go-live D1):** `broker_env` binds OANDA_ENV, the API host, the single
+  credential set and the account-id prefix, and refuses on any mismatch.
+- **Built:** `system2/common/execution_mode.py`, checked at the top of `python -m system2`
+  (exit 3 on failure):
+  - **Live refuses to start** without a mode file (`EXEC_MODE_FILE`, kept outside git)
+    holding `mode=live`, `confirmed_by`, `confirmed_at` and the live account's last
+    4 characters.
+  - A present file must agree with `EXEC_SHADOW` and `OANDA_ENV`.
+  - No file and not live: unchanged, so prod practice and the shadow-only DEV keep
+    starting.
+- Tests: `src/system2/common/tests/test_execution_mode.py` (14 tests). S2 suite: 582
+  passed.
+- **Runbook:** "How to switch to live" in `systems/hand/RUNBOOK.md` §6.
+- **Not done:** `C:\SB\prod\services\sb_service.ps1` (prod) still pins
+  `EXEC_SHADOW`/`OANDA_ENV` by hand. The runbook says to change those lines in the same
+  owner-approved deploy as going live. The dashboard LIVE frame (DECEMBER-READINESS §4)
+  is still open.

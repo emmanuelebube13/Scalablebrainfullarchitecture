@@ -40,3 +40,27 @@ The register entry therefore looks **stale**. Verify it rather than rebuilding.
 
 ## Guardrails
 Practice account only, minimum units. Never run this against live credentials.
+
+---
+
+## Result: 2026-10-31 (Claude, dev monorepo `a3f9546`). Verified: already built, no code change
+
+**The register entry was stale.**
+- F-303 already labels every order `sb-<idempotency_key>`.
+- It reconciles the broker's last 200 transactions **before every** `create_order`.
+- It treats "cannot verify" as "already submitted", so it refuses to send and the queue
+  retries.
+- Entry orders expire after 300 s (600 s after downtime), so the 200-transaction window
+  can't be outrun.
+
+Each crash point maps to a passing test in `test_oanda_adapter.py` (93 tests, listed in
+`C:\SB\dev\DECEMBER-READINESS.md`, now ticked):
+- (a) after POST
+- (b) after fill, before mark
+- filled then already closed
+- reconcile outage
+- (c) is safe because the mark is durable
+
+**Not done, on purpose:** a live crash drill on the practice account. DEV is shadow-only
+and the practice account is shared with prod. The owner can run one on prod practice at
+minimum units if wanted.
