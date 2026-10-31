@@ -349,7 +349,7 @@
       "options": "Encoders only (FinBERT, FinBERT-tone, CentralBankRoBERTa) · + FOMC-RoBERTa (CC BY-NC, research only) · + Claude via API (metered)",
       "recommendation": "All of them in the bake-off; FOMC-RoBERTa for research only; Claude via API on post-cutoff statements, cost logged. Briefing polish off until the deterministic text is trusted.",
       "status": "decided",
-      "answer": "Owner 2026-10-31: test them all, as recommended (FinBERT is just one probability model among several). FOMC-RoBERTa for research only (CC BY-NC); Claude counts only on statements after its training cutoff. Briefing polish stays off for now. Confirm if this reading is wrong."
+      "answer": "Owner 2026-10-31: test them all, as recommended (FinBERT is just one probability model among several). FOMC-RoBERTa for research only (CC BY-NC); Claude counts only on statements after its training cutoff. Briefing polish stays off for now. Owner confirmed 2026-10-31."
     },
     {
       "id": "W45-D7",
