@@ -33,3 +33,26 @@ their labels came from someone reading text in hindsight.
 - The registry is seeded for FinBERT, the lexicon and the TX-01 candidates.
 - The guard is used by `strategies.py` text strategies.
 - Tests pass.
+
+---
+
+## Result: 2026-10-31 (Claude, dev brain `c210ef2`)
+
+**Done, awaiting owner tick.**
+- `src/research/text_models.py` holds the registry and the rule. `PitData.need_doc_scores`
+  in `src/research/pit.py` is the single read path and applies it:
+  - an unregistered model is **refused**
+  - LLM scores on text published at or before the cutoff are **dropped**
+  - encoder scores are kept with a `pre_cutoff` flag
+- Tests: `src/research/tests/test_text_models.py`. One of them fails if any module other
+  than `pit.py`, the scoring writer or the mirror reads `ext.doc_score` directly. The
+  full research and outcomes suite passed: 200 tests.
+- Seeded with `ProsusAI/finbert`, the only model with scores today (191 docs, which the
+  FOMC tone strategy uses). Its cutoff is 2020-12-31, an upper bound.
+
+**Deviation from the plan, with the reason:** the registry is **code**, not an
+`ext.text_model` table, and no `model_cutoff_utc` column was added. Research-schema
+migrations 015–017 were being added by other work that same day, so a new migration
+number risked a collision. A code registry is also reviewed like code. TX-01 adds its
+candidates (CentralBankRoBERTa, FOMC-RoBERTa, FinBERT-tone, Claude) to `REGISTRY`, each
+with a sourced cutoff. The hypothesis-card template note (step 5) is still open.

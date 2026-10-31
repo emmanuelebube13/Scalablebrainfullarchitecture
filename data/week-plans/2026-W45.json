@@ -121,7 +121,8 @@
           "system": "system-1",
           "status": "todo",
           "title": "TX-04 look-ahead guard: text-model registry with training cutoffs; backtests read model scores only through the guard",
-          "plan": "plans/TX-04-lookahead-guard.md"
+          "plan": "plans/TX-04-lookahead-guard.md",
+          "note": "Built early 2026-10-31 (dev c210ef2). See the Result section in the plan. Awaiting owner tick."
         }
       ]
     },
