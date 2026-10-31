@@ -45,6 +45,7 @@
                 "status": { "type": "string", "enum": ["todo", "done", "blocked", "moved"] },
                 "title": { "type": "string" },
                 "note": { "type": "string" },
+                "plan": { "type": "string", "description": "repo-relative path to the task's plan document (plans/*.md)" },
                 "done_at": { "type": "string" }
               }
             }

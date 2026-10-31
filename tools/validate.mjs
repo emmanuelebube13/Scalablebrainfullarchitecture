@@ -17,6 +17,7 @@
  */
 
 import { readFile, readdir } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -288,6 +289,7 @@ for (const entry of weekIndex?.weeks ?? []) {
     for (const t of d.tasks ?? []) {
       if (ids.has(t.id)) err(entry.file, `duplicate task id "${t.id}"`);
       ids.add(t.id);
+      if (t.plan && !existsSync(join(ROOT, t.plan))) err(entry.file, `task "${t.id}" plan "${t.plan}" does not exist`);
       if (t.system && t.system !== 'ops' && !systemIds.has(t.system)) {
         err(entry.file, `task "${t.id}" references unknown system "${t.system}"`);
       }

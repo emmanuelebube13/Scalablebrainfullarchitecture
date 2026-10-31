@@ -75,6 +75,7 @@
 .wk-task-meta code { font-size: 0.72rem; }
 .wk-sys { font-family: var(--mono); color: var(--sys); }
 .wk-done-at { color: var(--good); font-family: var(--mono); }
+.wk-plan { font-size: 0.8rem; color: var(--site-accent); text-decoration: underline; }
 .wk-task-note { font-size: 0.85rem; color: var(--text-dim); }
 .wk-review { margin: 14px 0 0; padding-top: 12px; border-top: 1px dashed var(--border); color: var(--text-dim); font-size: 0.9rem; }
 
