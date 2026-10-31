@@ -37,7 +37,8 @@
           "system": "system-2",
           "status": "todo",
           "title": "LR-01 order idempotency and startup reconcile: verify F-303, crash-inject on practice, close or fix",
-          "plan": "plans/LR-01-order-idempotency.md"
+          "plan": "plans/LR-01-order-idempotency.md",
+          "note": "Verified 2026-10-31: already built (F-303); register ticked (dev a3f9546). Awaiting owner tick."
         }
       ]
     },
@@ -52,14 +53,16 @@
           "system": "system-1",
           "status": "todo",
           "title": "PC-03 volatility forecaster (HAR-RV) and vol_reach feature",
-          "plan": "plans/PC-03-volatility-forecaster.md"
+          "plan": "plans/PC-03-volatility-forecaster.md",
+          "note": "Built early 2026-10-31 (dev 20bf970). See the plan's Result section. Awaiting owner tick."
         },
         {
           "id": "W46-TUE-2",
           "system": "system-2",
           "status": "todo",
           "title": "LR-02 slippage bound (verify) and post-fill geometry check (build)",
-          "plan": "plans/LR-02-slippage-geometry.md"
+          "plan": "plans/LR-02-slippage-geometry.md",
+          "note": "Built early 2026-10-31 (dev 65d53f1). Awaiting owner tick."
         }
       ]
     },
@@ -96,7 +99,8 @@
           "system": "system-2",
           "status": "todo",
           "title": "LR-03 execution-mode gate (shadow / practice / live) with boot preflight",
-          "plan": "plans/LR-03-execution-mode-gate.md"
+          "plan": "plans/LR-03-execution-mode-gate.md",
+          "note": "Built early 2026-10-31 (dev cc20e12); prod sb_service.ps1 change waits for the live deploy. Awaiting owner tick."
         },
         {
           "id": "W46-THU-2",

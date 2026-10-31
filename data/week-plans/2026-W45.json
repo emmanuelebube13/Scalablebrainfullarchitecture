@@ -358,6 +358,13 @@
       "recommendation": "Skip: LightGBM and XGBoost are installed, and the library is not the bottleneck.",
       "status": "decided",
       "answer": "Owner 2026-10-31: include CatBoost, as a test, not a replacement. Run an ensemble of the candidates and choose the best; XGBoost stays the incumbent unless beaten. CatBoost 1.2.10 installed research-only at C:\\SB\\lab\\pydeps\\catboost-1.2.10 (pip --target; venv-s1 untouched; import tested OK under App Control)."
+    },
+    {
+      "id": "W45-D8",
+      "question": "Approve the proposed live risk numbers (LR-04)? 0.5% max per trade (research 0.10%), daily loss 1% soft / 2% hard, weekly 5%, max drawdown 15%, halt after 6 losses, at most 6 open trades and 6 a day, total open risk 3%.",
+      "options": "Approve as proposed · change some numbers",
+      "recommendation": "Approve. Full table and the $200/$5k instrument check are in plans/LR-04 Result. At $200 only FX, copper and the 2-year bond can trade at 0.10%.",
+      "status": "open"
     }
   ],
   "path_to_december": [

@@ -50,3 +50,33 @@ installed and must not be added.
 ## Guardrails
 Every input bar is ≤ decision time. Refits are expanding-window only. The rolling means
 never include the bar being forecast.
+
+---
+
+## Result: 2026-10-31 (Claude, dev brain `20bf970`)
+
+**Done, awaiting owner tick.**
+- Code: `src/features/vol_forecast.py`, run with `python -m src.features.vol_forecast`.
+  Tests: `src/features/tests/test_vol_forecast.py` (8 tests). They cover the DST roll,
+  check the exact formula against a Monte Carlo, and test causality by changing the
+  future and asserting the past forecasts don't move.
+- Report: `results/research/vol/2026-10-31-vol-har-1.0.0.md`. Per-trade
+  `vol_reach_*` values are in a git-ignored parquet next to it.
+
+**Results:**
+- **HAR beats EWMA and ATR on 69 of 72 asset × horizon cells (QLIKE).** The 3 losses are
+  all EUR_CHF, where the January 2015 SNB unpeg day dominates the average for every
+  model. HAR is the model shipped.
+- **The reach probability is well calibrated.** Predicted vs observed TP-first agrees
+  within about 2 points in every decile.
+- **It adds little beyond geometry.** Brier skill over 1/(1+RR) is +0.6% on the
+  reconstructable strategies and +2.6% on all strategies with a target. Volatility tells
+  how far price will travel, not which way. This is expected, and it is the honest
+  input for the PC-05 combiner, which will weight it accordingly.
+- Timed exits are under-predicted (2.1% predicted vs 5.2% observed). Hold windows are
+  approximate, which matches the PC-02 note on v2's conditional time exits.
+
+**Deviations:**
+- An exact closed form replaced the Monte Carlo.
+- Duan smearing corrects log-HAR's low bias.
+- Wiring as a PC-01 evidence source waits for PC-01 itself.
