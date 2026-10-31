@@ -75,3 +75,34 @@ Unique key: `(signal_key, source, source_version)`. Inserts use `ON CONFLICT DO 
 ## Guardrails
 Nothing in this task reads evidence back into a live decision. The hook may add at most
 200 ms p95 to emission. LLM sources run asynchronously, or are skipped until TX-01.
+
+---
+
+## Result: 2026-10-31 (Claude, umbrella `a583c16` branch `feat/evidence-ledger`; dev brain `0842a8f`, `4e3368b`)
+
+**Built, and live in DEV once the DEV emitters run with `EVIDENCE_LEDGER=on`.**
+- **Table:** `research.signal_evidence`, umbrella migration **018**. It is append-only
+  (trigger) and the DB enforces `data_cutoff_utc <= decided_at_utc`. Applied to
+  **scalable_brain_dev only**; the prod DB is untouched. The migration sits on umbrella
+  branch `feat/evidence-ledger` (worktree `C:\SB\lab\wt-evidence`); merging it into
+  umbrella `dev` is the owner's or the umbrella owner's call.
+- **Hook:** `src/evidence/hook.py`, called after decide and publish in both
+  `signals/run.py` and `research/live_emit.py`.
+  - Each source runs on its own, so a failure loses only that row.
+  - Rows that peek past the decision, or scores outside [0,1], are dropped.
+  - The hook never raises.
+  - It does nothing unless `EVIDENCE_LEDGER=on`.
+- **Sources so far** (`src/evidence/sources.py`), checked on live data 2026-10-31:
+  - `gk_v2`: the live champion's own `model_score`.
+  - `base_rate`: the strategy's win rate from trades that resolved before a 45-day
+    embargo (e.g. strategy 41: 0.461, n = 4,059).
+  - `vol_reach`: the PC-03 HAR reach probability (e.g. EUR_USD 1.5% target: 0.11, using
+    bars up to yesterday's close).
+  - `event_risk`: TX-02, counts only.
+- Tests: `src/evidence/tests/test_hook.py` (12), including real-DB checks that UPDATE is
+  refused and that a look-ahead row is rejected. Signals, emit, evidence and features:
+  191 tests pass.
+- **Open:**
+  - The daily "zero rows from a wired source" bell check (step 8).
+  - `tone_*` (TX-01) and `gk_v3` (PC-04) are wired when they exist.
+  - Mirror and prod migration on the next owner deploy.

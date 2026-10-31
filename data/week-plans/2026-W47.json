@@ -67,14 +67,16 @@
           "system": "system-3",
           "status": "todo",
           "title": "LR-05 circuit-breaker latch that survives restarts, with owner reset",
-          "plan": "plans/LR-05-circuit-breaker-latch.md"
+          "plan": "plans/LR-05-circuit-breaker-latch.md",
+          "note": "Built early 2026-10-31 (dev 742ba31). Awaiting owner tick."
         },
         {
           "id": "W47-WED-2",
           "system": "system-3",
           "status": "todo",
           "title": "LR-06 spread-widening and stale-quote gate (FX and CFDs)",
-          "plan": "plans/LR-06-spread-stale-quote-gate.md"
+          "plan": "plans/LR-06-spread-stale-quote-gate.md",
+          "note": "Built early 2026-10-31 (dev 2c8c10c): CFD pip bug fixed; FX gate already existed. Awaiting owner tick."
         }
       ]
     },
@@ -89,7 +91,8 @@
           "system": "system-1",
           "status": "todo",
           "title": "LR-07 S1 signal-emit idempotency and dead-letter on both emit paths",
-          "plan": "plans/LR-07-s1-emit-idempotency.md"
+          "plan": "plans/LR-07-s1-emit-idempotency.md",
+          "note": "Built early 2026-10-31 (dev fb3d5d2). Awaiting owner tick."
         },
         {
           "id": "W47-THU-2",

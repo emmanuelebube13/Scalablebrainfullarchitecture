@@ -30,3 +30,30 @@ B1/B3). S3's `gate/layers.py` has no spread layer that a grep can find. The S1 D
 - One documented owner of the gate.
 - Tests pass for FX and an index.
 - The register is updated.
+
+---
+
+## Result: 2026-10-31 (Claude, dev hand `2c8c10c`)
+
+**Done, awaiting owner tick.**
+- **One owner, S2**, already built as go-live B3. It refuses on:
+  - a spread above 3× typical, or the class ceiling (3 pips majors, 6 crosses)
+  - a quote older than 60 s
+  - no quote at all
+
+  S3 keeps only its clock rule (the rollover hold). No second gate was added.
+- **Bug fixed:** `pip_size` assumed 0.0001 for every non-JPY instrument. On index, metal,
+  energy and bond CFDs (pip 1.0 for SPX500, 0.01 for XAU) every spread read thousands of
+  pips and every slippage bound was a rounding error, so **every CFD order was refused or
+  cancelled**. Now:
+  - S2 uses OANDA's `pipLocation` per instrument.
+  - A new class `cfd` has **no default limits** and is refused, naming the key to set,
+    until `MAX_SLIPPAGE_PIPS_<X>` and `SPREAD_TYPICAL_PIPS_<X>` (or `MAX_SPREAD_PIPS_<X>`)
+    are set from measured quotes.
+  - FX is unchanged.
+- Tests: `src/system2/broker/tests/test_cfd_limits.py`. S2 suite: 598 passed.
+- **Open:**
+  - Measure typical spreads per pair before live. All are unset today, so the class
+    ceilings apply.
+  - Set CFD limits before any CFD trades.
+  - `position_manager` (trailing/BE, off) still uses the FX pip rule.

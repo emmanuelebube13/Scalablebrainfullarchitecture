@@ -84,7 +84,8 @@
           "system": "system-1",
           "status": "todo",
           "title": "TX-02 economic event calendar (point-in-time) and event_risk feature",
-          "plan": "plans/TX-02-event-calendar.md"
+          "plan": "plans/TX-02-event-calendar.md",
+          "note": "Built early 2026-10-31 (dev 4e3368b): calendar collector already ran every 6 h; event_risk source added. Awaiting owner tick."
         }
       ]
     },
@@ -107,7 +108,8 @@
           "system": "system-1",
           "status": "todo",
           "title": "PC-01 part 2: wire vol_reach, event_risk and tone_* into the evidence ledger",
-          "plan": "plans/PC-01-evidence-ledger.md"
+          "plan": "plans/PC-01-evidence-ledger.md",
+          "note": "vol_reach and event_risk wired 2026-10-31 (dev 0842a8f, 4e3368b); tone_* waits for TX-01."
         }
       ]
     },

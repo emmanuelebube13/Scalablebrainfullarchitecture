@@ -31,3 +31,25 @@ signal.
 ## Acceptance
 - Tests pass for both emit paths.
 - The register is updated.
+
+---
+
+## Result: 2026-10-31 (Claude, dev `fb3d5d2`)
+
+**Done, awaiting owner tick.**
+- **No double emit, already built:**
+  - deterministic `signal_id`s, which the producer uses as its idempotency key
+  - D9 economic-content setup dedup
+  - S3 decides each `signal_id` once, and S2 has its own order key
+- **Gatekeeper path:** a partial publish already retries next run, because dedup state is
+  committed only after a full publish. I confirmed this by reading the code, not with a
+  drill.
+- **Drop path fixed in the research emitter:** a *temporary* queue failure (`QUEUE_FULL`,
+  `PUBLISH_NACK`) used to be written to the frozen `research.live_intent` as
+  `dead_lettered`, which blocked every retry, so the signal was silently lost. Now:
+  - It writes no row, logs a warning, and the next hourly run retries it while it is
+    fresh (75 min).
+  - After that it is recorded `stale`, so a miss is visible.
+  - Malformed signals still dead-letter.
+- Tests in `src/research/tests/test_live_emit.py`; research, signals and queue: 351 tests
+  pass.

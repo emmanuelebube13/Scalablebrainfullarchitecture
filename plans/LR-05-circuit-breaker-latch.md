@@ -34,3 +34,25 @@ and resumes only when the owner explicitly acknowledges it.
 ## Acceptance
 - Tests pass.
 - A DEV drill (force a trip, restart, reset) is recorded in the commit.
+
+---
+
+## Result: 2026-10-31 (Claude, dev guardian `742ba31`)
+
+**Done, awaiting owner tick.**
+- **Already there:**
+  - The breaker log (`ams_circuit_breaker_log`) and `risk_state.halted_until` live in
+    `ams.db`, so they survive restarts.
+  - `max_drawdown` latches: CIRCUIT_BROKEN can only be left by a manual reset, then
+    `/clear_recovery`.
+  - `/reset_breaker` records who and when, and breakers raise alerts.
+- **Gap fixed:** the hard-daily, weekly and losing-streak halts **resumed on their own**
+  when their timer ran out. Now `circuit_breakers.latch_until_reset` keeps rejecting new
+  entries (layer A, reason `breaker_latched`) until an operator resets the breaker.
+  - The live profile latches all three. Practice is unchanged.
+  - Open trades are **not** closed: this blocks new risk only.
+  - The emergency STOP file is deliberately **not** written by breakers, because W45-D3
+    keeps STOP absolute.
+- Tests: `tests/test_breaker_latch.py` (7 tests). The same 10 S3 tests that already
+  failed still fail, and they need their own task.
+- **Open:** a dashboard reset button with a two-step confirm. The API exists.

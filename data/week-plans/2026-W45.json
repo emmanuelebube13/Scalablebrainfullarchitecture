@@ -52,7 +52,8 @@
           "id": "W45-MON-3",
           "system": "system-1",
           "status": "todo",
-          "title": "Schedule `live_emit --publish` hourly in DEV (SB_ENV=dev, QUEUE_PROVIDER=sqlite, QUEUE_LOCAL_PATH=C:/SB/devenv/queue/queue.db)"
+          "title": "Schedule `live_emit --publish` hourly in DEV (SB_ENV=dev, QUEUE_PROVIDER=sqlite, QUEUE_LOCAL_PATH=C:/SB/devenv/queue/queue.db)",
+          "note": "Also set EVIDENCE_LEDGER=on and RESEARCH_DB_NAME=scalable_brain_dev in the DEV emitter env (PC-01)."
         },
         {
           "id": "W45-MON-4",
@@ -167,7 +168,8 @@
           "system": "system-1",
           "status": "todo",
           "title": "PC-01 evidence ledger: research.signal_evidence (append-only) + hook on both emit paths; first sources base_rate and gk_v2, shadow only",
-          "plan": "plans/PC-01-evidence-ledger.md"
+          "plan": "plans/PC-01-evidence-ledger.md",
+          "note": "Built early 2026-10-31 (migration 018 on dev DB; dev brain 0842a8f). Turns on with EVIDENCE_LEDGER=on in the DEV emitter (W45-MON-3). Awaiting owner tick."
         }
       ]
     },
