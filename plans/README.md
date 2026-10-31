@@ -56,7 +56,9 @@ that review. The summary below is the part an agent needs.
    into it.** Available: xgboost 3.2, lightgbm 4.6, scikit-learn 1.8, optuna 4.8,
    transformers 5.4, torch 2.11 (CUDA). Missing: catboost, arch, statsmodels, anthropic.
    Implement HAR or GARCH with numpy and sklearn, and call LLM APIs over plain HTTPS
-   (`requests` / `urllib`). Anything that needs a new package is an **owner decision**;
+   (`requests` / `urllib`). **Exception, research only:** CatBoost 1.2.10 lives in
+   `C:\SB\lab\pydeps\catboost-1.2.10`. Use it with `PYTHONPATH` on research runs only,
+   never on a live path (see `C:\SB\lab\pydeps\README.md`). Anything that needs a new package is an **owner decision**;
    write it up and stop.
 3. **No look-ahead.** Every feature uses only data with a timestamp ≤ the decision time.
    Every evaluation uses purged, embargoed walk-forward splits, never random K-fold.
@@ -107,6 +109,7 @@ that review. The summary below is the part an agent needs.
 | [LR-05](LR-05-circuit-breaker-latch.md) | Circuit-breaker latch and owner reset | W47 | none |
 | [LR-06](LR-06-spread-stale-quote-gate.md) | Spread-widening and stale-quote admission gate | W47 | none |
 | [LR-07](LR-07-s1-emit-idempotency.md) | S1 signal-emit idempotency and dead-letter | W47 | none |
+| [PC-08](PC-08-probability-trade-management.md) | Probability-driven trade management (partial TP, break-even) | W48 | PC-02, PC-05 |
 | [ON-01](ON-01-bar-close-inference.md) | Event-driven bar-close inference (design, then DEV) | W49 | PC-01 |
 | [ON-02](ON-02-regime-router-vs-feature.md) | Regime as router vs as feature: walk-forward study | W48 | PC-02 |
 
@@ -115,14 +118,21 @@ register is stale.** For example, S2 already sends `clientExtensions.id` (F-303)
 `priceBound` limits in `execution_limits.py`. Every LR task therefore **starts by verifying
 what already exists** and closes only the real gap.
 
-## Owner decisions this program needs
+## Owner decisions (answered 2026-10-31)
 
-These are on the W45 page as W45-D5 to W45-D7:
+- **D5, size and block.** The bands apply to calibrated P(TP hit):
+  - below ~30%: block
+  - 30–60%: reduced size (0.5x)
+  - 60–85%: normal size, rising toward 1.25x
+  - ~90% and above: up to 1.5x
 
-- **D5:** Should the probability check only scale size at first, or also veto below an
-  expected-R floor? The recommendation is size only.
-- **D6:** Which text scorer? Claude via the API (metered), a local model (App Control
-  risk), or both in the bake-off. FOMC-RoBERTa is licensed CC BY-NC, so it is
-  non-commercial. Is research-only use acceptable?
-- **D7:** CatBoost is not installed and cannot be installed into venv-s1. Should it be
-  skipped, or should an approved install path be arranged?
+  Every size stays inside S3's caps. High probability also drives trade management:
+  partial TP and break-even (PC-08). The bands are confirmed at PC-07 against calibration
+  evidence. Caveat: P(full TP) falls with target distance, so a fixed 30% floor must not
+  silently block positive-expected-R wide-target trades. PC-07 checks this.
+- **D6, text models.** Test them all. FinBERT is one probability source among several.
+  FOMC-RoBERTa is research only (CC BY-NC). Claude scores count only on text published
+  after its training cutoff.
+- **D7, CatBoost.** Include it as a test, not a replacement. Choose from an ensemble
+  comparison, and XGBoost stays incumbent unless beaten. It is installed research-only
+  (see rule 2).

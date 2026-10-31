@@ -24,8 +24,16 @@ Promotion requires all of these:
      field with default 1.0.
    - It applies the multiplier to the sizing in `ams/risk/sizing.py` **after** every risk
      cap, so it can never exceed the caps.
-   - Bounds are [0.5, 1.5], or what D5 allows.
-   - A veto, i.e. size 0 below an expected-R floor, exists only if D5 said yes.
+   - Owner D5 bands on calibrated `p_tp100`:
+     - < 0.30: **block** (size 0)
+     - 0.30–0.60: 0.5x
+     - 0.60–0.85: 1.0x, rising linearly to 1.25x
+     - ≥ 0.85: up to 1.5x
+   - Before freezing the bands, check them against each geometry's break-even
+     probability, 1/(1+RR) plus costs. If the 30% floor would block a band of wide-target
+     trades whose OOS expected R is positive, present that to the owner with numbers.
+     Options: a per-RR floor, or a floor on `exp_r` instead.
+   - The management policy per band comes from PC-08, if approved.
 3. Deploy order: contract → S3 → S1 flag `PROB_CHECK_SIZING=true`, DEV first, with
    1 week of parity before practice.
 4. Add a kill switch: the flag off restores size × 1.0 immediately.

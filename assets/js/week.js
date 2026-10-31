@@ -28,6 +28,7 @@ const STATUS_LABEL = { blocked: 'Blocked', moved: 'Moved' };
 const root = $('#content');
 let plan = null;
 let planFile = null;
+let weekList = [];
 let busy = false;
 
 /* ---------- token ---------- */
@@ -243,6 +244,18 @@ async function onTick(t, box) {
   }
 }
 
+// Every plan in the index, so past and upcoming weeks are one click away.
+function weekNav() {
+  if (weekList.length < 2) return null;
+  return el('nav', { class: 'wk-weeks', 'aria-label': 'Weeks' },
+    weekList.map((w) => el('a', {
+      href: `?w=${w.week}`,
+      class: w.week === plan.week ? 'is-current' : '',
+      'aria-current': w.week === plan.week ? 'page' : null,
+      text: w.week.slice(-3),
+    })));
+}
+
 function render() {
   const allTasks = plan.days.flatMap((d) => d.tasks);
   const p = progress(allTasks);
@@ -250,7 +263,8 @@ function render() {
   root.replaceChildren(
     el('div', { class: 'wk-hero' },
       el('span', { class: 'kicker', text: `${plan.week}${plan.task_folder ? ` · ${plan.task_folder}` : ''} · ${fmtDay(plan.start, { weekday: 'short', day: 'numeric', month: 'short' })} – ${fmtDay(plan.end, { weekday: 'short', day: 'numeric', month: 'short' })} ${plan.end.slice(0, 4)}` }),
-      el('h1', { text: 'This week' }),
+      el('h1', { text: plan.start <= today && today <= plan.end ? 'This week' : `Week ${plan.week.slice(-2)}` }),
+      weekNav(),
       el('p', { class: 'wk-goal', html: inline(plan.goal) }),
       el('div', { class: 'wk-total' },
         el('strong', { text: `${p.done} of ${p.total} tasks done` }),
@@ -318,6 +332,7 @@ async function init() {
   try {
     const index = await loadJSON('data/week-plans/index.json');
     const weeks = index.weeks ?? [];
+    weekList = weeks;
     if (!weeks.length) throw new Error('data/week-plans/index.json lists no weeks');
     const wanted = new URLSearchParams(location.search).get('w');
     const today = todayISO();

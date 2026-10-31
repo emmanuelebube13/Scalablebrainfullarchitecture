@@ -339,21 +339,24 @@
       "question": "Probability check: when it is promoted (PC-07), may it only scale position size, or also veto trades below an expected-R floor?",
       "options": "Size only (0.5x-1.5x) · size + veto",
       "recommendation": "Size only at first: a veto starves the book (goal: at least a couple of trades a week).",
-      "status": "open"
+      "status": "decided",
+      "answer": "Owner 2026-10-31: size AND block, with bands on the calibrated P(TP hit). Block below ~30%. 30–60%: trade at reduced size (0.5x). 60–85%: normal size, rising toward 1.25x. ~90% and above: allocate more (up to 1.5x), always inside S3 caps. High probability should also manage the trade: partial take-profit at TP50 and/or lock break-even (new task PC-08). The bands are frozen only once PC-07 shows the probabilities are calibrated. Caveat to check at PC-07: P(full TP) falls with wider targets, so a fixed 30% block could reject every 3R trade even when its expected R is positive."
     },
     {
       "id": "W45-D6",
       "question": "Text scorer for central-bank statements: which candidates may the bake-off (TX-01) use, and may an LLM polish the morning briefing?",
       "options": "Encoders only (FinBERT, FinBERT-tone, CentralBankRoBERTa) · + FOMC-RoBERTa (CC BY-NC, research only) · + Claude via API (metered)",
       "recommendation": "All of them in the bake-off; FOMC-RoBERTa for research only; Claude via API on post-cutoff statements, cost logged. Briefing polish off until the deterministic text is trusted.",
-      "status": "open"
+      "status": "decided",
+      "answer": "Owner 2026-10-31: test them all, as recommended (FinBERT is just one probability model among several). FOMC-RoBERTa for research only (CC BY-NC); Claude counts only on statements after its training cutoff. Briefing polish stays off for now. Confirm if this reading is wrong."
     },
     {
       "id": "W45-D7",
       "question": "CatBoost is not installed and App Control forbids installing into venv-s1. Skip it in the gatekeeper bake-off (PC-04), or arrange an approved install path?",
       "options": "Skip · approved install",
       "recommendation": "Skip: LightGBM and XGBoost are installed, and the library is not the bottleneck.",
-      "status": "open"
+      "status": "decided",
+      "answer": "Owner 2026-10-31: include CatBoost, as a test, not a replacement. Run an ensemble of the candidates and choose the best; XGBoost stays the incumbent unless beaten. CatBoost 1.2.10 installed research-only at C:\\SB\\lab\\pydeps\\catboost-1.2.10 (pip --target; venv-s1 untouched; import tested OK under App Control)."
     }
   ],
   "path_to_december": [

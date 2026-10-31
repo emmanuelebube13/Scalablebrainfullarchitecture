@@ -114,3 +114,7 @@
 @media (prefers-reduced-motion: reduce) {
   .wk-bar span, .week-toast { transition: none; }
 }
+
+.wk-weeks { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.25rem 0 0.75rem; }
+.wk-weeks a { font-family: var(--font-mono, monospace); font-size: 0.8rem; padding: 0.15rem 0.55rem; border: 1px solid var(--accent-dim); border-radius: 999px; color: var(--text-dim); text-decoration: none; }
+.wk-weeks a.is-current { background: var(--site-accent); color: var(--on-accent); border-color: var(--site-accent); }
