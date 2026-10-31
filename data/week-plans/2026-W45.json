@@ -38,10 +38,9 @@
         {
           "id": "W45-MON-1",
           "system": "ops",
-          "status": "done",
+          "status": "todo",
           "title": "Restart DEV S2, S3 and bridge on current dev code (they run 10-24 code; this pulls a week of everyone's commits)",
-          "note": "Order: S2 first, then S3 + bridge.",
-          "done_at": "2026-10-31"
+          "note": "Order: S2 first, then S3 + bridge."
         },
         {
           "id": "W45-MON-2",
