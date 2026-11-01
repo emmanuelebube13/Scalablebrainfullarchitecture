@@ -81,3 +81,52 @@ model library is not the main lever, so the simplest model that ties wins.
 - No random K-fold.
 - The test window is never used for tuning.
 - If the lockbox is touched before the choice rule is written, say so in the report.
+
+---
+
+## Result: 2026-11-01 (Gemini draft, Claude-reviewed; dev brain `333ba75`, `9523b57`)
+
+**Done, awaiting owner tick. XGBoost stays.**
+- **Code:** `src/gatekeeper/v3/` (`python -m src.gatekeeper.v3.run --trials 30`).
+- **Report:** `results/research/gatekeeper_v3/2026-11-01-report.md`. The model artifact
+  is kept local and not committed.
+- **Data:**
+  - 51,702 development trades: reconstructable strategies with a declared target, target
+    `y100`.
+  - 5 purged, 40-day-embargoed walk-forward folds.
+  - 30 Optuna trials per model per fold.
+  - **Lockbox:** 4,956 trades from 2025-11-01 onward, scored once.
+
+| Model | Log loss (SE) | Brier skill vs geometry baseline (95% CI) | ECE | Top−bottom tercile R |
+|---|---|---|---|---|
+| ensemble_mean | 0.6280 (0.0029) | +1.53% [1.27, 1.81] | 0.008 | +0.013R |
+| catboost | 0.6285 (0.0029) | +1.49% [1.23, 1.77] | 0.011 | +0.012R |
+| lr | 0.6294 (0.0030) | +1.49% [1.24, 1.75] | 0.006 | +0.014R |
+| **xgboost (incumbent, kept)** | 0.6302 (0.0030) | +1.33% [1.03, 1.62] | 0.009 | +0.014R |
+| lightgbm | 0.6311 (0.0030) | +1.23% [0.93, 1.53] | 0.011 | +0.010R |
+| ensemble_stacked | 0.6328 (0.0031) | +1.15% [0.86, 1.47] | 0.011 | +0.021R |
+| baseline (null) | 0.6372 (0.0027) | 0 | 0.009 | +0.004R |
+
+**Lockbox (XGBoost, once):** Brier skill +2.3% [1.5, 3.1], ECE 0.013, top−bottom tercile
++0.022R.
+
+**Reading it honestly:**
+- Every model beats the geometry-only baseline, with CIs above zero, and is **well
+  calibrated**: ECE about 0.01, against the live champion's "says 0.46, gets 0.33".
+- No challenger beat XGBoost by more than 1 SE, so the incumbent stays (owner D7).
+- The skill is **small**: the gap between the best and worst third of trades is about
+  0.01–0.02R. That is better probabilities for the combiner (PC-05), **not a profitable
+  filter on its own**.
+- The rule printed "market-state model provides edge". That means statistical skill over
+  geometry, not trading profit.
+- The live inference gap remains: `vol_reach_*` is not on live signals yet, though PC-01's
+  evidence hook computes it.
+
+**Review notes on Gemini's draft (fixed before running):**
+- Optuna tuning was absent although the report claimed it.
+- Calibration was chosen on the rows it was fitted on.
+- There was no embargo before the inner validation slice.
+- The baseline could be chosen by the rule.
+- An ensemble win fell back to XGBoost in the lockbox.
+- A missing import crashed the report.
+- A duplicate `strategy_id` merge.

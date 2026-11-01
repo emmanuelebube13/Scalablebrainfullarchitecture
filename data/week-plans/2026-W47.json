@@ -29,7 +29,8 @@
           "system": "system-1",
           "status": "todo",
           "title": "PC-04 gatekeeper v3 bake-off: frame, folds, choice rule written, models fitted",
-          "plan": "plans/PC-04-gatekeeper-v3-bakeoff.md"
+          "plan": "plans/PC-04-gatekeeper-v3-bakeoff.md",
+          "note": "Ran 2026-11-01 (dev 9523b57). See W47-TUE-1 / plan Result."
         }
       ]
     },
@@ -44,7 +45,8 @@
           "system": "system-1",
           "status": "todo",
           "title": "PC-04 calibration, lockbox, report and proposed bundle (dry run only)",
-          "plan": "plans/PC-04-gatekeeper-v3-bakeoff.md"
+          "plan": "plans/PC-04-gatekeeper-v3-bakeoff.md",
+          "note": "Ran 2026-11-01: XGBoost kept; all models beat geometry by ~1.3-1.5% Brier, lockbox +2.3%, but R spread only ~0.02R. Awaiting owner tick."
         },
         {
           "id": "W47-TUE-2",

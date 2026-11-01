@@ -77,7 +77,8 @@
           "system": "system-1",
           "status": "todo",
           "title": "TX-01 text-model bake-off: label accuracy + market relevance, choice by pre-written rule",
-          "plan": "plans/TX-01-text-model-bakeoff.md"
+          "plan": "plans/TX-01-text-model-bakeoff.md",
+          "note": "Ran 2026-11-01 (dev 219966a): finbert-tone wins by rule (tie with FinBERT); no tone predicts USD. FOMC-RoBERTa (gated) + Claude (no key) not yet run. Awaiting owner tick."
         },
         {
           "id": "W46-WED-2",
