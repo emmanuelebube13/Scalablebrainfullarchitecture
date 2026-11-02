@@ -143,13 +143,15 @@
           "id": "W45-WED-1",
           "system": "ops",
           "status": "todo",
-          "title": "P0: tokens.css (rule book §3), IBM Plex only, data-theme toggle, design-lint script"
+          "title": "P0: tokens.css (rule book §3), IBM Plex only, data-theme toggle, design-lint script",
+          "note": "Already built 2026-10-30 by the design work (tokens.css, Plex only, data-theme toggle, design-lint; dev 404521a, live in prod 10-30). design-lint runs in npm test (dashboard baseline 213, panel 18). Awaiting owner tick."
         },
         {
           "id": "W45-WED-2",
           "system": "ops",
           "status": "todo",
-          "title": "P1: shell on tokens — sidebar, top bar, mobile nav, dialogs, bell; verdict pill with fix actions"
+          "title": "P1: shell on tokens — sidebar, top bar, mobile nav, dialogs, bell; verdict pill with fix actions",
+          "note": "Already built 2026-10-30 (shell on tokens; verdict pill with fix actions). The fix actions were deepened 11-02 under W45-TUE-1. Awaiting owner tick."
         },
         {
           "id": "W45-WED-3",
@@ -160,8 +162,9 @@
         {
           "id": "W45-WED-4",
           "system": "system-1",
-          "status": "todo",
-          "title": "Intraday FOMC statement fetch + FinBERT score within minutes of release (the tone strategy decides 60 min after; needed before 9 Dec)"
+          "status": "blocked",
+          "title": "Intraday FOMC statement fetch + FinBERT score within minutes of release (the tone strategy decides 60 min after; needed before 9 Dec)",
+          "note": "Built 2026-11-02 by Claude (dev 129d803). src.research.fomc_live --wait: on an FOMC day polls the Fed press release from the release time, extracts with the collector's own code (same sha -> no duplicate), scores with FinBERT v1, writes append-only with true timestamps, rings the bell with the tone z. Proven on past meetings: 10-28 and 09-16 reproduce the stored scores exactly (0.5858, 0.8244); a 10-28 replay scores 4.8 s after fetch, z -0.88 -> no trade (matches the ledger). FOUND AND FIXED (dev 1e4aa77): since 11-01 the TX-01 bake-off had re-scored every statement under a second FinBERT version and the tone strategy read both interleaved (its z was garbage); now one pinned version per model. Owner step: the scheduled task 'SB DEV research FOMC scorer (daily)' at 14:50 local is in the same register_live_emit_tasks.ps1 (MON-3). 9 Dec appears in ext.event via the Forex Factory weekly feed the week before."
         },
         {
           "id": "W45-WED-5",
