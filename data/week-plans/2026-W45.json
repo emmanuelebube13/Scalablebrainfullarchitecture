@@ -235,15 +235,18 @@
         {
           "id": "W45-FRI-1",
           "system": "system-2",
-          "status": "todo",
+          "status": "done",
           "title": "Bell notice when a timed exit falls due while emergency STOP is on (STOP stays absolute, W45-D3)",
-          "note": "Correction: the W45-D3 recommendation claimed the bell already announced this. It did not — the S2 sweeper only logs it."
+          "note": "Built 2026-11-02 by Claude (dev f63d467). STOP stops System 2, so S2 cannot report anything during STOP; the out-of-band ops watchdog now reads exit_by from each open broker trade and raises 'timed_exit:overdue:<id>' (to the bell via bell_relay) 10 min after it is due while the market is open. Covers STOP, S2 down, a DOWNTIME_HALT and a refusing broker. Stable message, resolves on close. Bridge tests pass. In the 2026-11-02 prod release (a0a4c3b).",
+          "done_at": "2026-11-02"
         },
         {
           "id": "W45-FRI-2",
           "system": "system-2",
-          "status": "todo",
-          "title": "Close-after-outbox-failure: a timed close whose fill event fails to publish must still reach S3"
+          "status": "done",
+          "title": "Close-after-outbox-failure: a timed close whose fill event fails to publish must still reach S3",
+          "note": "Built 2026-11-02 by Claude (dev 145cc29). Gap found: the timed-exit sweep marked a trade closed BEFORE emitting its close, so a failed emit was never retried and System 3 never learned of the close. Now closed only once recorded; a failed emit leaves the trade for the broker-close sweep, which reports it as 'expiry'. System 2 tests 601/601. Running in DEV. Not in prod: prod has no timed exits yet (ships with the W46 timed-exit rollout).",
+          "done_at": "2026-11-02"
         },
         {
           "id": "W45-FRI-3",
