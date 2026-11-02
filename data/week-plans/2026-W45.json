@@ -89,8 +89,10 @@
         {
           "id": "W45-TUE-1",
           "system": "ops",
-          "status": "todo",
-          "title": "Inventory every red/amber state (verdict chain, S1 health, services, risk gate, reconciliation) and give each a fix action: resume risk gate, restart a service (supervisor run\\<svc>.restart), rerun the signal job, reconcile broker, clear a stale halt"
+          "status": "blocked",
+          "title": "Inventory every red/amber state (verdict chain, S1 health, services, risk gate, reconciliation) and give each a fix action: resume risk gate, restart a service (supervisor run\\<svc>.restart), rerun the signal job, reconcile broker, clear a stale halt",
+          "plan": "plans/W45-TUE-1-fix-actions.md",
+          "note": "Built 2026-11-02 by Claude (umbrella feat/fix-actions ab6b582, stacked on TUE-3). Found and fixed: S2's downtime halt never reached the top-bar verdict, so a halted System 2 read 'Trading'. Every verdict-chain fix and all 29 System-view checks now offer a fix that deep-links to the exact control-panel section (or the exact manual step). Verified headless 20/20 at phone width. Not deployed; see the plan's 'To deploy'."
         },
         {
           "id": "W45-TUE-2",
