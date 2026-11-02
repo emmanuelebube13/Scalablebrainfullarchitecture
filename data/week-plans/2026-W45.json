@@ -89,10 +89,11 @@
         {
           "id": "W45-TUE-1",
           "system": "ops",
-          "status": "blocked",
+          "status": "done",
           "title": "Inventory every red/amber state (verdict chain, S1 health, services, risk gate, reconciliation) and give each a fix action: resume risk gate, restart a service (supervisor run\\<svc>.restart), rerun the signal job, reconcile broker, clear a stale halt",
           "plan": "plans/W45-TUE-1-fix-actions.md",
-          "note": "Built 2026-11-02 by Claude (umbrella feat/fix-actions ab6b582, stacked on TUE-3). Found and fixed: S2's downtime halt never reached the top-bar verdict, so a halted System 2 read 'Trading'. Every verdict-chain fix and all 29 System-view checks now offer a fix that deep-links to the exact control-panel section (or the exact manual step). Verified headless 20/20 at phone width. Not deployed; see the plan's 'To deploy'."
+          "note": "Built 2026-11-02 by Claude (umbrella feat/fix-actions ab6b582, stacked on TUE-3). Found and fixed: S2's downtime halt never reached the top-bar verdict, so a halted System 2 read 'Trading'. Every verdict-chain fix and all 29 System-view checks now offer a fix that deep-links to the exact control-panel section (or the exact manual step). Verified headless 20/20 at phone width. DEPLOYED to prod 2026-11-02 (umbrella 455861b + panel rebuilt), owner-requested.",
+          "done_at": "2026-11-02"
         },
         {
           "id": "W45-TUE-2",
@@ -104,16 +105,18 @@
         {
           "id": "W45-TUE-3",
           "system": "ops",
-          "status": "blocked",
+          "status": "done",
           "title": "Trades view: label manual broker trades 'Manual' (order_id manual:<id>, no strategy) instead of blank attribution",
-          "note": "Built 2026-11-02 by Claude (umbrella branch feat/manual-trade-label: c148b7e code, 5764bc7 static; worktree C:\\SB\\lab\\wt-manual-label). Rows written by trade_journal_sync as order_id manual:<id> / correlation manual[oanda] now read 'Manual' (strategyResolution 'manual') instead of 'Unattributed'; a real strategy_id still wins; phone cards now show the label. Tests: server 13/13, dashboard 303/304 (the 1 = golive-display, already red in prod), tsc ok, design-lint ok. NOT DEPLOYED: Claude was not permitted to deploy prod. To deploy: in C:\\SB\\scalablebrain-umbrella run git merge --ff-only feat/manual-trade-label, then write 'restart' to C:\\SB\\prod\\services\\run\\dashboard.restart."
+          "note": "Built 2026-11-02 by Claude (umbrella branch feat/manual-trade-label: c148b7e code, 5764bc7 static; worktree C:\\SB\\lab\\wt-manual-label). Rows written by trade_journal_sync as order_id manual:<id> / correlation manual[oanda] now read 'Manual' (strategyResolution 'manual') instead of 'Unattributed'; a real strategy_id still wins; phone cards now show the label. Tests: server 13/13, dashboard 303/304 (the 1 = golive-display, already red in prod), tsc ok, design-lint ok. DEPLOYED to prod 2026-11-02 (umbrella 455861b), owner-requested.",
+          "done_at": "2026-11-02"
         },
         {
           "id": "W45-TUE-4",
           "system": "system-3",
-          "status": "blocked",
+          "status": "done",
           "title": "Reconciliation: a manual trade the owner opened should raise one 'manual trade' notice, not a repeating divergence every minute",
-          "note": "Built 2026-11-02 by Claude (dev 8ee7cb1; prod-based branch release/2026-11-02-manual-trade = 90e31c6 on e73c450). The bridge tags snapshot positions origin system/manual (sb- client id = system; untagged and opened >= 2026-10-28 = manual; else omitted). S3 leaves a manual trade it does not hold out of the divergence check and logs it once; the single bell notice stays with trade_journal_sync (no duplicate); a manual trade never hides a divergence in S3's own trades. Contract AccountSnapshot gains optional 'origin'. Running in DEV since 21:28 UTC (snapshots accepted). Tests: guardian 676/676 (dev), 651/651 + bridge 208 on the prod base. Deploy gate DRY-RUN: WOULD DEPLOY 90e31c6 (all gates passed). Owner step: deploy 90e31c6 from the control panel Deploys page (S2 code is unchanged, but the 10-31 deploy restarted S2 and left a DOWNTIME_HALT; if it shows again, use the panel's 'Resume System 2 after downtime')."
+          "note": "Built 2026-11-02 by Claude (dev 8ee7cb1; prod-based branch release/2026-11-02-manual-trade = 90e31c6 on e73c450). The bridge tags snapshot positions origin system/manual (sb- client id = system; untagged and opened >= 2026-10-28 = manual; else omitted). S3 leaves a manual trade it does not hold out of the divergence check and logs it once; the single bell notice stays with trade_journal_sync (no duplicate); a manual trade never hides a divergence in S3's own trades. Contract AccountSnapshot gains optional 'origin'. Running in DEV since 21:28 UTC (snapshots accepted). Tests: guardian 676/676 (dev), 651/651 + bridge 208 on the prod base. Deploy gate DRY-RUN: WOULD DEPLOY 90e31c6 (all gates passed). Owner step: deploy 90e31c6 from the control panel Deploys page (S2 code is unchanged, but the 10-31 deploy restarted S2 and left a DOWNTIME_HALT; if it shows again, use the panel's 'Resume System 2 after downtime'). DEPLOYED to prod 2026-11-02 (S1-3 a0a4c3b), owner-requested.",
+          "done_at": "2026-11-02"
         },
         {
           "id": "W45-TUE-5",
