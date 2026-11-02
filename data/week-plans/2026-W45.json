@@ -102,14 +102,16 @@
         {
           "id": "W45-TUE-3",
           "system": "ops",
-          "status": "todo",
-          "title": "Trades view: label manual broker trades 'Manual' (order_id manual:<id>, no strategy) instead of blank attribution"
+          "status": "blocked",
+          "title": "Trades view: label manual broker trades 'Manual' (order_id manual:<id>, no strategy) instead of blank attribution",
+          "note": "Built 2026-11-02 by Claude (umbrella branch feat/manual-trade-label: c148b7e code, 5764bc7 static; worktree C:\\SB\\lab\\wt-manual-label). Rows written by trade_journal_sync as order_id manual:<id> / correlation manual[oanda] now read 'Manual' (strategyResolution 'manual') instead of 'Unattributed'; a real strategy_id still wins; phone cards now show the label. Tests: server 13/13, dashboard 303/304 (the 1 = golive-display, already red in prod), tsc ok, design-lint ok. NOT DEPLOYED: Claude was not permitted to deploy prod. To deploy: in C:\\SB\\scalablebrain-umbrella run git merge --ff-only feat/manual-trade-label, then write 'restart' to C:\\SB\\prod\\services\\run\\dashboard.restart."
         },
         {
           "id": "W45-TUE-4",
           "system": "system-3",
-          "status": "todo",
-          "title": "Reconciliation: a manual trade the owner opened should raise one 'manual trade' notice, not a repeating divergence every minute"
+          "status": "blocked",
+          "title": "Reconciliation: a manual trade the owner opened should raise one 'manual trade' notice, not a repeating divergence every minute",
+          "note": "Built 2026-11-02 by Claude (dev 8ee7cb1; prod-based branch release/2026-11-02-manual-trade = 90e31c6 on e73c450). The bridge tags snapshot positions origin system/manual (sb- client id = system; untagged and opened >= 2026-10-28 = manual; else omitted). S3 leaves a manual trade it does not hold out of the divergence check and logs it once; the single bell notice stays with trade_journal_sync (no duplicate); a manual trade never hides a divergence in S3's own trades. Contract AccountSnapshot gains optional 'origin'. Running in DEV since 21:28 UTC (snapshots accepted). Tests: guardian 676/676 (dev), 651/651 + bridge 208 on the prod base. Deploy gate DRY-RUN: WOULD DEPLOY 90e31c6 (all gates passed). Owner step: deploy 90e31c6 from the control panel Deploys page (S2 is not changed, so no downtime halt expected)."
         },
         {
           "id": "W45-TUE-5",
