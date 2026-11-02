@@ -248,8 +248,10 @@
         {
           "id": "W45-FRI-3",
           "system": "system-2",
-          "status": "todo",
-          "title": "Verify the OANDA account's hedging/netting mode against how timed exits close trades"
+          "status": "done",
+          "title": "Verify the OANDA account's hedging/netting mode against how timed exits close trades",
+          "done_at": "2026-11-02",
+          "note": "Verified 2026-11-02 by Claude (read-only OANDA GETs). The account NETS (hedgingEnabled false). Timed exits close by trade id (PUT /trades/{id}/close), which is correct on netting. BUT entries go out with positionFill DEFAULT and S3 layer F only refuses same-pair SAME-direction duplicates, so an opposite entry closes the open trade and opens only the remainder. It has happened: 2026-10-27 EUR_USD 2811 closed at -44.73 CAD by a new short (opened -5,889 instead of -10,976), CHF_JPY 2825 at -46.72, USD_CHF 2821 at -14.36; 2026-09-01 USD_CAD 2648 at -70.19. All System 2 orders. Fix built, OFF by default: exposure.reject_opposite_on_netting (dev 97abf41, guardian 678 tests pass). Decision W45-D9."
         },
         {
           "id": "W45-FRI-4",
@@ -375,6 +377,13 @@
       "question": "Approve the proposed live risk numbers (LR-04)? 0.5% max per trade (research 0.10%), daily loss 1% soft / 2% hard, weekly 5%, max drawdown 15%, halt after 6 losses, at most 6 open trades and 6 a day, total open risk 3%.",
       "options": "Approve as proposed · change some numbers",
       "recommendation": "Approve. Full table and the $200/$5k instrument check are in plans/LR-04 Result. At $200 only FX, copper and the 2-year bond can trade at 0.10%.",
+      "status": "open"
+    },
+    {
+      "id": "W45-D9",
+      "question": "The OANDA account nets: an entry opposite an open trade on the same pair closes that trade early (no stop/target, wrong size for the new one). It happened 4 times (10-27 x3, 09-01). Refuse such entries?",
+      "options": "(a) turn on exposure.reject_opposite_on_netting in demo and live configs: the second, opposite signal is refused and logged (fewer trades); (b) ask OANDA whether this account can have hedging enabled, then both trades can coexist (more spread paid for near-zero net exposure); (c) leave as is.",
+      "recommendation": "(a) now: a confident wrong position is worse than a skipped trade. It also matters for December: the tone strategy trades all 4 USD majors at once, against whatever is open.",
       "status": "open"
     }
   ],
