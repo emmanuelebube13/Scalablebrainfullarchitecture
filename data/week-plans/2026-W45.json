@@ -40,26 +40,28 @@
           "system": "ops",
           "status": "todo",
           "title": "Restart DEV S2, S3 and bridge on current dev code (they run 10-24 code; this pulls a week of everyone's commits)",
-          "note": "Order: S2 first, then S3 + bridge."
+          "note": "Done by Claude 2026-11-02 ~21:12 UTC. DEV was not just stale code - every DEV service had been DOWN since 10-25 (heartbeats 8 days old). Started S2 first (dev 54d1448, clean; shadow pinned; adopted prod's 7 open trades read-only), then S3, bridge, signal mirror, publisher. DEV S2 DOWNTIME_HALT (process_start) cleared with resume_dev_s2.ps1 (dev state only). Backup of DEV ams.db/system2.db: C:\\SB\\devenv\backups\\pre-restart-2026-11-02. Not started: DEV control panel (dev-umbrella is on another session's branch). DEV does not survive a reboot: run start_dev.ps1 again. Awaiting owner tick."
         },
         {
           "id": "W45-MON-2",
           "system": "system-2",
           "status": "todo",
-          "title": "Set BRIDGE_FORWARD_TIMED_EXITS=true in DEV only"
+          "title": "Set BRIDGE_FORWARD_TIMED_EXITS=true in DEV only",
+          "note": "Done by Claude 2026-11-02: BRIDGE_FORWARD_TIMED_EXITS=true set in the DEV supervisor header for the bridge only (C:\\SB\\devenv\\services\\dev_service.header.ps1, backup .bak-20261102-timedexits); prod untouched. Live in the running DEV bridge. Awaiting owner tick."
         },
         {
           "id": "W45-MON-3",
           "system": "system-1",
-          "status": "todo",
+          "status": "blocked",
           "title": "Schedule `live_emit --publish` hourly in DEV (SB_ENV=dev, QUEUE_PROVIDER=sqlite, QUEUE_LOCAL_PATH=C:/SB/devenv/queue/queue.db)",
-          "note": "Also set EVIDENCE_LEDGER=on and RESEARCH_DB_NAME=scalable_brain_dev in the DEV emitter env (PC-01)."
+          "note": "Built and run once by hand 2026-11-02 (C:\\SB\\devenv\\services\\live_emit_job.py hourly: DEV queue, scalable_brain_dev, EVIDENCE_LEDGER=on; bell on failure). BLOCKED on one owner step: Claude was not permitted to register scheduled tasks. Run: powershell -NoProfile -ExecutionPolicy Bypass -File C:\\SB\\devenv\\services\register_live_emit_tasks.ps1 (hourly at :35, after S1's :15 ingest). First run found weak_voters_committee USD_CAD short decided 11-02 02:00 UTC - missed (DEV down, emitter unscheduled), recorded stale, never sent late."
         },
         {
           "id": "W45-MON-4",
           "system": "system-1",
-          "status": "todo",
-          "title": "Schedule the daily parity report (`live_emit --parity`): live decisions vs the forward ledger; any mismatch rings the bell"
+          "status": "blocked",
+          "title": "Schedule the daily parity report (`live_emit --parity`): live decisions vs the forward ledger; any mismatch rings the bell",
+          "note": "Built 2026-11-02: live_emit --parity --since/--book-only (dev 3016c00) so the check counts only from go-live 2026-11-02 21:00 UTC and only book strategies (otherwise every pre-go-live paper trade and the deferred vol_managed_carry ring forever). live_emit_job.py parity writes C:\\SB\\devenv\\logs\research\\parity\\<date>.json and posts a [DEV] bell notice on any mismatch. First run: clean (0 rows). Scheduled daily 21:00 by the same register_live_emit_tasks.ps1 - owner step."
         },
         {
           "id": "W45-MON-5",
@@ -74,7 +76,7 @@
           "system": "system-1",
           "status": "todo",
           "title": "Read the 10-30 month-end measurement (results/research/month_end/2026-10-30.json) and append it to card H-04's results; check vol_managed_carry's first rebalance (10-30 close) appeared in replay and the post_fomc_drift GBP/JPY timed exits closed in research.forward_trade",
-          "note": "Follow-up from the W44 Tuesday review (dev 344e72c). Then delete the one-off task 'SB research - month-end measure 2026-10-30'."
+          "note": "Done 2026-11-02 (dev adc1847). The 10-30 one-off measurement task NEVER ran (Task Scheduler 267011, interactive-only); measured late by hand, still point-in-time. Prediction SELL_USD (S&P MTD +1.0%); pre-fix basket -7.15 bps -> matched (3/4 pairs; USD_JPY against); every pair reversed after the fix. Tally 1 of 2 months; appended to card H-04 as an OBSERVATION, not a test of its rule. post_fomc_drift: GBP_USD +1.80R and USD_JPY +1.42R closed by timed exit 10-30 19:00 UTC; AUD/EUR stopped -1.01R each (one event, net +1.21R). vol_managed_carry 10-30 rebalance present (4 legs opened 21:00 UTC). Left for owner: delete the one-off task 'SB research - month-end measure 2026-10-30'. Awaiting owner tick."
         }
       ]
     },
