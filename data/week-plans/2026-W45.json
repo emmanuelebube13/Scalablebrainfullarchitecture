@@ -82,9 +82,10 @@
         {
           "id": "W45-MON-7",
           "system": "system-3",
-          "status": "blocked",
+          "status": "done",
           "title": "Per-strategy slot limit not enforced (precision_swing 7 open on a limit of 4)",
-          "note": "Found + fixed 2026-11-02 by Claude (guardian e277431 on prod a0a4c3b; dev 2bd47db). Cause 1: the gate's open-book objects carried no strategy_id, so layer E counted 0 per strategy and the limit never fired (with 4 open, 3 more approved on 11-02 18:19). Cause 2: approved-but-unfilled orders were not counted (those 3 were approved within 10 ms). Now strategy_id is loaded and pending order-watch rows hold slots (strategy + account). Slot eviction (auto-close of weak trades) left OFF on purpose - owner decision. Tests: 4 new (3 fail on old code), guardian 657/657; gate dry-run WOULD DEPLOY. Owner step: say 'deploy the slot fix' (or deploy e277431 from the control panel Deploys page), then Resume System 2."
+          "note": "Found + fixed 2026-11-02 by Claude (guardian e277431 on prod a0a4c3b; dev 2bd47db). Cause 1: the gate's open-book objects carried no strategy_id, so layer E counted 0 per strategy and the limit never fired (with 4 open, 3 more approved on 11-02 18:19). Cause 2: approved-but-unfilled orders were not counted (those 3 were approved within 10 ms). Now strategy_id is loaded and pending order-watch rows hold slots (strategy + account). Slot eviction (auto-close of weak trades) left OFF on purpose - owner decision. Tests: 4 new (3 fail on old code), guardian 657/657; gate dry-run WOULD DEPLOY. Owner step: say 'deploy the slot fix' (or deploy e277431 from the control panel Deploys page), then Resume System 2. DEPLOYED: prod e277431 (tag deployed/20261102-220439, deploy OK 02:08 UTC 11-03); System 2 resumed 02:10 UTC (panel audit #57, owner asked).",
+          "done_at": "2026-11-03"
         }
       ]
     },
