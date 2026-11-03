@@ -77,6 +77,13 @@
           "status": "todo",
           "title": "Read the 10-30 month-end measurement (results/research/month_end/2026-10-30.json) and append it to card H-04's results; check vol_managed_carry's first rebalance (10-30 close) appeared in replay and the post_fomc_drift GBP/JPY timed exits closed in research.forward_trade",
           "note": "Done 2026-11-02 (dev adc1847). The 10-30 one-off measurement task NEVER ran (Task Scheduler 267011, interactive-only); measured late by hand, still point-in-time. Prediction SELL_USD (S&P MTD +1.0%); pre-fix basket -7.15 bps -> matched (3/4 pairs; USD_JPY against); every pair reversed after the fix. Tally 1 of 2 months; appended to card H-04 as an OBSERVATION, not a test of its rule. post_fomc_drift: GBP_USD +1.80R and USD_JPY +1.42R closed by timed exit 10-30 19:00 UTC; AUD/EUR stopped -1.01R each (one event, net +1.21R). vol_managed_carry 10-30 rebalance present (4 legs opened 21:00 UTC). Left for owner: delete the one-off task 'SB research - month-end measure 2026-10-30'. Awaiting owner tick."
+        },
+        {
+          "id": "W45-MON-7",
+          "system": "system-3",
+          "status": "blocked",
+          "title": "Per-strategy slot limit not enforced (precision_swing 7 open on a limit of 4)",
+          "note": "Found + fixed 2026-11-02 by Claude (guardian e277431 on prod a0a4c3b; dev 2bd47db). Cause 1: the gate's open-book objects carried no strategy_id, so layer E counted 0 per strategy and the limit never fired (with 4 open, 3 more approved on 11-02 18:19). Cause 2: approved-but-unfilled orders were not counted (those 3 were approved within 10 ms). Now strategy_id is loaded and pending order-watch rows hold slots (strategy + account). Slot eviction (auto-close of weak trades) left OFF on purpose - owner decision. Tests: 4 new (3 fail on old code), guardian 657/657; gate dry-run WOULD DEPLOY. Owner step: say 'deploy the slot fix' (or deploy e277431 from the control panel Deploys page), then Resume System 2."
         }
       ]
     },
