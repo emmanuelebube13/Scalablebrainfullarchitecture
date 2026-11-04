@@ -273,7 +273,8 @@
           "id": "W45-THU-9",
           "system": "system-1",
           "status": "todo",
-          "title": "Forward ledger read: the 43 incubator strategies after their first week (rows, open trades, divergences)"
+          "title": "Forward ledger read: the 43 incubator strategies after their first week (rows, open trades, divergences)",
+          "note": "Read 2026-11-04 (3 days in, early). 43 strategies run daily, no errors, 0 divergences. Ledger: 68 INC rows, 28 closed / 40 open; 13 of 43 have traded. Closed sum about -2.7R (-0.10R/trade): noise. Status shows n_closed 0 by design - INC-v1 counts only finished weeks. Full read again after Sunday's close."
         }
       ]
     },
@@ -310,8 +311,10 @@
         {
           "id": "W45-FRI-4",
           "system": "ops",
-          "status": "todo",
-          "title": "Prod practice rollout plan for timed exits (S2 → S3 + bridge → flag), with the parity numbers from the week"
+          "status": "done",
+          "title": "Prod practice rollout plan for timed exits (S2 → S3 + bridge → flag), with the parity numbers from the week",
+          "note": "Written 2026-11-04: dev task/2026-November-week1/W45-FRI-4-timed-exit-prod-rollout.md. Overtaken in part: prod bridge flag + prod emitter went live 11-03 (owner go) for trend_pullback_indices only. GAP: no timed exit has gone end to end in either env - every emitter run 0 decisions; parity clean but on 0 rows (vacuous). Plan: check the first real chain; DEV drill 11-09 if none (needs owner OK); weak_voters to prod after 1 clean chain + 3 parity rows; FOMC strategies to prod before 12-08; D9 before tone.",
+          "done_at": "2026-11-04"
         },
         {
           "id": "W45-FRI-5",
@@ -324,9 +327,10 @@
         {
           "id": "W45-FRI-6",
           "system": "ops",
-          "status": "todo",
+          "status": "done",
           "title": "Owner: review ADR-004 (trade health) and answer D1 (overdue trades get a notice?) and D2 (hide verdict where the rule does not help?)",
-          "note": "dev systems/brain docs/design/ADR-004-trade-health-keep-or-close.md"
+          "note": "Owner answered 2026-11-04: D1 yes, D2 hide. And: show the verdict live on Overview open positions and in the Trades panel instead of relying on the bell (owner rarely uses the notice) - test which gets used. ADR-004 ACCEPTED (dev ca59f05). New task W46-FRI-6.",
+          "done_at": "2026-11-04"
         },
         {
           "id": "W45-FRI-7",
@@ -437,21 +441,24 @@
       "question": "Approve the proposed live risk numbers (LR-04)? 0.5% max per trade (research 0.10%), daily loss 1% soft / 2% hard, weekly 5%, max drawdown 15%, halt after 6 losses, at most 6 open trades and 6 a day, total open risk 3%.",
       "options": "Approve as proposed · change some numbers",
       "recommendation": "Approve. Full table and the $200/$5k instrument check are in plans/LR-04 Result. At $200 only FX, copper and the 2-year bond can trade at 0.10%.",
-      "status": "open"
+      "status": "decided",
+      "answer": "Owner 2026-11-04: approve, with max open trades 10 and max trades per day 10 (not 6) - 'filter by strategy if needed'. Live profile updated (dev 3ede416); loaded only with AMS_RISK_PROFILE=live, nothing runs it yet."
     },
     {
       "id": "W45-D9",
       "question": "The OANDA account nets: an entry opposite an open trade on the same pair closes that trade early (no stop/target, wrong size for the new one). It happened 4 times (10-27 x3, 09-01). Refuse such entries?",
       "options": "(a) turn on exposure.reject_opposite_on_netting in demo and live configs: the second, opposite signal is refused and logged (fewer trades); (b) ask OANDA whether this account can have hedging enabled, then both trades can coexist (more spread paid for near-zero net exposure); (c) leave as is.",
       "recommendation": "(a) now: a confident wrong position is worse than a skipped trade. It also matters for December: the tone strategy trades all 4 USD majors at once, against whatever is open.",
-      "status": "open"
+      "status": "decided",
+      "answer": "Owner 2026-11-04: (a) refuse the second, opposite entry. Practice: release d39fd78 (prod e8af95e + config), gate dry-run WOULD DEPLOY (deploy-20261104-045627-dryrun.log); owner deploys. Dev e5f9f15. Live profile also on (dev 3ede416)."
     },
     {
       "id": "W45-D10",
       "question": "Hard decision date for the edge question: by when must at least one strategy have a forward record good enough to risk small real money, or we rethink the approach (assets, timeframes, or whether systematic FX is the right game)?",
       "options": "2026-12-14 (after the 9 Dec FOMC) · end of January · other",
       "recommendation": "2026-12-14. It gives the forward ledger six weeks, and it is after FOMC 9 Dec, which the tone strategy needs.",
-      "status": "open"
+      "status": "decided",
+      "answer": "Owner 2026-11-04: 2026-12-14."
     }
   ],
   "path_to_december": [

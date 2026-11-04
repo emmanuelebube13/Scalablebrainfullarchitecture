@@ -152,6 +152,12 @@
           "system": "ops",
           "status": "todo",
           "title": "Asset-chart audit fixes"
+        },
+        {
+          "id": "W46-FRI-6",
+          "system": "ops",
+          "status": "todo",
+          "title": "Trade health shown live (ADR-004, owner 11-04): verdict pill + age vs planned hold + net R on each Overview open-position row and in the Trades panel beside Close / Lock BE; bell only on a change of state; advice log records which surface was used (test vs the bell)"
         }
       ]
     },
