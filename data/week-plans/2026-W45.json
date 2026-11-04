@@ -204,8 +204,10 @@
         {
           "id": "W45-WED-8",
           "system": "system-1",
-          "status": "todo",
-          "title": "Owner: create the Gemini Spark recurring task (daily 06:00) from SPARK-TASK-PROMPT.md; confirm the sheet and its 3 tabs exist after the first run"
+          "status": "done",
+          "title": "Owner: create the Gemini Spark recurring task (daily 06:00) from SPARK-TASK-PROMPT.md; confirm the sheet and its 3 tabs exist after the first run",
+          "done_at": "2026-11-04",
+          "note": "Spark task running: its Found tab arrived 2026-11-04 04:55 (lab/edge-research/scout/inbox/). Catalog batch also received 11-03."
         }
       ]
     },
@@ -260,14 +262,18 @@
         {
           "id": "W45-THU-7",
           "system": "system-1",
-          "status": "todo",
-          "title": "Claude: triage the first scout batch; register up to 3 hypothesis cards (pass/kill rules written before testing)"
+          "status": "done",
+          "title": "Claude: triage the first scout batch; register up to 3 hypothesis cards (pass/kill rules written before testing)",
+          "done_at": "2026-11-04",
+          "note": "Done early by another session. 11-03 catalog batch: 3 cards registered (H-20261103-01 TOM indices, -02 200-MA 3-day pullback, -03 TSMOM), 1 drop, 1 park. 11-04 Found batch: 3 drop, 1 park, 1 card DRAFT H-20261109-01 pre-ECB drift on EU indices (dev 33180aa), registered W46 because the 3-card cap was used. Record: lab/edge-research/scout/TRIAGED.csv."
         },
         {
           "id": "W45-THU-8",
           "system": "system-1",
-          "status": "todo",
-          "title": "Claude: search-window backtest of the registered cards (2.4-pip round trip + rollover rule); confirm window only for passes"
+          "status": "done",
+          "title": "Claude: search-window backtest of the registered cards (2.4-pip round trip + rollover rule); confirm window only for passes",
+          "done_at": "2026-11-04",
+          "note": "Done 11-03/11-04 by another session. TOM KILLED (run 788 Sharpe -0.09); TSMOM KILLED (run 791 -0.25); 200-MA pullback SHADOW (run 789 +0.31, 5/6 blocks; one-shot 2023+ +0.84), forward from 11-03. Follow-ups 11-04: random-timing check passed (p<0.0001); replication on 10 untested indices PROMISING (run 843 +0.19); SMA5 exit PROMISING (845 +0.324); 13-index book PROMISING (846 +0.266) but dilutes the original 3."
         },
         {
           "id": "W45-THU-9",
