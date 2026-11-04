@@ -157,9 +157,10 @@
         {
           "id": "W46-FRI-6",
           "system": "ops",
-          "status": "todo",
+          "status": "done",
           "title": "Trade health shown live (ADR-004, owner 11-04): verdict pill + age vs planned hold + net R on each Overview open-position row and in the Trades panel beside Close / Lock BE; bell only on a change of state; advice log records which surface was used (test vs the bell)",
-          "note": "Built 2026-11-04, NOT deployed (awaits owner). Brain: trade_health.json (dev 4aeeecf) = per-strategy policy from H-20261104-04. Dashboard: umbrella branch feat/trade-health-display (3a6e603, ff from prod 63431b8; worktree C:\\SB\\lab\\wt-trade-health): server attaches trade_health to every open position; Overview Health column + phone card + full sentence in trade detail. Verified on a :18070 preview against live data: the 5 open precision_swing trades show a dash (policy none, correct); a visual-test artifact rendered the pill + plan/E_rest line on desktop and phone. Tests: server 7/7, dashboard 5/5 new (327/328, golive-display red as in prod), tsc ok, design-lint 202->190. Old bridge bell notices (EVICT) unchanged."
+          "note": "Built and DEPLOYED to prod 2026-11-04 ~19:40 UTC (owner: 'deploy'): umbrella prod tree fast-forwarded 63431b8 -> 3a6e603, dashboard restarted, :8050 serves the new bundle and trade_health on all 5 open trades (suppressed: precision_swing). Rollback: git reset --keep 63431b8 + restart file. Brain: trade_health.json (dev 4aeeecf) = per-strategy policy from H-20261104-04. Dashboard: umbrella branch feat/trade-health-display (3a6e603, ff from prod 63431b8; worktree C:\\SB\\lab\\wt-trade-health): server attaches trade_health to every open position; Overview Health column + phone card + full sentence in trade detail. Verified on a :18070 preview against live data: the 5 open precision_swing trades show a dash (policy none, correct); a visual-test artifact rendered the pill + plan/E_rest line on desktop and phone. Tests: server 7/7, dashboard 5/5 new (327/328, golive-display red as in prod), tsc ok, design-lint 202->190. Old bridge bell notices (EVICT) unchanged.",
+          "done_at": "2026-11-04"
         }
       ]
     },
