@@ -139,7 +139,7 @@
           "system": "system-1",
           "status": "todo",
           "title": "Trade health P1-P2: continuation tables from backtest paths; advice rule registered and backtested",
-          "note": "dev brain docs/design/ADR-004-trade-health-keep-or-close.md; share the path walker with PC-02"
+          "note": "P1 done early 2026-11-04 (dev bd53752, src/outcomes/continuation.py; write-up task/2026-November-week2/W46-FRI-3-...md). 35,530 OOS trades walked; 22 strategies pass the path check (4 that scale out give no verdict). The 5 open prod precision_swing trades read KEEP (old engine: 3 EVICT). P2 (rule as a card, backtested) still to do."
         },
         {
           "id": "W46-FRI-4",
