@@ -137,9 +137,10 @@
         {
           "id": "W46-FRI-3",
           "system": "system-1",
-          "status": "todo",
+          "status": "done",
           "title": "Trade health P1-P2: continuation tables from backtest paths; advice rule registered and backtested",
-          "note": "P1 done early 2026-11-04 (dev bd53752, src/outcomes/continuation.py; write-up task/2026-November-week2/W46-FRI-3-...md). 35,530 OOS trades walked; 22 strategies pass the path check (4 that scale out give no verdict). The 5 open prod precision_swing trades read KEEP (old engine: 3 EVICT). P2 (rule as a card, backtested) still to do."
+          "note": "Done early 2026-11-04. P1 continuation tables (dev bd53752; v1.1.0 on real fills 17edefc/01ffc91). P2 = card H-20261104-04, registered before any result. Run 1 INVALID: entries rebuilt at the bar open, but pending stop/limit entries fill intrabar (0.41R off on h4_box_breakout) - fixed by re-running backtests for real fills. Run 2: HELPS h4_box_breakout (+0.106R/trade, CI +0.07..+0.14); HURTS weekly_gap_fade and three_candle_swing_reversal; NO_EFFECT x9; pooled +0.009 (CI spans 0). So: verdict shown only for h4_box_breakout, hidden for the 2 HURTS, info-only elsewhere. The 11-04 KEEP on the 5 open precision_swing trades is withdrawn: 54% of its stored trades no longer reproduce (stale rows, issue logged) - no verdict until refreshed.",
+          "done_at": "2026-11-04"
         },
         {
           "id": "W46-FRI-4",
