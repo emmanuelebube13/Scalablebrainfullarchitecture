@@ -278,9 +278,10 @@
         {
           "id": "W45-THU-9",
           "system": "system-1",
-          "status": "todo",
+          "status": "done",
           "title": "Forward ledger read: the 43 incubator strategies after their first week (rows, open trades, divergences)",
-          "note": "Read 2026-11-04 (3 days in, early). 43 strategies run daily, no errors, 0 divergences. Ledger: 68 INC rows, 28 closed / 40 open; 13 of 43 have traded. Closed sum about -2.7R (-0.10R/trade): noise. Status shows n_closed 0 by design - INC-v1 counts only finished weeks. Full read again after Sunday's close."
+          "note": "Read 2026-11-04 (3 days in, early). 43 strategies run daily, no errors, 0 divergences. Ledger: 68 INC rows, 28 closed / 40 open; 13 of 43 have traded. Closed sum about -2.7R (-0.10R/trade): noise. Status shows n_closed 0 by design - INC-v1 counts only finished weeks. Full read again after Sunday's close. 11-06 read: 197 ledger rows across 31 strategies since 10-26, 112 closed, 0 late, 0 incubator errors; 44 incubating, 1 withdrawn; no strategy has a luck probability below 0.2. Eleven days is too short to read any result.",
+          "done_at": "2026-11-06"
         }
       ]
     },
@@ -358,7 +359,8 @@
           "id": "W45-SAT-1",
           "system": "ops",
           "status": "todo",
-          "title": "Weekly research job output; storage hygiene summary (C:\\SB\\prod\\state\\storage_hygiene.json)"
+          "title": "Weekly research job output; storage hygiene summary (C:\\SB\\prod\\state\\storage_hygiene.json)",
+          "note": "11-06: hygiene read: model cache fine, but rotating the prod dashboard log failed (PermissionError, 28.6 MB). The weekly research job next runs on schedule Sat 11-07 09:00; its last run (10-31) was clean."
         },
         {
           "id": "W45-SAT-2",
@@ -369,8 +371,10 @@
         {
           "id": "W45-SAT-3",
           "system": "ops",
-          "status": "todo",
-          "title": "Week's parity record: any live-vs-ledger mismatch explained"
+          "status": "done",
+          "title": "Week's parity record: any live-vs-ledger mismatch explained",
+          "done_at": "2026-11-06",
+          "note": "11-06: parity clean 11-02 to 11-05. The 11-06 report shows weak_voters_committee matched 0, paper-only 2. Explained: H4 committee decisions only appear after the next bar closes, about 4 h later, and the emitter drops anything older than 75 min, so DEV has never published this strategy. Backtest and ledger unaffected. Fix not done: brain issues/November-Week-1/2026-11-06.md."
         },
         {
           "id": "W45-SAT-4",
@@ -381,8 +385,10 @@
         {
           "id": "W45-SAT-5",
           "system": "system-1",
-          "status": "todo",
-          "title": "Owner: send the scout sheet's Found tab to Claude (weekly, every Saturday/Sunday)"
+          "status": "done",
+          "title": "Owner: send the scout sheet's Found tab to Claude (weekly, every Saturday/Sunday)",
+          "done_at": "2026-11-06",
+          "note": "11-06: owner sent the whole sheet as Excel; Excel is the format from now on."
         }
       ]
     }
