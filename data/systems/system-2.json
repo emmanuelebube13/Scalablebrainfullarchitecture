@@ -249,7 +249,7 @@
       "body": {
         "technical": [
           "System 2 is the only component in the platform holding a broker credential capable of placing an order. System 3, which decides *whether* to trade, deliberately never holds that key — separating the authority to decide from the ability to act.",
-          "The account is OANDA practice `101-002-38449021-001`, CAD, balance 84,013.70, lifetime P/L −15,954.17, zero open trades as of 2026-08-22T15:15Z."
+          "The account is an OANDA practice account in CAD."
         ],
         "plain": [
           "This is the only machine that can actually move money. The machine that decides whether to move money cannot, and the machine that can does not decide. Neither can act alone.",
