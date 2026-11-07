@@ -4,12 +4,13 @@
   "task_folder": "2026-November-week2",
   "start": "2026-11-09",
   "end": "2026-11-14",
-  "as_of": "2026-10-31",
-  "goal": "Lay the probability check's foundations (labels, volatility, text, events) and close the first three live-readiness items, while timed exits reach prod practice.",
+  "as_of": "2026-11-07",
+  "goal": "December track, week 1: fix parity, get the live token, ship the live-readiness code to prod practice, and turn timed exits on there.",
   "context": [
     "Program: plans/README.md (read first). Every task with a Plan link is written so another agent can pick it up cold.",
     "Rules: DEV first; venv-s1 is read-only (no pip install); no look-ahead; forward ledger untouched; shadow until PC-07; free data only.",
-    "This week is deliberately overloaded; agents pick tasks in order of their dependencies."
+    "This week is deliberately overloaded; agents pick tasks in order of their dependencies.",
+    "2026-11-07 owner: \"the key now is to prepare for the December start date\". This week is re-planned around one track: get the December book trading safely on real money. Tasks not needed for that are moved (status moved) to W50+. Edge research keeps running in the background toward the 2026-12-14 decision date."
   ],
   "fixed_dates": [
     {
@@ -20,17 +21,22 @@
   "days": [
     {
       "date": "2026-11-09",
-      "theme": "Labels",
-      "goal": "Every backtested trade knows which barrier it hit first.",
-      "plan": "Build and backfill the barrier labeller; verify it against recorded exits. In parallel, verify order idempotency on practice.",
+      "theme": "Parity + live token",
+      "goal": "The paper record and DEV agree again, and the live account can be read.",
+      "plan": "Claude finds why DEV missed the weak-voters trades and fixes it. Owner creates the live API token. Owner ticks the items that were built early.",
       "tasks": [
         {
-          "id": "W46-MON-1",
-          "system": "system-1",
           "status": "todo",
-          "title": "PC-02 triple-barrier labels from rebuilt price paths (TP50 / TP100 / SL / time)",
-          "plan": "plans/PC-02-triple-barrier-labels.md",
-          "note": "Built early 2026-10-31 (dev 496b7f7). See the Result section in the plan. Awaiting owner tick."
+          "id": "W46-MON-3",
+          "system": "system-1",
+          "title": "Fix the DEV parity mismatch: since 11-06 weak_voters_committee has 3 paper trades and 0 DEV decisions. Find the cause, fix it, re-run parity clean.",
+          "note": "Started by Claude 2026-11-07. The clean-parity clock (W47-FRI-4) restarts from this fix."
+        },
+        {
+          "status": "todo",
+          "id": "W46-MON-4",
+          "system": "ops",
+          "title": "Owner: create an OANDA LIVE API token (on the live site; the practice key returns 401 there) and put it in the live secrets file. Claude verifies with one read-only call."
         },
         {
           "id": "W46-MON-2",
@@ -39,22 +45,28 @@
           "title": "LR-01 order idempotency and startup reconcile: verify F-303, crash-inject on practice, close or fix",
           "plan": "plans/LR-01-order-idempotency.md",
           "note": "Verified 2026-10-31: already built (F-303); register ticked (dev a3f9546). Awaiting owner tick."
+        },
+        {
+          "id": "W46-MON-1",
+          "system": "system-1",
+          "status": "todo",
+          "title": "PC-02 triple-barrier labels from rebuilt price paths (TP50 / TP100 / SL / time)",
+          "plan": "plans/PC-02-triple-barrier-labels.md",
+          "note": "Built early 2026-10-31 (dev 496b7f7). See the Result section in the plan. Awaiting owner tick."
         }
       ]
     },
     {
       "date": "2026-11-10",
-      "theme": "Volatility",
-      "goal": "A volatility forecast and a reach probability per signal.",
-      "plan": "HAR-RV against ATR and EWMA out of sample; reach probability from the forecast; post-fill geometry guard in S2.",
+      "theme": "December release",
+      "goal": "The live-readiness code that sits on DEV is gated and ready for prod practice.",
+      "plan": "One release from dev with only the readiness changes; prod stays on practice. Gate dry run, then the owner deploys elevated.",
       "tasks": [
         {
-          "id": "W46-TUE-1",
-          "system": "system-1",
           "status": "todo",
-          "title": "PC-03 volatility forecaster (HAR-RV) and vol_reach feature",
-          "plan": "plans/PC-03-volatility-forecaster.md",
-          "note": "Built early 2026-10-31 (dev 20bf970). See the plan's Result section. Awaiting owner tick."
+          "id": "W46-TUE-3",
+          "system": "system-2",
+          "title": "Release \"december-1\" to prod practice: LR-02 slippage bound + CFD pip fix, LR-03 execution-mode gate (mode stays practice), LR-05 breaker latch, live risk profile file (present, not active). Gate dry run, owner deploys elevated."
         },
         {
           "id": "W46-TUE-2",
@@ -63,15 +75,30 @@
           "title": "LR-02 slippage bound (verify) and post-fill geometry check (build)",
           "plan": "plans/LR-02-slippage-geometry.md",
           "note": "Built early 2026-10-31 (dev 65d53f1). Awaiting owner tick."
+        },
+        {
+          "id": "W46-TUE-1",
+          "system": "system-1",
+          "status": "todo",
+          "title": "PC-03 volatility forecaster (HAR-RV) and vol_reach feature",
+          "plan": "plans/PC-03-volatility-forecaster.md",
+          "note": "Built early 2026-10-31 (dev 20bf970). See the plan's Result section. Awaiting owner tick."
         }
       ]
     },
     {
       "date": "2026-11-11",
-      "theme": "Text and events",
-      "goal": "Choose the central-bank text scorer on evidence; store the event calendar.",
-      "plan": "Bake-off FinBERT vs FinBERT-tone vs CentralBankRoBERTa vs FOMC-RoBERTa vs Claude; collect the calendar hourly.",
+      "theme": "Timed exits on",
+      "goal": "Prod practice can open and close the December book's timed trades.",
+      "plan": "Follow the W45 rollout order: S2 first, then S3 and the bridge, then the flag. Watch the first timed exit close on time.",
       "tasks": [
+        {
+          "status": "todo",
+          "id": "W46-WED-3",
+          "system": "ops",
+          "title": "Timed exits on prod practice: S2 -> S3 + bridge -> BRIDGE_FORWARD_TIMED_EXITS flag; confirm the first timed exit closes at exit_by.",
+          "note": "Was W46-FRI-1, moved earlier so practice gets more days of timed trades before the go / no-go."
+        },
         {
           "id": "W46-WED-1",
           "system": "system-1",
@@ -92,10 +119,22 @@
     },
     {
       "date": "2026-11-12",
-      "theme": "Plumbing",
-      "goal": "Going live becomes one verified config change; new sources log to the ledger.",
-      "plan": "Execution-mode file + boot preflight; wire vol_reach, event_risk and tone into the evidence hook.",
+      "theme": "Live account facts",
+      "goal": "We know what the live account allows and what $200 can trade.",
+      "plan": "Read-only calls only. Measure spreads from practice quotes; read instruments, minimum units and margin from the live account.",
       "tasks": [
+        {
+          "status": "todo",
+          "id": "W46-THU-3",
+          "system": "system-2",
+          "title": "Measure typical spreads for every December book instrument and set SPREAD_TYPICAL_PIPS_* (FX) and the CFD limits (a CFD is refused until they are set)."
+        },
+        {
+          "status": "todo",
+          "id": "W46-THU-4",
+          "system": "system-3",
+          "title": "Live account check (read-only): instruments, minimum units, margin rates and leverage caps on the CAD account. Confirm $200 can size every book instrument at the live risk numbers, or name the ones it cannot."
+        },
         {
           "id": "W46-THU-1",
           "system": "system-2",
@@ -116,23 +155,23 @@
     },
     {
       "date": "2026-11-13",
-      "theme": "December track",
-      "goal": "The items already on the road to December.",
-      "plan": "Carry the existing path_to_december targets; their plans live where noted.",
+      "theme": "FOMC scorer",
+      "goal": "The FOMC statement scorer runs on its own, well before 9 Dec.",
+      "plan": "Schedule the intraday fetch + score; prove it on a past statement.",
       "tasks": [
-        {
-          "id": "W46-FRI-1",
-          "system": "ops",
-          "status": "todo",
-          "title": "Timed exits on prod practice (S2 -> S3 + bridge -> flag), using the W45 parity numbers",
-          "note": "Plan: W45-FRI-4 rollout plan"
-        },
         {
           "id": "W46-FRI-2",
           "system": "system-1",
           "status": "todo",
           "title": "FOMC intraday statement fetch + score within minutes of release, live before 9 Dec",
           "note": "Follow-up of W45-WED-4"
+        },
+        {
+          "id": "W46-FRI-1",
+          "system": "ops",
+          "status": "moved",
+          "title": "Timed exits on prod practice (S2 -> S3 + bridge -> flag), using the W45 parity numbers",
+          "note": "Plan: W45-FRI-4 rollout plan Moved 2026-11-07 to W46-WED-3 (earlier, so practice collects more timed trades)."
         },
         {
           "id": "W46-FRI-3",
@@ -143,32 +182,34 @@
           "done_at": "2026-11-04"
         },
         {
-          "id": "W46-FRI-4",
-          "system": "ops",
-          "status": "todo",
-          "title": "Private phone-push channel for the bell (W45-D4)"
-        },
-        {
-          "id": "W46-FRI-5",
-          "system": "ops",
-          "status": "todo",
-          "title": "Asset-chart audit fixes"
-        },
-        {
           "id": "W46-FRI-6",
           "system": "ops",
           "status": "done",
           "title": "Trade health shown live (ADR-004, owner 11-04): verdict pill + age vs planned hold + net R on each Overview open-position row and in the Trades panel beside Close / Lock BE; bell only on a change of state; advice log records which surface was used (test vs the bell)",
           "note": "Built and DEPLOYED to prod 2026-11-04 ~19:40 UTC (owner: 'deploy'): umbrella prod tree fast-forwarded 63431b8 -> 3a6e603, dashboard restarted, :8050 serves the new bundle and trade_health on all 5 open trades (suppressed: precision_swing). Rollback: git reset --keep 63431b8 + restart file. Brain: trade_health.json (dev 4aeeecf) = per-strategy policy from H-20261104-04. Dashboard: umbrella branch feat/trade-health-display (3a6e603, ff from prod 63431b8; worktree C:\\SB\\lab\\wt-trade-health): server attaches trade_health to every open position; Overview Health column + phone card + full sentence in trade detail. Verified on a :18070 preview against live data: the 5 open precision_swing trades show a dash (policy none, correct); a visual-test artifact rendered the pill + plan/E_rest line on desktop and phone. Tests: server 7/7, dashboard 5/5 new (327/328, golive-display red as in prod), tsc ok, design-lint 202->190. Old bridge bell notices (EVICT) unchanged. | 2026-11-04 ~20:20 UTC, owner: trade detail now opens in a DRAWER beside the list (right on desktop, bottom sheet on phone) with previous/next across the list (also <- -> keys) and Lock BE / Close in its header; same drawer in the Trades view (forensics). Prod tree feee394 (pushed). Trade health now shows data: continuation-1.1.1 leaves stale outcome rows out of coverage; owner ran the precision_swing reconcile; precision_swing = info (H-20261104-04 run 3 NO_EFFECT), so its 5 trades show '+0.10R from here' with no verdict.",
           "done_at": "2026-11-04"
+        },
+        {
+          "id": "W46-FRI-4",
+          "system": "ops",
+          "status": "moved",
+          "title": "Private phone-push channel for the bell (W45-D4)",
+          "note": "Moved 2026-11-07 to W47-WED-3 (December track: critical alerts to the phone before live)."
+        },
+        {
+          "id": "W46-FRI-5",
+          "system": "ops",
+          "status": "moved",
+          "title": "Asset-chart audit fixes",
+          "note": "Moved 2026-11-07: December track (owner). Not needed for the first live week; back on the plan from W50."
         }
       ]
     },
     {
       "date": "2026-11-14",
-      "theme": "Scorecard and W47",
-      "goal": "Know what landed and what moved.",
-      "plan": "Weekly job, backup, carry-over.",
+      "theme": "Review",
+      "goal": "W46 closed honestly; W47 ready.",
+      "plan": "Weekly job, backup, review.",
       "tasks": [
         {
           "id": "W46-SAT-1",
@@ -191,5 +232,45 @@
       ]
     }
   ],
-  "decisions": []
+  "decisions": [
+    {
+      "id": "W46-D1",
+      "status": "open",
+      "question": "First real-money day.",
+      "options": "Mon 2026-11-30 (switch after the Sat 11-28 go) · Tue 2026-12-01 · other",
+      "recommendation": "Mon 11-30: switch in the morning, watch the first day. The FOMC on 9 Dec then falls in week 2, with one week of live plumbing behind it."
+    },
+    {
+      "id": "W46-D2",
+      "status": "open",
+      "question": "December live book. Demo keeps running everything; live gets only these.",
+      "options": "FOMC tone + post-FOMC drift + weak-voters committee (carry deferred, ADR-003 D2) · fewer · other",
+      "recommendation": "These three. None is proven; December is a paid forward test at 0.10% research risk."
+    },
+    {
+      "id": "W46-D3",
+      "status": "open",
+      "question": "Starting money and the rule for adding more.",
+      "options": "$200 CAD in December; ~$5k in January only if the plumbing was clean (no duplicate, unbounded or orphaned orders) · other",
+      "recommendation": "$200 now. The January top-up is judged on plumbing, not on December P&L, because one month cannot show an edge."
+    }
+  ],
+  "path_to_december": [
+    {
+      "week": "2026-W46",
+      "target": "Parity clean; live token works; readiness code and timed exits on prod practice; FOMC scorer scheduled."
+    },
+    {
+      "week": "2026-W47",
+      "target": "December book traded end to end on prod practice; cutover + rollback runbook; phone alerts; restore drill."
+    },
+    {
+      "week": "2026-W48",
+      "target": "Live rehearsal in shadow mode; $200 deposited; register closed; go / no-go on Sat 11-28."
+    },
+    {
+      "week": "2026-W49",
+      "target": "If go: live from Mon 11-30, watched daily; FOMC 9 Dec dry run."
+    }
+  ]
 }
