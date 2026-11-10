@@ -1,0 +1,1745 @@
+{
+ "eyebrow": "Strategies · Backtest Review 2023–2025",
+ "as_of": "2026-11-10",
+ "title": "Every strategy on its own $10,000 account, 2023–2025",
+ "lede": {
+  "technical": "93 strategies, 98,731 trades, costs deducted. Each strategy is replayed on its own $10,000 account with fixed-fractional risk (a set % of current equity per trade) so profits and losses compound. 22 of 93 were profitable over the three years. The live book (1 qualified + 4 designated) lost; the SHADOW forward-test set made money.",
+  "plain": "We replayed every strategy we have ever worked with, one by one, as if each had its own $10,000 account from January 2023 to December 2025. 22 of 93 ended up making money. The strategies trading today would have lost about half the account at 0.5% risk per trade; the small group being paper-tested now would have grown it."
+ },
+ "sections": [
+  {
+   "id": "headline",
+   "nav": "Headline",
+   "kicker": "Result",
+   "title": "What the three years say",
+   "body": {
+    "technical": "Live book at 0.5% risk: $10,000 → $5,005 (max drawdown 52.8%). SHADOW set at 1% risk: $10,000 → $14,138 (max drawdown 16.7%, ~12%/yr). Everything traded at once is ruinous: the losing high-frequency strategies dominate the trade count.",
+    "plain": "The book trading today would have shrunk $10,000 to about $5,005. The paper-test group would have grown it to about $14,138. Turning everything on at once would have emptied the account."
+   },
+   "callouts": [
+    {
+     "tone": "good",
+     "title": "Best single strategies (1% risk)",
+     "text": "nnfx_backtrader +29.9% with a 4.1% max drawdown (and its research twin nnfx_backtrader_fx +24.7%), weekly_day_reversal_ea +29.3% (but a 36% drawdown), ma_crossover_swing +24.6%, post_fomc_drift +17.4%. Most trade less than once a week."
+    },
+    {
+     "tone": "bad",
+     "title": "The live book loses",
+     "text": "Of the five strategies routed live today, only nnfx_backtrader made money. precision_swing −45.9%, inside_bar_reversal −45.4%, strong_weak_analysis −27.6%, h4_crossover_21_89_macd (qualified) −14.9% over three years at 1% risk."
+    },
+    {
+     "tone": "warn",
+     "title": "Selection is not done here",
+     "text": "This page records what each strategy would have made. Which ones to combine into a book is an owner decision taken after reading it — see Open decisions."
+    }
+   ]
+  },
+  {
+   "id": "method",
+   "nav": "Method",
+   "kicker": "How it was run",
+   "title": "Method and assumptions",
+   "paragraphs": [
+    {
+     "technical": "**Trades.** Legacy fleet (41 strategies): `fact_trade_outcomes`, engine position_engine_v2, `r_multiple` net of a round-trip cost. Strategy House (52): the strategy's pre-registered `one_shot_2023` run where one exists, otherwise a review run (`kind=explore`, 2023-01-01 → 2025-12-31, runs 1179–1221 on 2026-11-10), `r_net` net of spread, slippage and financing.",
+     "plain": "Every trade comes from our own backtest engine with trading costs already taken off."
+    },
+    {
+     "technical": "**Account.** $10,000 start; each trade risks a fixed % of current equity (0.25%, 0.5%, 1%, 2%); equity updates when a trade closes. Yearly return = year-end balance vs. the previous year-end on one continuous account. Max drawdown = largest fall from a peak, in %.",
+     "plain": "Each trade risks a slice of whatever the account holds at the time, so wins and losses compound."
+    },
+    {
+     "technical": "**Leverage.** Risk per trade is the real lever; leverage only has to be high enough to open the position. Margin is not modelled (legacy rows carry no stop distance). The \"max open\" column shows how many trades were open at once — open risk = that × risk per trade.",
+     "plain": "How much you risk per trade decides the result. Leverage just has to allow the trade to be opened."
+    },
+    {
+     "technical": "**Prop firm** (generic two-step, not a specific firm): $100,000 account, phase 1 +8%, phase 2 +5%, daily loss 5%, max loss 10% of the starting balance, 80% profit split, $540 fee. A fresh attempt starts on the first of every month from Jan 2023 to Jun 2025 (30 attempts); a funded account pays out profit above +1% and keeps trading to end-2025.",
+     "plain": "We tried a typical prop-firm challenge 30 times, one start per month, and counted how often each strategy passed and what it paid out after the fee."
+    }
+   ],
+   "callouts": [
+    {
+     "tone": "warn",
+     "title": "What makes these numbers look better than reality",
+     "text": "1) Legacy fleet results are not out-of-sample; their code was written after much of this history. 2) The demo cap (10 open trades, 16 a day) is not applied. 3) Prop daily loss counts closed trades only; firms count open losses too. 4) h4_box_breakout's legacy rows are summer-only (fixed 2026-11-10). 5) The live gatekeeper and probability gate are not applied — every signal is taken."
+    }
+   ]
+  },
+  {
+   "id": "per-strategy",
+   "nav": "Every strategy",
+   "kicker": "93 strategies · 1% risk per trade",
+   "title": "Each strategy on its own $10,000",
+   "body": "Sorted by balance at the end of 2025. Prop = generic two-step challenge passes out of 30 monthly attempts at 1% risk.",
+   "tables": [
+    {
+     "columns": [
+      "#",
+      "Strategy",
+      "Group",
+      "Trades/wk",
+      "Profit factor",
+      "2023",
+      "2024",
+      "2025",
+      "$10k → end-2025",
+      "Max DD",
+      "Prop"
+     ],
+     "rows": [
+      [
+       "1",
+       "`nnfx_backtrader`",
+       "Designated (live)",
+       "0.3",
+       "2.18",
+       "+5.9%",
+       "+23.4%",
+       "-0.6%",
+       "$12,987",
+       "4.1%",
+       "19/30"
+      ],
+      [
+       "2",
+       "`weekly_day_reversal_ea`",
+       "Incubator / legacy fleet",
+       "1.1",
+       "1.22",
+       "+7.7%",
+       "+76.4%",
+       "-31.9%",
+       "$12,934",
+       "36.4%",
+       "10/30"
+      ],
+      [
+       "3",
+       "`nnfx_backtrader_fx`",
+       "Strategy House (KILLED)",
+       "0.3",
+       "2.0",
+       "+4.9%",
+       "+17.6%",
+       "+1.1%",
+       "$12,470",
+       "3.6%",
+       "18/30"
+      ],
+      [
+       "4",
+       "`ma_crossover_swing`",
+       "Incubator / legacy fleet",
+       "1.2",
+       "1.25",
+       "+25.1%",
+       "+2.1%",
+       "-5.6%",
+       "$12,464",
+       "10.4%",
+       "10/30"
+      ],
+      [
+       "5",
+       "`post_fomc_drift`",
+       "Strategy House (SHADOW)",
+       "0.6",
+       "1.33",
+       "+10.9%",
+       "-3.2%",
+       "+9.4%",
+       "$11,739",
+       "10.5%",
+       "11/30"
+      ],
+      [
+       "6",
+       "`oil_equity_timing`",
+       "Strategy House (KILLED)",
+       "0.1",
+       "2.9",
+       "-8.8%",
+       "+6.8%",
+       "+9.9%",
+       "$11,683",
+       "8.8%",
+       "16/30"
+      ],
+      [
+       "7",
+       "`pre_fomc_24h_basket`",
+       "Strategy House (KILLED)",
+       "0.8",
+       "1.28",
+       "+14.3%",
+       "+16.7%",
+       "-15.2%",
+       "$11,314",
+       "22.7%",
+       "18/30"
+      ],
+      [
+       "8",
+       "`orb_5min_nasdaq_costgate`",
+       "Strategy House (BACKTEST)",
+       "1.8",
+       "1.08",
+       "-9.0%",
+       "+23.3%",
+       "-0.2%",
+       "$11,205",
+       "16.7%",
+       "15/30"
+      ],
+      [
+       "9",
+       "`trend_pullback_indices_sma5`",
+       "Strategy House (SHADOW)",
+       "2.0",
+       "1.25",
+       "+6.0%",
+       "+4.2%",
+       "-1.1%",
+       "$10,927",
+       "6.9%",
+       "0/30"
+      ],
+      [
+       "10",
+       "`fomc_tone_lexicon`",
+       "Strategy House (SHADOW)",
+       "0.3",
+       "2.37",
+       "+1.8%",
+       "+10.5%",
+       "-3.5%",
+       "$10,854",
+       "3.6%",
+       "0/30"
+      ],
+      [
+       "11",
+       "`vol_managed_carry`",
+       "Strategy House (SHADOW)",
+       "0.1",
+       "3.46",
+       "-0.5%",
+       "-2.3%",
+       "0.0%",
+       "$10,732",
+       "2.9%",
+       "0/30"
+      ],
+      [
+       "12",
+       "`trend_pullback_indices`",
+       "Strategy House (SHADOW)",
+       "1.0",
+       "1.49",
+       "+0.8%",
+       "+3.9%",
+       "+2.2%",
+       "$10,716",
+       "1.6%",
+       "0/30"
+      ],
+      [
+       "13",
+       "`janus_swing_system`",
+       "Incubator / legacy fleet",
+       "0.1",
+       "2.09",
+       "+8.7%",
+       "-2.6%",
+       "+0.7%",
+       "$10,657",
+       "2.6%",
+       "0/30"
+      ],
+      [
+       "14",
+       "`payday_opex_spx`",
+       "Strategy House (SHADOW)",
+       "0.2",
+       "1.34",
+       "+3.8%",
+       "+1.6%",
+       "+0.9%",
+       "$10,646",
+       "4.0%",
+       "0/30"
+      ],
+      [
+       "15",
+       "`double_bottom_measured_move`",
+       "Incubator / legacy fleet",
+       "0.3",
+       "1.26",
+       "+8.4%",
+       "-2.7%",
+       "-2.3%",
+       "$10,481",
+       "7.7%",
+       "0/30"
+      ],
+      [
+       "16",
+       "`trend_pullback_indices13`",
+       "Strategy House (ONE_SHOT)",
+       "8.4",
+       "1.12",
+       "+3.3%",
+       "+4.4%",
+       "-3.2%",
+       "$10,439",
+       "7.2%",
+       "0/30"
+      ],
+      [
+       "17",
+       "`trend_pullback_indices_trades`",
+       "Strategy House (SHADOW)",
+       "1.0",
+       "1.35",
+       "+0.8%",
+       "+1.8%",
+       "+1.3%",
+       "$10,397",
+       "1.3%",
+       "0/30"
+      ],
+      [
+       "18",
+       "`currency_momentum_factor`",
+       "Incubator / legacy fleet",
+       "2.3",
+       "1.07",
+       "+6.7%",
+       "-4.6%",
+       "+0.9%",
+       "$10,265",
+       "10.5%",
+       "0/30"
+      ],
+      [
+       "19",
+       "`fomc_window_spx`",
+       "Strategy House (KILLED)",
+       "0.2",
+       "1.25",
+       "-0.1%",
+       "+0.1%",
+       "+2.2%",
+       "$10,211",
+       "3.9%",
+       "0/30"
+      ],
+      [
+       "20",
+       "`pre_ecb_drift_eu_indices`",
+       "Strategy House (KILLED)",
+       "0.3",
+       "1.22",
+       "-3.0%",
+       "+3.1%",
+       "+1.9%",
+       "$10,190",
+       "3.8%",
+       "0/30"
+      ],
+      [
+       "21",
+       "`trend_pullback_indices_rep`",
+       "Strategy House (ONE_SHOT)",
+       "3.4",
+       "1.06",
+       "+1.2%",
+       "+1.9%",
+       "-2.1%",
+       "$10,112",
+       "2.8%",
+       "0/30"
+      ],
+      [
+       "22",
+       "`strong_weak_basket`",
+       "Strategy House (KILLED)",
+       "0.0",
+       "1.57",
+       "-0.4%",
+       "0.0%",
+       "+0.6%",
+       "$10,022",
+       "0.4%",
+       "0/30"
+      ],
+      [
+       "23",
+       "`engulfing_broken_level`",
+       "Incubator / legacy fleet",
+       "0.3",
+       "1.0",
+       "+0.4%",
+       "-1.2%",
+       "+0.7%",
+       "$9,994",
+       "3.3%",
+       "0/30"
+      ],
+      [
+       "24",
+       "`dollar_carry`",
+       "Strategy House (KILLED)",
+       "7.0",
+       "0.99",
+       "-1.9%",
+       "+8.2%",
+       "-6.2%",
+       "$9,952",
+       "9.2%",
+       "0/30"
+      ],
+      [
+       "25",
+       "`weak_voters_committee`",
+       "Strategy House (SHADOW)",
+       "1.9",
+       "0.97",
+       "-2.0%",
+       "+3.2%",
+       "-2.6%",
+       "$9,837",
+       "7.2%",
+       "0/30"
+      ],
+      [
+       "26",
+       "`holy_grail_pullback`",
+       "Incubator / legacy fleet",
+       "0.3",
+       "0.87",
+       "+3.6%",
+       "-2.9%",
+       "-2.7%",
+       "$9,789",
+       "6.5%",
+       "0/30"
+      ],
+      [
+       "27",
+       "`trending_retracement_daily_rc`",
+       "Strategy House (KILLED)",
+       "0.4",
+       "0.88",
+       "-0.6%",
+       "+2.9%",
+       "-4.8%",
+       "$9,774",
+       "6.7%",
+       "0/30"
+      ],
+      [
+       "28",
+       "`pre_fomc_dollar_drift`",
+       "Strategy House (KILLED)",
+       "0.6",
+       "0.74",
+       "-3.2%",
+       "+0.7%",
+       "-0.9%",
+       "$9,663",
+       "5.7%",
+       "0/30"
+      ],
+      [
+       "29",
+       "`commodity_seasonal_x11`",
+       "Strategy House (KILLED)",
+       "1.3",
+       "0.97",
+       "-0.3%",
+       "-2.2%",
+       "-1.5%",
+       "$9,652",
+       "13.7%",
+       "0/30"
+      ],
+      [
+       "30",
+       "`us_real_yield_momentum`",
+       "Strategy House (KILLED)",
+       "7.0",
+       "0.9",
+       "-1.3%",
+       "-2.2%",
+       "-0.2%",
+       "$9,633",
+       "6.4%",
+       "0/30"
+      ],
+      [
+       "31",
+       "`trending_retracement_daily`",
+       "Incubator / legacy fleet",
+       "0.4",
+       "0.77",
+       "+2.7%",
+       "+2.1%",
+       "-8.3%",
+       "$9,614",
+       "10.2%",
+       "0/30"
+      ],
+      [
+       "32",
+       "`pinbar_nose_eyes`",
+       "Incubator / legacy fleet",
+       "0.1",
+       "0.28",
+       "-1.2%",
+       "-0.6%",
+       "-2.1%",
+       "$9,614",
+       "4.6%",
+       "0/30"
+      ],
+      [
+       "33",
+       "`three_candle_swing_reversal`",
+       "Incubator / legacy fleet",
+       "1.8",
+       "0.99",
+       "-3.8%",
+       "+11.6%",
+       "-13.0%",
+       "$9,526",
+       "22.7%",
+       "18/30"
+      ],
+      [
+       "34",
+       "`yield_curve_slope`",
+       "Strategy House (KILLED)",
+       "0.3",
+       "0.86",
+       "+2.5%",
+       "-1.1%",
+       "-6.2%",
+       "$9,517",
+       "10.3%",
+       "0/30"
+      ],
+      [
+       "35",
+       "`vix_fx_vol_switch`",
+       "Strategy House (KILLED)",
+       "5.0",
+       "0.9",
+       "-2.1%",
+       "-3.6%",
+       "+0.2%",
+       "$9,463",
+       "9.2%",
+       "0/30"
+      ],
+      [
+       "36",
+       "`quarter_end_turn`",
+       "Strategy House (KILLED)",
+       "0.8",
+       "0.72",
+       "-2.8%",
+       "-0.2%",
+       "-3.2%",
+       "$9,433",
+       "8.0%",
+       "0/30"
+      ],
+      [
+       "37",
+       "`weekly_gap_fade_rb`",
+       "Strategy House (KILLED)",
+       "1.2",
+       "0.72",
+       "-3.3%",
+       "-3.7%",
+       "-0.1%",
+       "$9,298",
+       "7.2%",
+       "0/30"
+      ],
+      [
+       "38",
+       "`turn_of_month_indices`",
+       "Strategy House (KILLED)",
+       "0.7",
+       "0.79",
+       "+3.5%",
+       "-6.8%",
+       "-3.6%",
+       "$9,295",
+       "12.4%",
+       "0/30"
+      ],
+      [
+       "39",
+       "`tsmom_multi_asset`",
+       "Strategy House (KILLED)",
+       "3.0",
+       "0.84",
+       "+1.5%",
+       "-5.6%",
+       "-3.1%",
+       "$9,283",
+       "12.2%",
+       "0/30"
+      ],
+      [
+       "40",
+       "`cross_sectional_trend`",
+       "Strategy House (KILLED)",
+       "4.0",
+       "0.88",
+       "-2.2%",
+       "-5.6%",
+       "-0.8%",
+       "$9,155",
+       "10.1%",
+       "0/30"
+      ],
+      [
+       "41",
+       "`liquidity_grab_fade`",
+       "Strategy House (KILLED)",
+       "0.6",
+       "0.83",
+       "-8.9%",
+       "+8.1%",
+       "-7.6%",
+       "$9,100",
+       "11.1%",
+       "0/30"
+      ],
+      [
+       "42",
+       "`inside_bar_pinbar_combo`",
+       "Incubator / legacy fleet",
+       "0.1",
+       "0.45",
+       "-0.0%",
+       "-8.4%",
+       "-3.0%",
+       "$8,882",
+       "15.6%",
+       "0/30"
+      ],
+      [
+       "43",
+       "`reference_pullback_continuation`",
+       "Incubator / legacy fleet",
+       "0.9",
+       "0.85",
+       "+0.1%",
+       "-4.2%",
+       "-10.3%",
+       "$8,754",
+       "22.2%",
+       "0/30"
+      ],
+      [
+       "44",
+       "`holy_grail_pullback_rb`",
+       "Strategy House (KILLED)",
+       "0.3",
+       "0.54",
+       "+2.1%",
+       "-3.1%",
+       "-12.5%",
+       "$8,672",
+       "15.7%",
+       "0/30"
+      ],
+      [
+       "45",
+       "`riding_trend_retracement`",
+       "Strategy House (KILLED)",
+       "0.3",
+       "0.58",
+       "-4.4%",
+       "-2.8%",
+       "-6.9%",
+       "$8,673",
+       "16.1%",
+       "0/30"
+      ],
+      [
+       "46",
+       "`yield_spread_momentum`",
+       "Strategy House (KILLED)",
+       "3.0",
+       "0.83",
+       "-5.1%",
+       "-5.8%",
+       "-3.4%",
+       "$8,558",
+       "17.0%",
+       "0/30"
+      ],
+      [
+       "47",
+       "`h4_crossover_21_89_macd`",
+       "Qualified (live)",
+       "1.4",
+       "0.87",
+       "-7.4%",
+       "-8.3%",
+       "-0.1%",
+       "$8,508",
+       "21.3%",
+       "0/30"
+      ],
+      [
+       "48",
+       "`cot_asset_manager_flow`",
+       "Strategy House (KILLED)",
+       "3.9",
+       "0.89",
+       "-5.7%",
+       "-15.5%",
+       "+2.1%",
+       "$8,151",
+       "29.8%",
+       "0/30"
+      ],
+      [
+       "49",
+       "`liquidity_sweep_ob`",
+       "Incubator / legacy fleet",
+       "0.3",
+       "0.61",
+       "-11.0%",
+       "-14.2%",
+       "+4.0%",
+       "$7,938",
+       "27.0%",
+       "0/30"
+      ],
+      [
+       "50",
+       "`macd_divergence`",
+       "Incubator / legacy fleet",
+       "3.5",
+       "0.67",
+       "-5.7%",
+       "-11.7%",
+       "-5.2%",
+       "$7,889",
+       "26.9%",
+       "0/30"
+      ],
+      [
+       "51",
+       "`weekly_range_reversal`",
+       "Incubator / legacy fleet",
+       "0.4",
+       "0.56",
+       "-3.5%",
+       "-7.0%",
+       "-13.6%",
+       "$7,761",
+       "28.9%",
+       "0/30"
+      ],
+      [
+       "52",
+       "`long_wick_pinbar_8ema`",
+       "Incubator / legacy fleet",
+       "1.4",
+       "0.86",
+       "-3.0%",
+       "+10.7%",
+       "-29.2%",
+       "$7,758",
+       "35.9%",
+       "11/30"
+      ],
+      [
+       "53",
+       "`orb_5min_nasdaq`",
+       "Strategy House (KILLED)",
+       "4.9",
+       "0.99",
+       "-8.3%",
+       "-25.3%",
+       "+11.7%",
+       "$7,651",
+       "51.7%",
+       "5/30"
+      ],
+      [
+       "54",
+       "`pinbar_key_level_50pct`",
+       "Incubator / legacy fleet",
+       "0.4",
+       "0.67",
+       "-21.8%",
+       "-5.3%",
+       "+2.6%",
+       "$7,597",
+       "28.6%",
+       "0/30"
+      ],
+      [
+       "55",
+       "`weekly_gap_fade`",
+       "Incubator / legacy fleet",
+       "6.7",
+       "0.78",
+       "-4.7%",
+       "-11.7%",
+       "-11.4%",
+       "$7,478",
+       "26.7%",
+       "0/30"
+      ],
+      [
+       "56",
+       "`smash_days`",
+       "Incubator / legacy fleet",
+       "2.7",
+       "0.89",
+       "-20.0%",
+       "-24.4%",
+       "+23.3%",
+       "$7,457",
+       "44.0%",
+       "9/30"
+      ],
+      [
+       "57",
+       "`psar_gbpjpy_daily`",
+       "Incubator / legacy fleet",
+       "4.6",
+       "0.95",
+       "-7.1%",
+       "-9.0%",
+       "-23.4%",
+       "$7,412",
+       "40.0%",
+       "9/30"
+      ],
+      [
+       "58",
+       "`mtf_swing_weekly_pivots`",
+       "Incubator / legacy fleet",
+       "1.9",
+       "0.87",
+       "-14.7%",
+       "-27.8%",
+       "+16.9%",
+       "$7,341",
+       "43.8%",
+       "5/30"
+      ],
+      [
+       "59",
+       "`strong_weak_analysis`",
+       "Designated (live)",
+       "1.0",
+       "0.71",
+       "-25.2%",
+       "-10.6%",
+       "+3.7%",
+       "$7,238",
+       "42.0%",
+       "2/30"
+      ],
+      [
+       "60",
+       "`kpl_donchian_breakout`",
+       "Incubator / legacy fleet",
+       "1.5",
+       "0.69",
+       "-12.0%",
+       "-1.9%",
+       "-20.8%",
+       "$7,131",
+       "31.6%",
+       "0/30"
+      ],
+      [
+       "61",
+       "`smash_days_fx`",
+       "Strategy House (KILLED)",
+       "2.6",
+       "0.85",
+       "-23.4%",
+       "-25.1%",
+       "+18.6%",
+       "$6,827",
+       "48.5%",
+       "6/30"
+      ],
+      [
+       "62",
+       "`precision_swing_named`",
+       "Strategy House (IDEA)",
+       "2.9",
+       "0.85",
+       "-22.4%",
+       "-10.1%",
+       "-8.2%",
+       "$6,531",
+       "39.3%",
+       "1/30"
+      ],
+      [
+       "63",
+       "`kiss_h4`",
+       "Incubator / legacy fleet",
+       "3.5",
+       "0.71",
+       "-18.9%",
+       "-15.5%",
+       "-15.7%",
+       "$5,797",
+       "43.8%",
+       "0/30"
+      ],
+      [
+       "64",
+       "`ma_cross`",
+       "Strategy House (IDEA)",
+       "0.5",
+       "0.5",
+       "-16.4%",
+       "-40.1%",
+       "+14.1%",
+       "$5,716",
+       "62.9%",
+       "1/30"
+      ],
+      [
+       "65",
+       "`inside_bar_continuation_ea`",
+       "Incubator / legacy fleet",
+       "2.7",
+       "0.74",
+       "-10.1%",
+       "-19.2%",
+       "-22.5%",
+       "$5,626",
+       "45.4%",
+       "0/30"
+      ],
+      [
+       "66",
+       "`inside_bar_reversal`",
+       "Designated (live)",
+       "3.7",
+       "0.8",
+       "-16.7%",
+       "-26.1%",
+       "-15.6%",
+       "$5,456",
+       "53.2%",
+       "6/30"
+      ],
+      [
+       "67",
+       "`precision_swing`",
+       "Designated (live)",
+       "4.1",
+       "0.83",
+       "-20.8%",
+       "+11.0%",
+       "-36.8%",
+       "$5,409",
+       "46.9%",
+       "8/30"
+      ],
+      [
+       "68",
+       "`bb_midline_break`",
+       "Incubator / legacy fleet",
+       "6.9",
+       "0.92",
+       "+9.3%",
+       "-30.1%",
+       "-29.7%",
+       "$5,387",
+       "59.4%",
+       "10/30"
+      ],
+      [
+       "69",
+       "`h4_forex_system_rc`",
+       "Strategy House (KILLED)",
+       "8.0",
+       "0.87",
+       "-7.2%",
+       "-29.8%",
+       "-30.4%",
+       "$4,551",
+       "62.4%",
+       "5/30"
+      ],
+      [
+       "70",
+       "`outside_hma_klinger`",
+       "Incubator / legacy fleet",
+       "10.2",
+       "0.84",
+       "-20.2%",
+       "-23.6%",
+       "-36.4%",
+       "$3,815",
+       "65.7%",
+       "3/30"
+      ],
+      [
+       "71",
+       "`h4_forex_system`",
+       "Incubator / legacy fleet",
+       "6.6",
+       "0.85",
+       "-7.1%",
+       "-42.6%",
+       "-29.5%",
+       "$3,756",
+       "67.7%",
+       "4/30"
+      ],
+      [
+       "72",
+       "`h4_box_breakout`",
+       "Incubator / legacy fleet",
+       "6.6",
+       "0.79",
+       "-41.5%",
+       "-4.5%",
+       "-40.7%",
+       "$3,310",
+       "71.1%",
+       "1/30"
+      ],
+      [
+       "73",
+       "`donchian_trend_basket`",
+       "Strategy House (KILLED)",
+       "2.6",
+       "0.5",
+       "-37.4%",
+       "-22.9%",
+       "-32.0%",
+       "$3,282",
+       "67.7%",
+       "0/30"
+      ],
+      [
+       "74",
+       "`kiss_h4_rc`",
+       "Strategy House (KILLED)",
+       "4.2",
+       "0.78",
+       "-17.1%",
+       "-3.2%",
+       "-61.5%",
+       "$3,265",
+       "69.1%",
+       "4/30"
+      ],
+      [
+       "75",
+       "`intraday_momentum_us`",
+       "Strategy House (KILLED)",
+       "14.1",
+       "0.66",
+       "-28.7%",
+       "-39.0%",
+       "-39.2%",
+       "$2,645",
+       "75.3%",
+       "0/30"
+      ],
+      [
+       "76",
+       "`amazing_crossover`",
+       "Incubator / legacy fleet",
+       "27.6",
+       "0.81",
+       "-46.0%",
+       "-20.1%",
+       "-48.3%",
+       "$2,192",
+       "78.2%",
+       "0/30"
+      ],
+      [
+       "77",
+       "`vshape_swing_breakout`",
+       "Incubator / legacy fleet",
+       "11.3",
+       "0.79",
+       "-37.7%",
+       "-12.8%",
+       "-60.1%",
+       "$2,181",
+       "80.5%",
+       "3/30"
+      ],
+      [
+       "78",
+       "`reps_donchian_pyramiding`",
+       "Incubator / legacy fleet",
+       "1.6",
+       "0.28",
+       "-46.5%",
+       "-54.3%",
+       "-44.5%",
+       "$1,871",
+       "86.8%",
+       "0/30"
+      ],
+      [
+       "79",
+       "`nzdjpy_median_ma_retrace`",
+       "Incubator / legacy fleet",
+       "14.9",
+       "0.85",
+       "-60.1%",
+       "-23.9%",
+       "-42.7%",
+       "$1,700",
+       "86.0%",
+       "3/30"
+      ],
+      [
+       "80",
+       "`smart_money_swing`",
+       "Strategy House (KILLED)",
+       "8.7",
+       "0.76",
+       "-40.7%",
+       "-21.1%",
+       "-66.3%",
+       "$1,573",
+       "84.4%",
+       "2/30"
+      ],
+      [
+       "81",
+       "`smart_money_swing_named` — _duplicate of smart_money_swing (identical trades)_",
+       "Strategy House (IDEA)",
+       "8.7",
+       "0.76",
+       "-40.7%",
+       "-21.1%",
+       "-66.3%",
+       "$1,573",
+       "84.4%",
+       "2/30"
+      ],
+      [
+       "82",
+       "`ema_cross_h4_filter_bot`",
+       "Incubator / legacy fleet",
+       "13.0",
+       "0.83",
+       "-61.4%",
+       "-63.6%",
+       "-53.2%",
+       "$673",
+       "93.9%",
+       "3/30"
+      ],
+      [
+       "83",
+       "`demark_fractal_breakout`",
+       "Incubator / legacy fleet",
+       "21.6",
+       "0.76",
+       "-63.6%",
+       "-43.9%",
+       "-67.4%",
+       "$665",
+       "93.5%",
+       "6/30"
+      ],
+      [
+       "84",
+       "`xard_ma_cross_daily_open`",
+       "Incubator / legacy fleet",
+       "17.9",
+       "0.86",
+       "-68.5%",
+       "-82.7%",
+       "-25.5%",
+       "$406",
+       "96.9%",
+       "4/30"
+      ],
+      [
+       "85",
+       "`smashing_forex_2`",
+       "Strategy House (KILLED)",
+       "9.9",
+       "0.72",
+       "-72.5%",
+       "-76.0%",
+       "-74.0%",
+       "$180",
+       "98.4%",
+       "5/30"
+      ],
+      [
+       "86",
+       "`fx_fix_reversal`",
+       "Strategy House (KILLED)",
+       "49.7",
+       "0.72",
+       "-72.6%",
+       "-76.0%",
+       "-82.0%",
+       "$118",
+       "98.9%",
+       "0/30"
+      ],
+      [
+       "87",
+       "`ema_cross_h4_filter_bot_rc`",
+       "Strategy House (KILLED)",
+       "23.1",
+       "0.75",
+       "-76.7%",
+       "-93.4%",
+       "-96.1%",
+       "$6",
+       "99.9%",
+       "3/30"
+      ],
+      [
+       "88",
+       "`adx_trend_pullback_ea`",
+       "Incubator / legacy fleet",
+       "28.3",
+       "0.79",
+       "-74.5%",
+       "-96.0%",
+       "-93.8%",
+       "$6",
+       "99.9%",
+       "2/30"
+      ],
+      [
+       "89",
+       "`classic_ema_adx_trend`",
+       "Strategy House (KILLED)",
+       "31.7",
+       "0.76",
+       "-90.4%",
+       "-90.0%",
+       "-96.2%",
+       "$4",
+       "100.0%",
+       "1/30"
+      ],
+      [
+       "90",
+       "`classic_donchian_breakout`",
+       "Strategy House (KILLED)",
+       "64.9",
+       "0.77",
+       "-99.8%",
+       "-99.2%",
+       "-99.7%",
+       "$0",
+       "100.0%",
+       "3/30"
+      ],
+      [
+       "91",
+       "`amazing_crossover_rc`",
+       "Strategy House (KILLED)",
+       "53.9",
+       "0.67",
+       "-99.0%",
+       "-99.7%",
+       "-99.9%",
+       "$0",
+       "100.0%",
+       "1/30"
+      ],
+      [
+       "92",
+       "`classic_bollinger_reversion`",
+       "Strategy House (KILLED)",
+       "58.0",
+       "0.82",
+       "-94.9%",
+       "-94.0%",
+       "-95.9%",
+       "$1",
+       "100.0%",
+       "3/30"
+      ],
+      [
+       "93",
+       "`daily_fib_retracement_rc` — _suspect: average loss below −1R, likely an engine/stop defect_",
+       "Strategy House (KILLED)",
+       "5.8",
+       "0.2",
+       "-100.0%",
+       "-100.0%",
+       "-100.0%",
+       "$0",
+       "100.0%",
+       "0/30"
+      ]
+     ],
+     "note": "Profit factor = gross wins ÷ gross losses (above 1 makes money). Group = where the strategy sits today."
+    }
+   ]
+  },
+  {
+   "id": "risk-levels",
+   "nav": "Risk levels",
+   "kicker": "Leverage scenarios",
+   "title": "The profitable ones at four risk levels",
+   "body": "End-2025 balance from $10,000, with the worst drawdown in brackets. Doubling risk roughly doubles both the return and the drawdown, until losing streaks compound against you.",
+   "tables": [
+    {
+     "columns": [
+      "Strategy",
+      "0.25% / trade",
+      "0.5% / trade",
+      "1% / trade",
+      "2% / trade"
+     ],
+     "rows": [
+      [
+       "`nnfx_backtrader`",
+       "$10,687 (1% DD)",
+       "$11,413 (2% DD)",
+       "$12,987 (4% DD)",
+       "$16,668 (8% DD)"
+      ],
+      [
+       "`weekly_day_reversal_ea`",
+       "$10,844 (10% DD)",
+       "$11,626 (20% DD)",
+       "$12,934 (36% DD)",
+       "$14,223 (60% DD)"
+      ],
+      [
+       "`nnfx_backtrader_fx`",
+       "$10,578 (1% DD)",
+       "$11,182 (2% DD)",
+       "$12,470 (4% DD)",
+       "$15,388 (7% DD)"
+      ],
+      [
+       "`ma_crossover_swing`",
+       "$10,596 (3% DD)",
+       "$11,206 (5% DD)",
+       "$12,464 (10% DD)",
+       "$15,077 (20% DD)"
+      ],
+      [
+       "`post_fomc_drift`",
+       "$10,429 (3% DD)",
+       "$10,862 (5% DD)",
+       "$11,739 (10% DD)",
+       "$13,506 (20% DD)"
+      ],
+      [
+       "`oil_equity_timing`",
+       "$10,421 (2% DD)",
+       "$10,842 (4% DD)",
+       "$11,683 (9% DD)",
+       "$13,320 (18% DD)"
+      ],
+      [
+       "`pre_fomc_24h_basket`",
+       "$10,327 (6% DD)",
+       "$10,655 (12% DD)",
+       "$11,314 (23% DD)",
+       "$12,621 (40% DD)"
+      ],
+      [
+       "`orb_5min_nasdaq_costgate`",
+       "$10,399 (4% DD)",
+       "$10,737 (8% DD)",
+       "$11,205 (17% DD)",
+       "$11,258 (32% DD)"
+      ],
+      [
+       "`trend_pullback_indices_sma5`",
+       "$10,228 (2% DD)",
+       "$10,459 (4% DD)",
+       "$10,927 (7% DD)",
+       "$11,886 (13% DD)"
+      ],
+      [
+       "`fomc_tone_lexicon`",
+       "$10,209 (1% DD)",
+       "$10,420 (2% DD)",
+       "$10,854 (4% DD)",
+       "$11,763 (7% DD)"
+      ],
+      [
+       "`vol_managed_carry`",
+       "$10,185 (1% DD)",
+       "$10,369 (2% DD)",
+       "$10,732 (3% DD)",
+       "$11,443 (6% DD)"
+      ],
+      [
+       "`trend_pullback_indices`",
+       "$10,176 (0% DD)",
+       "$10,354 (1% DD)",
+       "$10,716 (2% DD)",
+       "$11,465 (3% DD)"
+      ],
+      [
+       "`janus_swing_system`",
+       "$10,169 (1% DD)",
+       "$10,335 (1% DD)",
+       "$10,657 (3% DD)",
+       "$11,266 (5% DD)"
+      ],
+      [
+       "`payday_opex_spx`",
+       "$10,166 (1% DD)",
+       "$10,330 (2% DD)",
+       "$10,646 (4% DD)",
+       "$11,228 (8% DD)"
+      ],
+      [
+       "`double_bottom_measured_move`",
+       "$10,122 (2% DD)",
+       "$10,243 (4% DD)",
+       "$10,481 (8% DD)",
+       "$10,944 (15% DD)"
+      ],
+      [
+       "`trend_pullback_indices13`",
+       "$10,109 (2% DD)",
+       "$10,218 (4% DD)",
+       "$10,439 (7% DD)",
+       "$10,885 (14% DD)"
+      ],
+      [
+       "`trend_pullback_indices_trades`",
+       "$10,098 (0% DD)",
+       "$10,197 (1% DD)",
+       "$10,397 (1% DD)",
+       "$10,800 (3% DD)"
+      ],
+      [
+       "`currency_momentum_factor`",
+       "$10,068 (3% DD)",
+       "$10,136 (5% DD)",
+       "$10,265 (10% DD)",
+       "$10,506 (20% DD)"
+      ],
+      [
+       "`fomc_window_spx`",
+       "$10,055 (1% DD)",
+       "$10,109 (2% DD)",
+       "$10,211 (4% DD)",
+       "$10,397 (8% DD)"
+      ],
+      [
+       "`pre_ecb_drift_eu_indices`",
+       "$10,048 (1% DD)",
+       "$10,096 (2% DD)",
+       "$10,190 (4% DD)",
+       "$10,371 (8% DD)"
+      ],
+      [
+       "`trend_pullback_indices_rep`",
+       "$10,028 (1% DD)",
+       "$10,056 (1% DD)",
+       "$10,112 (3% DD)",
+       "$10,220 (6% DD)"
+      ],
+      [
+       "`strong_weak_basket`",
+       "$10,006 (0% DD)",
+       "$10,011 (0% DD)",
+       "$10,022 (0% DD)",
+       "$10,044 (1% DD)"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "books",
+   "nav": "Combined books",
+   "kicker": "Portfolios",
+   "title": "Strategies traded together",
+   "body": "One shared $10,000 account. The hindsight row picks only strategies already known to have been profitable over these years — an upper bound nobody could have traded, shown for scale.",
+   "tables": [
+    {
+     "columns": [
+      "Book",
+      "Risk/trade",
+      "2023",
+      "2024",
+      "2025",
+      "$10k → end-2025",
+      "Max DD",
+      "Sharpe",
+      "Max open",
+      "Prop pass",
+      "Prop net/attempt"
+     ],
+     "rows": [
+      [
+       "Live book today (1 qualified + 4 designated)",
+       "0.25%",
+       "-16.1%",
+       "-3.8%",
+       "-13.2%",
+       "$7,128",
+       "30.8%",
+       "-1.43",
+       "32",
+       "0/30",
+       "$-540"
+      ],
+      [
+       "Live book today (1 qualified + 4 designated)",
+       "0.5%",
+       "-29.9%",
+       "-8.0%",
+       "-25.1%",
+       "$5,005",
+       "52.8%",
+       "-1.45",
+       "32",
+       "0/30",
+       "$-540"
+      ],
+      [
+       "Live book today (1 qualified + 4 designated)",
+       "1%",
+       "-51.6%",
+       "-17.1%",
+       "-45.1%",
+       "$2,360",
+       "79.0%",
+       "-1.47",
+       "32",
+       "4/30",
+       "$-321"
+      ],
+      [
+       "Everything at once (all 93)",
+       "0.1%",
+       "-98.3%",
+       "-98.4%",
+       "-99.3%",
+       "$0",
+       "100.0%",
+       "-6.22",
+       "371",
+       "0/30",
+       "$-540"
+      ],
+      [
+       "Strategy House one-shots (12)",
+       "0.5%",
+       "+3.4%",
+       "+28.7%",
+       "+2.1%",
+       "$14,996",
+       "14.2%",
+       "0.87",
+       "27",
+       "22/30",
+       "$6,393"
+      ],
+      [
+       "SHADOW forward-test set (5)",
+       "0.5%",
+       "+6.6%",
+       "+1.6%",
+       "+5.0%",
+       "$11,955",
+       "8.7%",
+       "0.7",
+       "12",
+       "16/30",
+       "$1,781"
+      ],
+      [
+       "SHADOW forward-test set (5)",
+       "1%",
+       "+13.2%",
+       "+3.0%",
+       "+10.0%",
+       "$14,138",
+       "16.7%",
+       "0.71",
+       "12",
+       "18/30",
+       "$3,123"
+      ],
+      [
+       "Hindsight pick: only strategies that were positive 2023-25",
+       "0.5%",
+       "+53.2%",
+       "+120.9%",
+       "-18.6%",
+       "$31,102",
+       "28.5%",
+       "1.36",
+       "51",
+       "17/30",
+       "$9,892"
+      ]
+     ],
+     "note": "Sharpe = annualised monthly return ÷ volatility (above 1 is good). Max open = most trades open at the same moment."
+    }
+   ]
+  },
+  {
+   "id": "prop",
+   "nav": "Prop firm",
+   "kicker": "Funded-account simulation",
+   "title": "Which strategies pass a prop challenge",
+   "body": "Strategies that passed at least once at 1% risk, ranked by average payout per attempt after the fee. Every other strategy loses the fee on every attempt.",
+   "tables": [
+    {
+     "columns": [
+      "Strategy",
+      "Passed both phases",
+      "Still funded end-2025",
+      "Avg net per attempt"
+     ],
+     "rows": [
+      [
+       "`weekly_day_reversal_ea`",
+       "10/30",
+       "0",
+       "$5,777"
+      ],
+      [
+       "`nnfx_backtrader`",
+       "19/30",
+       "19",
+       "$4,584"
+      ],
+      [
+       "`orb_5min_nasdaq_costgate`",
+       "15/30",
+       "0",
+       "$4,083"
+      ],
+      [
+       "`pre_fomc_24h_basket`",
+       "18/30",
+       "0",
+       "$3,748"
+      ],
+      [
+       "`nnfx_backtrader_fx`",
+       "18/30",
+       "18",
+       "$2,691"
+      ],
+      [
+       "`ma_crossover_swing`",
+       "10/30",
+       "0",
+       "$2,358"
+      ],
+      [
+       "`three_candle_swing_reversal`",
+       "18/30",
+       "0",
+       "$2,308"
+      ],
+      [
+       "`demark_fractal_breakout`",
+       "6/30",
+       "0",
+       "$2,013"
+      ],
+      [
+       "`smash_days`",
+       "9/30",
+       "6",
+       "$1,926"
+      ],
+      [
+       "`bb_midline_break`",
+       "10/30",
+       "0",
+       "$1,711"
+      ],
+      [
+       "`vshape_swing_breakout`",
+       "3/30",
+       "0",
+       "$1,481"
+      ],
+      [
+       "`oil_equity_timing`",
+       "16/30",
+       "16",
+       "$1,165"
+      ]
+     ]
+    }
+   ],
+   "callouts": [
+    {
+     "tone": "warn",
+     "title": "Passing is not the same as an edge",
+     "text": "Several losing strategies (bb_midline_break, demark_fractal_breakout) pass sometimes because a lucky streak hits +8% before the 10% stop. A real prop plan should use strategies that are profitable on their own first, then fit the firm's specific rules."
+    }
+   ]
+  },
+  {
+   "id": "not-covered",
+   "nav": "Not covered",
+   "kicker": "Gaps",
+   "title": "Strategies with no 2023–2025 result",
+   "body": "These are names in the catalogue with no runnable implementation in the research engine (or excluded). They need building before they can be judged: `Trend_EMA_ADX_H1`, `Trend_EMA_ADX_H4`, `Trend_EMA_ADX_MultiTF`, `Trend_Donchian_H1`, `Trend_Donchian_H4`, `Trend_Donchian_VCP`, `Range_Bollinger_H1`, `Range_Bollinger_H4`, `Range_Bollinger_Aggressive`, (each of the nine above also has an _RA regime-adjusted twin), `retail_sentiment_fade`, `daily_fib_retracement`, `sunday_breakout`, `Range_Stochastic_Divergence (excluded: reads the future)`, `cot_crowding_gate`, `oil_cad_lead_lag`, `one_over_n_book`, `outside_hma_klinger_rc`, `uncovered_equity_parity`, `value_real_fx`, `vol_targeted_xs_momentum`, `month_end_rebalancing`, `trade_health_advice_exit`, `commodity_tot_fx_spillover`, `month_end_equity_fx_rebal`, `lab_portfolio`, `vol_gated_sovereign_fx_carry`, `yield_confirmed_macro_drift`."
+  },
+  {
+   "id": "choosing-years",
+   "nav": "Choosing years",
+   "kicker": "Method question",
+   "title": "How professionals choose tuning and test years",
+   "paragraphs": [
+    {
+     "technical": "One fixed split (tune 2010–2022, test 2023+) rests on a single guess, and a 12-year tuning block spans several regimes. The standard answer is **walk-forward analysis**: tune on a window, test on the next unseen year, slide forward one year, repeat. Every year after the first window becomes an out-of-sample year exactly once; the stitched test years are the record. Stricter variants: **purged / combinatorial cross-validation** (López de Prado) tests every block against the rest with an embargo gap, and **regime-split tests** report trending, ranging and volatile periods separately.",
+     "plain": "Instead of picking one set of years to practise on and one to test on, you practise on a few years, test on the next one, then move everything forward a year and repeat. Every year gets tested once on settings chosen only from the years before it — the closest thing to having actually run the strategy live and re-tuned it yearly."
+    },
+    {
+     "technical": "The engine already has the fold logic (`src/validation/walk_forward.py`: 36-month train, 6-month step, anchored). It is not yet how Strategy House judges a strategy. Proposal: adopt yearly walk-forward as the standard and re-run every runnable strategy, with this page's $10,000 view applied to the stitched out-of-sample record.",
+     "plain": "We already have most of the code. The proposal is to make this the way every strategy is judged."
+    }
+   ]
+  },
+  {
+   "id": "decisions",
+   "nav": "Decisions",
+   "kicker": "Log",
+   "title": "Decisions and open questions",
+   "paragraphs": [
+    "**2026-11-10 — owner:** review every strategy individually on its own compounding account; combining the good ones into a book is decided after the review.",
+    "**2026-11-10 — owner:** a review run is a fresh, blind instance; running 2023–2025 for every strategy is accepted. The research engine marks those strategies `one_shot_contaminated` automatically.",
+    "**2026-11-10 — owner:** results and decisions are recorded on this site, not only in a sheet.",
+    "**Open:** adopt yearly walk-forward as the standard way a strategy is judged (proposed above).",
+    "**Open:** which profitable strategies, if any, form a candidate book for demo / live / prop.",
+    "**Open:** investigate `daily_fib_retracement_rc` (losses beyond −1R per trade) before trusting any of its numbers."
+   ]
+  }
+ ]
+}
