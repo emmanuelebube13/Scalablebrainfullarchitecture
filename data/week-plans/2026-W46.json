@@ -51,10 +51,11 @@
         {
           "id": "W46-MON-1",
           "system": "system-1",
-          "status": "todo",
+          "status": "done",
           "title": "PC-02 triple-barrier labels from rebuilt price paths (TP50 / TP100 / SL / time)",
           "plan": "plans/PC-02-triple-barrier-labels.md",
-          "note": "Built early 2026-10-31 (dev 496b7f7). See the Result section in the plan. Awaiting owner tick."
+          "note": "Built early 2026-10-31 (dev 496b7f7). See the Result section in the plan. Awaiting owner tick.",
+          "done_at": "2026-11-10"
         }
       ]
     },
