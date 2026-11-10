@@ -42,10 +42,11 @@
         {
           "id": "W46-MON-2",
           "system": "system-2",
-          "status": "todo",
+          "status": "done",
           "title": "LR-01 order idempotency and startup reconcile: verify F-303, crash-inject on practice, close or fix",
           "plan": "plans/LR-01-order-idempotency.md",
-          "note": "Verified 2026-10-31: already built (F-303); register ticked (dev a3f9546). Awaiting owner tick."
+          "note": "Verified 2026-10-31: already built (F-303); register ticked (dev a3f9546). Awaiting owner tick.",
+          "done_at": "2026-11-10"
         },
         {
           "id": "W46-MON-1",
