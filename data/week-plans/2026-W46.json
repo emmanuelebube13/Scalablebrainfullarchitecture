@@ -26,12 +26,11 @@
       "plan": "Claude finds why DEV missed the weak-voters trades and fixes it. Owner creates the live API token. Owner ticks the items that were built early.",
       "tasks": [
         {
-          "status": "done",
+          "status": "todo",
           "id": "W46-MON-3",
           "system": "system-1",
           "title": "Fix the DEV parity mismatch: since 11-06 weak_voters_committee has 3 paper trades and 0 DEV decisions. Find the cause, fix it, re-run parity clean.",
-          "note": "Started by Claude 2026-11-07. The clean-parity clock (W47-FRI-4) restarts from this fix.",
-          "done_at": "2026-11-10"
+          "note": "Started by Claude 2026-11-07. The clean-parity clock (W47-FRI-4) restarts from this fix."
         },
         {
           "status": "done",
