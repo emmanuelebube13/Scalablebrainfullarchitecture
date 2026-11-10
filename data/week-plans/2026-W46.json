@@ -34,10 +34,11 @@
           "done_at": "2026-11-10"
         },
         {
-          "status": "todo",
+          "status": "done",
           "id": "W46-MON-4",
           "system": "ops",
-          "title": "Owner: create an OANDA LIVE API token (on the live site; the practice key returns 401 there) and put it in the live secrets file. Claude verifies with one read-only call."
+          "title": "Owner: create an OANDA LIVE API token (on the live site; the practice key returns 401 there) and put it in the live secrets file. Claude verifies with one read-only call.",
+          "done_at": "2026-11-10"
         },
         {
           "id": "W46-MON-2",
