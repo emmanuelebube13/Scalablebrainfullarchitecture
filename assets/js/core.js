@@ -192,6 +192,7 @@ const NAV_GROUPS = [
       ['macro-finbert.html',        'FinBERT Macro NLP', 'finbert'],
       ['edge-exploration.html',     'Edge Exploration',  'edge'],
       ['backtest-review.html',      'Backtest Review',   'backtest-review'],
+      ['backtest-profitable.html',  'Profitable Strategies', 'backtest-profitable'],
     ],
   },
   {

@@ -4,7 +4,9 @@
    Renders data/backtest-review.json. Content only lives in the
    JSON: each section has a kicker, a title, a {technical, plain}
    body, optional paragraphs, tables (renderTable specs) and
-   callouts. A new review is a new data file, not new code.
+   callouts, figures (images with alt text and a caption) and
+   download links. A new review is a new data file plus a copy of
+   the HTML shell whose <body data-src> names that file.
    ============================================================ */
 
 import {
@@ -15,8 +17,8 @@ import {
 const main = $('#content');
 
 try {
-  mountChrome('backtest-review');
-  const D = await loadJSON('data/backtest-review.json');
+  mountChrome(document.body.dataset.nav || 'backtest-review');
+  const D = await loadJSON(document.body.dataset.src || 'data/backtest-review.json');
 
   $('#br-asof').textContent = `${D.eyebrow} · as of ${D.as_of}`;
   $('#br-title').textContent = D.title;
@@ -41,6 +43,13 @@ try {
           s.body ? el('p', { html: inline(voice(s.body, mode) ?? '') }) : null),
         ...(s.paragraphs || []).map((p) => el('p', { html: inline(voice(p, mode) ?? '') })),
         ...(s.callouts || []).map((c) => renderCallout(c, mode)),
+        s.links ? el('ul', {}, s.links.map((l) =>
+          el('li', {}, el('a', { href: l.href, download: '' }, l.label), l.note ? ` — ${l.note}` : ''))) : null,
+        ...(s.figures || []).map((f) => el('figure', { style: 'margin:24px 0' },
+          el('a', { href: f.src, target: '_blank', rel: 'noopener' },
+            el('img', { src: f.src, alt: f.alt, loading: 'lazy',
+              style: 'width:100%;border:1px solid var(--border);border-radius:var(--radius);background:#fcfcfb' })),
+          el('figcaption', { class: 'table-note', style: 'margin-top:8px', html: inline(f.caption || '') }))),
         ...(s.tables || []).flatMap((t) => renderTable(t))));
   }
 
