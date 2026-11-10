@@ -1722,8 +1722,8 @@
      "plain": "Instead of picking one set of years to practise on and one to test on, you practise on a few years, test on the next one, then move everything forward a year and repeat. Every year gets tested once on settings chosen only from the years before it — the closest thing to having actually run the strategy live and re-tuned it yearly."
     },
     {
-     "technical": "The engine already has the fold logic (`src/validation/walk_forward.py`: 36-month train, 6-month step, anchored). It is not yet how Strategy House judges a strategy. Proposal: adopt yearly walk-forward as the standard and re-run every runnable strategy, with this page's $10,000 view applied to the stitched out-of-sample record.",
-     "plain": "We already have most of the code. The proposal is to make this the way every strategy is judged."
+     "technical": "The engine already has the fold logic (`src/validation/walk_forward.py`: 36-month train, 6-month step, anchored). Owner decision 2026-11-10: yearly walk-forward is now the standard. Every runnable strategy will be re-run that way, with this page's $10,000 view applied to the stitched out-of-sample record.",
+     "plain": "Decided 2026-11-10: this is now how every strategy is judged. We already have most of the code."
     }
    ]
   },
@@ -1736,8 +1736,8 @@
     "**2026-11-10 — owner:** review every strategy individually on its own compounding account; combining the good ones into a book is decided after the review.",
     "**2026-11-10 — owner:** a review run is a fresh, blind instance; running 2023–2025 for every strategy is accepted. The research engine marks those strategies `one_shot_contaminated` automatically.",
     "**2026-11-10 — owner:** results and decisions are recorded on this site, not only in a sheet.",
-    "**Open:** adopt yearly walk-forward as the standard way a strategy is judged (proposed above).",
-    "**Open:** which profitable strategies, if any, form a candidate book for demo / live / prop.",
+    "**2026-11-10 — owner:** yearly walk-forward is ADOPTED as the standard way a strategy is judged. Build in progress; results will be published here as a new review.",
+    "**Open (owner to reply):** which profitable strategies, if any, form a candidate book for demo / live / prop.",
     "**Open:** investigate `daily_fib_retracement_rc` (losses beyond −1R per trade) before trusting any of its numbers."
    ]
   }
