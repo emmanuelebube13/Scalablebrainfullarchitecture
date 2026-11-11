@@ -38,6 +38,13 @@
           "title": "PC-04 gatekeeper v3 bake-off: frame, folds, choice rule written, models fitted",
           "plan": "plans/PC-04-gatekeeper-v3-bakeoff.md",
           "note": "Ran 2026-11-01 (dev 9523b57). See W47-TUE-1 / plan Result."
+        },
+        {
+          "id": "W47-MON-3",
+          "system": "ops",
+          "status": "todo",
+          "title": "Prove one timed exit end to end on prod practice (emitter -> S3 -> bridge -> S2 -> close at exit_by): a natural trade, or a marked practice test trade (owner: later)",
+          "note": "Moved from W46-WED-3 on 2026-11-11. DEV cannot prove the close (shadow broker has no positions). Needed before the 11-28 go / no-go."
         }
       ]
     },
@@ -59,7 +66,7 @@
           "status": "todo",
           "title": "LR-04 risk_config.live.json with the tiny-account table; owner approves the numbers",
           "plan": "plans/LR-04-risk-config-live.md",
-          "note": "Code done 2026-10-31 (dev 0599444). OWNER: approve the proposed numbers in the plan's Result table. Owner approved the live numbers 2026-11-04 (W45-D8: max open 10, 10 per day)."
+          "note": "Code done 2026-10-31 (dev 0599444). OWNER: approve the proposed numbers in the plan's Result table. Owner approved the live numbers 2026-11-04 (W45-D8: max open 10, 10 per day). | Review 2026-11-11 (Claude): Done early: live profile with approved numbers (3ede416) deployed in december-1 (aef76ad). The tiny-account check is in dev 914ee8c (W46-THU-4)."
         },
         {
           "id": "W47-TUE-1",
@@ -90,7 +97,7 @@
           "status": "todo",
           "title": "LR-05 circuit-breaker latch that survives restarts, with owner reset",
           "plan": "plans/LR-05-circuit-breaker-latch.md",
-          "note": "Built early 2026-10-31 (dev 742ba31). Awaiting owner tick."
+          "note": "Built early 2026-10-31 (dev 742ba31). Awaiting owner tick. | Review 2026-11-11 (Claude): Done early: LR-05 breaker latch deployed in december-1 (aef76ad)."
         },
         {
           "id": "W47-WED-2",
@@ -98,7 +105,7 @@
           "status": "todo",
           "title": "LR-06 spread-widening and stale-quote gate (FX and CFDs)",
           "plan": "plans/LR-06-spread-stale-quote-gate.md",
-          "note": "Built early 2026-10-31 (dev 2c8c10c): CFD pip bug fixed; FX gate already existed. Awaiting owner tick."
+          "note": "Built early 2026-10-31 (dev 2c8c10c): CFD pip bug fixed; FX gate already existed. Awaiting owner tick. | Review 2026-11-11 (Claude): Mostly done: CFD limits live since 11-03; FX per-pair spread ceilings set, active at the december-2 deploy. Stale-quote gate not checked."
         }
       ]
     },
@@ -120,7 +127,7 @@
           "status": "todo",
           "title": "LR-07 S1 signal-emit idempotency and dead-letter on both emit paths",
           "plan": "plans/LR-07-s1-emit-idempotency.md",
-          "note": "Built early 2026-10-31 (dev fb3d5d2). Awaiting owner tick."
+          "note": "Built early 2026-10-31 (dev fb3d5d2). Awaiting owner tick. | Review 2026-11-11 (Claude): Built early: LR-07 emitter retry dev fb3d5d2 (the research emitter runs from dev code). S1 bridge path not re-checked."
         },
         {
           "id": "W47-THU-2",

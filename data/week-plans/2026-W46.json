@@ -30,7 +30,7 @@
           "id": "W46-MON-3",
           "system": "system-1",
           "title": "Fix the DEV parity mismatch: since 11-06 weak_voters_committee has 3 paper trades and 0 DEV decisions. Find the cause, fix it, re-run parity clean.",
-          "note": "Started by Claude 2026-11-07. The clean-parity clock (W47-FRI-4) restarts from this fix."
+          "note": "Started by Claude 2026-11-07. The clean-parity clock (W47-FRI-4) restarts from this fix. | Review 2026-11-11 (Claude): FIXED dev 546aba7: the committee's decision was reported one H4 bar late and always marked stale; the emitter now gets it at the bar close (same signal id). Replay: all 4 paper decisions fresh. Parity restarted 11-10 22:00 UTC; 11-11 run mismatched=0 but on 0 rows (no committee decision yet), so not yet proven. Tick when a run shows >= 1 matched row."
         },
         {
           "status": "done",
@@ -69,7 +69,8 @@
           "status": "todo",
           "id": "W46-TUE-3",
           "system": "system-2",
-          "title": "Release \"december-1\" to prod practice: LR-02 slippage bound + CFD pip fix, LR-03 execution-mode gate (mode stays practice), LR-05 breaker latch, live risk profile file (present, not active). Gate dry run, owner deploys elevated."
+          "title": "Release \"december-1\" to prod practice: LR-02 slippage bound + CFD pip fix, LR-03 execution-mode gate (mode stays practice), LR-05 breaker latch, live risk profile file (present, not active). Gate dry run, owner deploys elevated.",
+          "note": "Review 2026-11-11 (Claude): DEPLOYED by owner 2026-11-10 18:36 -04:00: prod aef76ad (deployed/20261110-183300) = 8407434 + LR-02/03/04/05; LR-06 was already in prod. Gate: brain 1123, guardian 723, bridge 230, hand 621. Pin dev 35c96ba."
         },
         {
           "id": "W46-TUE-2",
@@ -77,7 +78,7 @@
           "status": "todo",
           "title": "LR-02 slippage bound (verify) and post-fill geometry check (build)",
           "plan": "plans/LR-02-slippage-geometry.md",
-          "note": "Built early 2026-10-31 (dev 65d53f1). Awaiting owner tick."
+          "note": "Built early 2026-10-31 (dev 65d53f1). Awaiting owner tick. | Review 2026-11-11 (Claude): Deployed to prod in december-1 (aef76ad)."
         },
         {
           "id": "W46-TUE-1",
@@ -85,7 +86,7 @@
           "status": "todo",
           "title": "PC-03 volatility forecaster (HAR-RV) and vol_reach feature",
           "plan": "plans/PC-03-volatility-forecaster.md",
-          "note": "Built early 2026-10-31 (dev 20bf970). See the plan's Result section. Awaiting owner tick."
+          "note": "Built early 2026-10-31 (dev 20bf970). See the plan's Result section. Awaiting owner tick. | Review 2026-11-11 (Claude): Verified: dev 20bf970 + plan Result section."
         }
       ]
     },
@@ -96,11 +97,11 @@
       "plan": "Follow the W45 rollout order: S2 first, then S3 and the bridge, then the flag. Watch the first timed exit close on time.",
       "tasks": [
         {
-          "status": "todo",
+          "status": "moved",
           "id": "W46-WED-3",
           "system": "ops",
           "title": "Timed exits on prod practice: S2 -> S3 + bridge -> BRIDGE_FORWARD_TIMED_EXITS flag; confirm the first timed exit closes at exit_by.",
-          "note": "Was W46-FRI-1, moved earlier so practice gets more days of timed trades before the go / no-go."
+          "note": "Was W46-FRI-1, moved earlier so practice gets more days of timed trades before the go / no-go. | Review 2026-11-11 (Claude): Rollout steps were already done 11-03 (bridge flag on). Not proven: no timed exit has closed at exit_by yet. Prod book quiet by rule (index pullback has not fired since 11-03). DEV cannot prove the close (EXEC_SHADOW: no positions). Owner 11-11: prod practice test trade later. Moved to W47-MON-3."
         },
         {
           "id": "W46-WED-1",
@@ -108,7 +109,7 @@
           "status": "todo",
           "title": "TX-01 text-model bake-off: label accuracy + market relevance, choice by pre-written rule",
           "plan": "plans/TX-01-text-model-bakeoff.md",
-          "note": "Ran 2026-11-01 (dev 219966a): finbert-tone wins by rule (tie with FinBERT); no tone predicts USD. FOMC-RoBERTa (gated) + Claude (no key) not yet run. Awaiting owner tick."
+          "note": "Ran 2026-11-01 (dev 219966a): finbert-tone wins by rule (tie with FinBERT); no tone predicts USD. FOMC-RoBERTa (gated) + Claude (no key) not yet run. Awaiting owner tick. | Review 2026-11-11 (Claude): Verified: dev 219966a; tone wired into evidence (sources.py)."
         },
         {
           "id": "W46-WED-2",
@@ -116,7 +117,7 @@
           "status": "todo",
           "title": "TX-02 economic event calendar (point-in-time) and event_risk feature",
           "plan": "plans/TX-02-event-calendar.md",
-          "note": "Built early 2026-10-31 (dev 4e3368b): calendar collector already ran every 6 h; event_risk source added. Awaiting owner tick."
+          "note": "Built early 2026-10-31 (dev 4e3368b): calendar collector already ran every 6 h; event_risk source added. Awaiting owner tick. | Review 2026-11-11 (Claude): Verified: dev 4e3368b; collector runs every 6 h."
         }
       ]
     },
@@ -130,13 +131,15 @@
           "status": "todo",
           "id": "W46-THU-3",
           "system": "system-2",
-          "title": "Measure typical spreads for every December book instrument and set SPREAD_TYPICAL_PIPS_* (FX) and the CFD limits (a CFD is refused until they are set)."
+          "title": "Measure typical spreads for every December book instrument and set SPREAD_TYPICAL_PIPS_* (FX) and the CFD limits (a CFD is refused until they are set).",
+          "note": "Review 2026-11-11 (Claude): Measured (dev 914ee8c). Owner OK 11-11: per-pair FX ceilings MAX_SPREAD_PIPS_* added to prod .env.system2 (backup bak-20261111-fxspread); they take effect at the next S2 start = the december-2 deploy (2f5fd55, gate WOULD DEPLOY, includes the netting refusal e5f9f15). CFD values from 11-03 confirmed."
         },
         {
           "status": "todo",
           "id": "W46-THU-4",
           "system": "system-3",
-          "title": "Live account check (read-only): instruments, minimum units, margin rates and leverage caps on the CAD account. Confirm $200 can size every book instrument at the live risk numbers, or name the ones it cannot."
+          "title": "Live account check (read-only): instruments, minimum units, margin rates and leverage caps on the CAD account. Confirm $200 can size every book instrument at the live risk numbers, or name the ones it cannot.",
+          "note": "Review 2026-11-11 (Claude): Done read-only (dev 914ee8c): every book instrument on the CAD live account, FX min 1 unit, margin 5% (USD_CAD 2%). $200 x 0.10% = $0.20 risk: committee 15-23 units, post-FOMC 32-58, tone 5-8 (rounding up to -15% risk). Index CFDs cannot size at $200."
         },
         {
           "id": "W46-THU-1",
@@ -144,7 +147,7 @@
           "status": "todo",
           "title": "LR-03 execution-mode gate (shadow / practice / live) with boot preflight",
           "plan": "plans/LR-03-execution-mode-gate.md",
-          "note": "Built early 2026-10-31 (dev cc20e12); prod sb_service.ps1 change waits for the live deploy. Awaiting owner tick."
+          "note": "Built early 2026-10-31 (dev cc20e12); prod sb_service.ps1 change waits for the live deploy. Awaiting owner tick. | Review 2026-11-11 (Claude): Deployed to prod in december-1 (aef76ad); no mode file = practice unchanged."
         },
         {
           "id": "W46-THU-2",
@@ -152,7 +155,7 @@
           "status": "todo",
           "title": "PC-01 part 2: wire vol_reach, event_risk and tone_* into the evidence ledger",
           "plan": "plans/PC-01-evidence-ledger.md",
-          "note": "vol_reach and event_risk wired 2026-10-31 (dev 0842a8f, 4e3368b); tone_* waits for TX-01."
+          "note": "vol_reach and event_risk wired 2026-10-31 (dev 0842a8f, 4e3368b); tone_* waits for TX-01. | Review 2026-11-11 (Claude): Done: tone_* (finbert-tone + FinBERT) wired 11-01/02; evidence tests 18 passed."
         }
       ]
     },
@@ -167,7 +170,7 @@
           "system": "system-1",
           "status": "todo",
           "title": "FOMC intraday statement fetch + score within minutes of release, live before 9 Dec",
-          "note": "Follow-up of W45-WED-4"
+          "note": "Follow-up of W45-WED-4 | Review 2026-11-11 (Claude): Done (dev 6f545c8): daily task 13:50 NY verified; 10-28 statement re-scored = stored (+0.5858), run_wait replay notice 4 min after release; backup schedule for 9 Dec if the weekly feed misses it; job runs HF offline. Still open: move tone + drift to the prod book before 12-08."
         },
         {
           "id": "W46-FRI-1",
@@ -232,7 +235,8 @@
           "status": "todo",
           "title": "Review W46 against plans; carry open tasks to W47 as moved"
         }
-      ]
+      ],
+      "review": "Pre-review 2026-11-11 (Claude, owner asked to start Saturday early). Built/verified Mon-Fri: see each task note. Found: the DEV runtime was DOWN from 2026-11-05 ~09:50 local (all services and supervisors killed at once, no log message; DEV does not restart after the 11-08 reboot by design). Restarted 11-11 13:03 local, S2 resumed (shadow). So DEV shadow evidence for 11-05..11-11 is missing. Open: SAT-1/SAT-2 run on 11-14; december-2 deploy (owner); MON-3 needs one matched parity row; WED-3 moved to W47-MON-3."
     }
   ],
   "decisions": [
