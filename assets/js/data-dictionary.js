@@ -74,7 +74,7 @@ function render() {
       },
     },
       el('span', { text: t.name }),
-      t.rows != null ? el('span', { style: 'font-size:0.68rem; opacity:0.6;', text: `${t.rows}` }) : null,
+      t.rows != null ? el('span', { style: 'font-size:0.6875rem; opacity:0.6;', text: `${t.rows}` }) : null,
     );
     tableNavList.append(item);
   });

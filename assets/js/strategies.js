@@ -136,13 +136,13 @@ function renderStrategyCard(s) {
         }),
         el('h3', { style: 'margin:0; font-size:1.05rem; font-family:var(--sans); font-weight:700;', text: s.name }),
         s.family && el('span', {
-          style: 'font-family:var(--mono); font-size:0.65rem; text-transform:uppercase; background:var(--bg-sunken); border:1px solid var(--border); padding:1px 6px; border-radius:3px; color:var(--text-dim);',
+          style: 'font-family:var(--mono); font-size:0.6875rem; text-transform:uppercase; background:var(--bg-sunken); border:1px solid var(--border); padding:1px 6px; border-radius:3px; color:var(--text-dim);',
           text: s.family,
         }),
       ),
       el('div', { style: 'display:flex; gap:4px; margin-top:4px;' },
         (s.granularities || []).map((g) => el('span', {
-          style: 'font-family:var(--mono); font-size:0.68rem; font-weight:600; color:var(--brass);',
+          style: 'font-family:var(--mono); font-size:0.6875rem; font-weight:600; color:var(--brass);',
           text: `@${g}`,
         })),
       )
@@ -173,11 +173,11 @@ function renderStrategyCard(s) {
   detailsPane.append(
     el('div', { style: 'display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; font-size:0.8rem;' },
       el('div', {},
-        el('span', { style: 'color:var(--text-faint); font-family:var(--mono); display:block; font-size:0.68rem; text-transform:uppercase;', text: 'Entry Mechanics' }),
+        el('span', { style: 'color:var(--text-faint); font-family:var(--mono); display:block; font-size:0.6875rem; text-transform:uppercase;', text: 'Entry Mechanics' }),
         el('span', { style: 'font-weight:600;', text: (s.entries || []).join(', ') || 'Market Order' })
       ),
       el('div', {},
-        el('span', { style: 'color:var(--text-faint); font-family:var(--mono); display:block; font-size:0.68rem; text-transform:uppercase;', text: 'Exit Mechanics' }),
+        el('span', { style: 'color:var(--text-faint); font-family:var(--mono); display:block; font-size:0.6875rem; text-transform:uppercase;', text: 'Exit Mechanics' }),
         el('span', { style: 'font-weight:600;', text: (s.exits || []).join(', ') || 'Fixed Target / SL' })
       )
     )

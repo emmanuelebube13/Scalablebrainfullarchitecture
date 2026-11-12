@@ -343,7 +343,7 @@
 
 .gcal-wk-num {
   font-family: var(--mono);
-  font-size: 0.68rem;
+  font-size: 0.6875rem;
   color: var(--text-faint);
   line-height: 1;
 }
@@ -517,7 +517,7 @@
 .gcard-dod strong {
   color: var(--text-faint);
   display: block;
-  font-size: 0.68rem;
+  font-size: 0.6875rem;
   text-transform: uppercase;
   letter-spacing: 0.07em;
   margin-bottom: 2px;
@@ -607,7 +607,7 @@
 
 .gladder-state {
   font-family: var(--mono);
-  font-size: 0.68rem;
+  font-size: 0.6875rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }

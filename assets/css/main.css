@@ -298,7 +298,7 @@ hr { border: 0; border-top: 1px solid var(--border); margin: 2.5rem 0; }
 
   .nav-toggle {
     display: grid; place-items: center; margin-left: auto; flex: none;
-    width: 40px; height: 40px; padding: 0; cursor: pointer;
+    width: 44px; height: 44px; padding: 0; cursor: pointer;
     background: var(--bg-sunken); color: var(--text-dim);
     border: 1px solid var(--border); border-radius: var(--radius-sm);
   }
@@ -349,7 +349,7 @@ hr { border: 0; border-top: 1px solid var(--border); margin: 2.5rem 0; }
   .nav-group-btn { display: none; }
   .nav-group-label {
     display: block; border-left: 0; padding: 4px 0 6px 4px;
-    font-family: var(--mono); font-size: 0.68rem; font-weight: 700;
+    font-family: var(--mono); font-size: 0.6875rem; font-weight: 700;
     text-transform: uppercase; color: var(--text-faint); letter-spacing: 0.06em;
   }
   .nav-group-dropdown {
@@ -406,7 +406,7 @@ hr { border: 0; border-top: 1px solid var(--border); margin: 2.5rem 0; }
 .section-head p { color: var(--text-dim); max-width: 70ch; margin: 0; font-size: 1rem; }
 
 .kicker {
-  font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.18em;
+  font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.18em;
   text-transform: uppercase; color: var(--accent); opacity: 0.65;
   display: block; margin-bottom: 10px;
 }
@@ -448,7 +448,7 @@ a.card:hover {
   pointer-events: none;
 }
 .system-card .sys-ordinal {
-  font-family: var(--mono); font-size: 0.68rem; color: var(--sys, var(--accent));
+  font-family: var(--mono); font-size: 0.6875rem; color: var(--sys, var(--accent));
   letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.85;
 }
 .system-card h3 { margin: 8px 0 2px; font-size: 1.12rem; }
@@ -754,7 +754,7 @@ tbody tr:hover { background: var(--bg-raised); }
 .ladder li { display: grid; grid-template-columns: 76px 1fr; gap: 18px; padding: 18px 0; border-top: 1px solid var(--border); }
 .ladder li:last-child { border-bottom: 1px solid var(--border); }
 .rung { font-family: var(--mono); font-weight: 700; font-size: 1.05rem; color: var(--tone, var(--muted)); }
-.rung small { display: block; font-size: 0.68rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; }
+.rung small { display: block; font-size: 0.6875rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; }
 .ladder h3 { font-size: 1rem; margin-bottom: 4px; }
 .ladder p { margin: 0 0 8px; color: var(--text-dim); font-size: 0.93rem; }
 .falsifier { font-size: 0.86rem; color: var(--text-faint); border-left: 2px solid var(--border-strong); padding-left: 12px; }
@@ -834,7 +834,7 @@ pre code { background: none; border: 0; padding: 0; white-space: pre; }
 }
 .stat-tile-label {
   font-family: var(--mono);
-  font-size: 0.66rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--text-faint);
@@ -892,7 +892,7 @@ pre code { background: none; border: 0; padding: 0; white-space: pre; }
 }
 .sys-sidebar-badge {
   flex: none;
-  font-family: var(--mono); font-size: 0.68rem;
+  font-family: var(--mono); font-size: 0.6875rem;
   background: var(--bad); color: var(--on-accent);
   border-radius: 999px; padding: 1px 6px;
 }
@@ -935,7 +935,7 @@ pre code { background: none; border: 0; padding: 0; white-space: pre; }
 }
 .runbook-toc-col h3 {
   font-family: var(--mono);
-  font-size: 0.66rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--accent);
@@ -1086,7 +1086,7 @@ body.search-open { overflow: hidden; }
 }
 .search-group { padding: 6px 0; }
 .search-group-label {
-  font-family: var(--mono); font-size: 0.66rem; font-weight: 700;
+  font-family: var(--mono); font-size: 0.6875rem; font-weight: 700;
   letter-spacing: 0.12em; text-transform: uppercase;
   padding: 6px 16px 4px; display: block;
 }
@@ -1125,7 +1125,7 @@ body.search-open { overflow: hidden; }
 }
 .map-column-filter button:hover { color: var(--text); border-color: var(--border-strong); }
 .map-column-filter button.active { background: var(--bg-raised); color: var(--text); border-color: var(--border-strong); }
-.map-column-filter-label { font-family: var(--mono); font-size: 0.66rem; color: var(--text-faint); align-self: center; letter-spacing: 0.08em; text-transform: uppercase; }
+.map-column-filter-label { font-family: var(--mono); font-size: 0.6875rem; color: var(--text-faint); align-self: center; letter-spacing: 0.08em; text-transform: uppercase; }
 
 /* ---- Runbook ToC ----
    The ToC is the sticky left column; .runbook-toc-col above carries its looks.
@@ -1385,4 +1385,24 @@ body.search-open { overflow: hidden; }
   .vphase-exit { grid-template-columns: 1fr; gap: 4px; }
   .vdoc { grid-template-columns: 1fr; gap: 4px; padding-left: calc(18px + var(--depth, 0) * 10px); }
   .vtable-split thead th:first-child, .vtable-split tbody td:first-child { width: auto; }
+}
+
+/* ---------- Phone audit 2026-11-12 ----------
+   Measured at 390 px: six pages scrolled sideways (wide tables, long code lines,
+   grid columns that would not shrink) and the shared header and footer links were
+   under the 44 px touch size. Rules here apply to every page. */
+@media (max-width: 720px) {
+  /* Grid and flex children may shrink below their content, so a long word or a
+     table inside one no longer widens the whole page. */
+  body :where(main, section, article, aside, div) { min-width: 0; }
+  /* A wide table or code block scrolls inside its own box, never the page. */
+  table { display: block; max-width: 100%; overflow-x: auto; }
+  pre { max-width: 100%; overflow-x: auto; }
+  :not(pre) > code { overflow-wrap: anywhere; }
+  .badge { white-space: normal; }
+  /* A heading that is one long path or identifier breaks instead of pushing the page wide. */
+  h1, h2, h3, h4 { overflow-wrap: anywhere; }
+  /* 44 px touch targets for the links every page shares. */
+  .brand { min-height: 44px; }
+  .site-footer a { display: inline-flex; align-items: center; min-height: 44px; }
 }
