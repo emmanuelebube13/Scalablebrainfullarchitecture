@@ -198,6 +198,7 @@ const NAV_GROUPS = [
   {
     label: 'Data & ERD',
     items: [
+      ['data-blueprint.html',       'Data Blueprint',    'data-blueprint'],
       ['data-dictionary.html',      'Data Dictionary v2', 'data-dictionary'],
       ['erd.html',                  'Interactive ERD',   'erd'],
       ['audit-remarks.html',        'Forensic Audit',    'audit'],
