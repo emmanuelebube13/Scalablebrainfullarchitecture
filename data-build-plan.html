@@ -48,10 +48,10 @@
 <div class="bpl-head">
 <h1>Build Plan: instances, configuration, money, telemetry, live</h1>
 <p class="bpl-lede">Plan phase only. Finalised conceptual, logical and physical models, then an ordered build plan so December is plumbing and real money starts in January. Written for a build agent and a reviewer. Nothing in any database or service was changed to produce it. It builds on the <a href="data-blueprint.html">Data Blueprint</a>.</p>
-<p class="bpl-meta">Revised 15 Nov 2026 with the owner's answers and a review: December is plumbing and testing from 30 Nov, real money from the week of 4 Jan 2027, goal $200k. Open items are in section 6.</p>
+<p class="bpl-meta">Revised 15 Nov 2026 with the owner's answers and a review: December is plumbing and testing from 30 Nov, real money from the week of 4 Jan 2027, goal $200k. Open items are in section 6; section 7 is the brief for the lead agent that runs the build.</p>
 <p id="bpl-noscript" class="bpl-meta bpl-noscript">The sections below render from Markdown when the page's script loads.</p>
 </div>
-<nav class="bpl-toc" aria-label="Sections"><a href="#readme">Read me first</a><a href="#current">1 · Current state</a><a href="#conceptual">2a · Conceptual model</a><a href="#logical">2b · Logical model</a><a href="#physical">2c · Physical model</a><a href="#build">3 · Build plan</a><a href="#migration">4 · Migration</a><a href="#golive">5 · Go-live checklist</a><a href="#questions">6 · Open questions</a></nav>
+<nav class="bpl-toc" aria-label="Sections"><a href="#readme">Read me first</a><a href="#current">1 · Current state</a><a href="#conceptual">2a · Conceptual model</a><a href="#logical">2b · Logical model</a><a href="#physical">2c · Physical model</a><a href="#build">3 · Build plan</a><a href="#migration">4 · Migration</a><a href="#golive">5 · Go-live checklist</a><a href="#questions">6 · Open questions</a><a href="#lead">7 · Lead agent brief</a><a href="#pending">8 · Pending decisions</a></nav>
 <section id="readme" class="bpl-doc"><script type="text/markdown"># Build plan 2026-11-15: instances, configuration out of code, money and goals, telemetry, live readiness
 
 Written 2026-11-15 (Sunday) in PLAN phase only. Revised the same day with the owner's answers and a reviewer's fixes (see [05-open-questions-and-risks.md](#questions)). Nothing in any database, service, scheduled task
@@ -85,6 +85,8 @@ it is listed in [05-open-questions-and-risks.md](#questions) and the plan says w
 | 6 | [03-migration-plan.md](#migration) | Migration of existing data, with rollback per step |
 | 7 | [04-go-live-checklist.md](#golive) | Go-live checklist for the live instance |
 | 8 | [05-open-questions-and-risks.md](#questions) | Open questions and risks for the owner |
+| 9 | [06-lead-agent-brief.md](#lead) | How a lead agent runs the build with a team of agents: waves, ownership, frozen contracts, prompts, owner steps |
+| 10 | [07-pending-owner-decisions.md](#pending) | The five decisions still open, saved as a plan to work through later |
 
 ## Rules the build agent and reviewer follow
 
@@ -1645,6 +1647,406 @@ and date, so the reason for each choice is not lost.
 | R12 | **Prop rules modelled without a firm** | medium | a breach the gate did not predict | safety buffers and unrealised-P&L options; no real prop instance until Q8 |
 | R13 | **Owner steps** gate several phases (deploys, elevated tasks, the research cutover) | medium | phases wait | owner steps grouped per phase so they can be done in one sitting |
 | R14 | **Superuser password deferred**: no least-privilege roles yet, so the dashboard keeps a login that can write every table, and the old trade table stays in place | certain until Q10 | a dashboard bug could write where it should not; an old reader could use stale data | the dashboard code writes only through the audited `config`/`finance` endpoints (tested); append-only triggers protect the ledgers whatever the login; the trade path has no database login at all, so the goal-never-touches-risk rule does not depend on roles; a grep check in Phase 3.2 confirms nothing reads `public.fact_live_trades`. Recommend supplying the password before go-live (checklist B16) |
+</script></section><section id="lead" class="bpl-doc"><script type="text/markdown"># 7. Lead agent brief: build the plan with a team of agents
+
+Written 2026-11-15 for a **lead agent** who was not in the conversations that produced the plan.
+The lead reads this file, then the plan, then runs the build by dispatching workstream agents in
+waves, checking each wave's evidence, and queueing the owner's steps. The lead does not write
+product code itself except to resolve a conflict between two agents' work.
+
+Copy the prompt in §0 into a new Claude Code session started in `C:\SB`.
+
+---
+
+## 0. The prompt to start the lead agent
+
+```text
+You are the lead agent for the Scalable Brain build that starts 2026-11-16.
+Read, in this order, before doing anything else:
+  1. C:\SB\Scalablebrainfullarchitecture\data-model\10-build-plan\06-lead-agent-brief.md  (your brief)
+  2. C:\SB\Scalablebrainfullarchitecture\data-model\10-build-plan\00-README.md  and files 01-05
+  3. C:\SB\Scalablebrainfullarchitecture\data-model\04-conceptual, 05-logical, 06-physical
+  4. C:\SB\scalablebrain-umbrella\CLAUDE.md  (how to write instructions for agents on this codebase)
+  5. C:\SB\Scalablebrainfullarchitecture\plans\README.md  (rules every agent follows)
+The same plan is published at
+https://emmanuelebube13.github.io/Scalablebrainfullarchitecture/data-build-plan.html
+but that page has login names and secrets paths removed; build from the local files.
+Run Wave 0 now. Dispatch workstream agents as the brief says, one owning system per agent,
+each in its own git worktree. Never deploy to production, never write a production database,
+never register a scheduled task: queue those as owner steps. Report at the end of each wave with
+evidence, then continue to the next wave unless a gate fails or an owner step blocks it.
+```
+
+---
+
+## 1. Mission, scope and stop rules
+
+**Mission.** Build the critical path of the plan so that the live instance runs in shadow from
+about 2026-12-07 and the go/no-go on Saturday 2027-01-02 has the evidence it needs.
+
+**In scope, in this order:** Phase 0, Phase 1, Phase 2, Phase 3.1-3.4, Phase 4.1, 4.2, 4.5, and the
+code parts of Phase 6 and the go-live checklist. After those, if time allows: 3.5-3.8, 4.6, Phase 5.
+
+**Out of scope:** Phase 7; any new strategy, research run or parameter search; Power BI; changing
+any risk number (numbers are the owner's, entered as settings drafts the owner activates); any
+broker order. Anything not named in a wave below is out of scope until the lead writes it into
+`STATUS.md` and the owner agrees.
+
+**Stop and report to the owner, without working around it, when:**
+- a wave's gate fails twice after fixes;
+- an action would write a production database, deploy, restart a production service, register or
+  change a scheduled task, or touch `<secrets folder, kept off the public site>`;
+- a test that passed on the base commit fails and the cause is outside the agent's owning system;
+- two agents need the same file (re-plan the split instead of letting both edit);
+- live data contradicts the plan's facts (counts, schemas) in a way that changes a design choice.
+
+---
+
+## 2. Where everything is, and how code reaches production
+
+| What | Development copy (agents edit here, in worktrees) | Production copy (agents never edit) | How it reaches production |
+|---|---|---|---|
+| Brain, Hand, Guardian, bridge, contracts | `C:\SB\dev` (branch `dev`, at `f09490d`, 5 modified files belong to other sessions) | `C:\SB\prod\repo` (detached at `0dafcf7`; **72 modified files on 2026-11-15**, recorded drift) | owner runs `C:\SB\prod\services\deploy.ps1 -Commit <sha>` (elevated, test gate). Releases are cut from live prod HEAD as narrow branches (pre-demo rule), never by merging all of `dev` (262+ commits ahead, live-path changes) |
+| Dashboard (telemetry-server, telemetry-dashboard), control panel, PostgreSQL migrations | branch `dev` of the umbrella repo, checked out as a **new worktree** under `C:\SB\lab\wt-build-<name>` | `C:\SB\scalablebrain-umbrella` (branch `prod-snapshot-2026-10-30`, served on :8050 and :8060) | the prod-dashboard-deploy method: record drift, merge in a separate worktree, rebuild static, fast-forward, restart file, verify on :8050. Owner approves |
+| `C:\SB\dev-umbrella` | **Do not use.** Another session's branch `feat/telemetry-oct30-fixes` with 76 uncommitted files | — | — |
+| Ops scripts (supervisor, relays, backup, watchdog, bell, journal sync) | a worktree of the ops repo at `C:\SB\prod\services` (branch `master`, 24 modified files are live edits) under `C:\SB\lab\wt-build-ops` | `C:\SB\prod\services` itself is production | owner copies the reviewed files in (several are admin-only) and restarts; the lead writes the exact copy list |
+| DEV runtime | `C:\SB\devenv` (services down since 2026-11-11 unless restarted) | — | `start_dev.ps1` then `resume_dev_s2.ps1` (owner or lead may run these: DEV is shadow-only) |
+| Databases | `scalable_brain_dev` (agents may apply migrations here) | `scalable_brain`, `ForexBrainDB` | owner applies each migration file after the DEV gate, recorded in `09-change-log/` |
+| Plan and records | `C:\SB\Scalablebrainfullarchitecture\data-model\` | site page `data-build-plan.html` | regenerate with `data-model\tools\build_plan_page.py`; commit only the generated page |
+
+Python: `C:\SB\venv-s1` (brain, dashboard, ops tools), `venv-s2` (Hand, bridge, publisher),
+`venv-s3` (Guardian). They are **read-only**: never `pip install` (App Control blocks new
+packages and DLLs). Scheduled tasks use `pythonw.exe`, never `python.exe`.
+
+**Worktrees.** Each workstream agent gets its own worktree and branch, named
+`build/<wave>-<system>` (example `build/w2-guardian`), created by the lead from the right base:
+`dev` for brain/hand/guardian/bridge, umbrella `dev` for dashboard and migrations, ops `master`
+for ops scripts. When a wave passes, the lead merges the branches into `dev` (or umbrella `dev`,
+ops `master`) and records the merge commit in `STATUS.md`.
+
+---
+
+## 3. Standing invariants (put these in every agent prompt)
+
+1. Never place, enlarge or modify a broker order. Exceptions are only the owner-approved ones in
+   `scalablebrain-umbrella\CLAUDE.md` §8, and agents do not trigger them.
+2. Never auto-remediate. Report only. The one approved automatic remediation (S2 downtime
+   self-heal) is not to be extended.
+3. Never set a live mode, `go_live_enabled`, `enforce` on the probability gate, or activate a
+   `risk` setting. Agents create settings as **drafts**; the owner activates.
+4. No secrets in code, tables, commits, prompts, logs or this folder. Refer to credential files by
+   path only. The full live account id never appears anywhere.
+5. Honest rendering: absent is absent. No `COALESCE(x, 0.5)`, no `|| 0`, no defaulted direction.
+6. Every record that belongs to an instance carries `instance_id`/`instance_key`; there is no
+   default instance (plan invariant I9).
+7. The trade path never reads `finance.*` and has no database login (I10).
+8. No regex or script-based patching of source files. Use targeted edits; run
+   `python -c "import ast; ast.parse(open(f).read())"` on every touched `.py`, and check for
+   duplicate definitions with `grep -oE "^def [a-zA-Z0-9_]+" f.py | sort | uniq -d`.
+9. A file can be in sync while its collaborators are not: check every changed attribute, kwarg
+   and import against the code that will run beside it in production (`C:\SB\prod\repo`, read-only).
+10. Design system for every screen: `C:\SB\Scalablebrainfullarchitecture\design\` (IBM Plex,
+    tokens, phone first, every red state shows its fix).
+11. Commits: plain messages, no co-author or generated-by footer (owner rule).
+12. Write the evidence, not the claim: each acceptance check is a command or query plus its output.
+
+---
+
+## 4. The team
+
+One agent per owning system, so no two agents edit one file. The lead may run a system's agent
+more than once across waves; it resumes the same agent (SendMessage) rather than starting cold
+when the context is useful.
+
+| Agent | Owns (may edit) | Never edits | Venv for tests |
+|---|---|---|---|
+| **db** | `telemetry-server/migrations/020+`, `migrations/runner.py`, SQL views and functions, `tools/gen_setting_defs.py`, `tools/diff_resolved.py`, seed files | any service code | venv-s1 |
+| **config** | `config_publisher.py`, `validator.py` (shared library under the ops worktree, imported by dashboard and publisher), snapshot and `instances.json` writers | Guardian/Hand readers | venv-s1 |
+| **guardian** (S3) | `systems/guardian/**` incl. sqlite migrations 0020+, snapshot loader, layer K, contract copy under `guardian/contracts` | bridge, hand, brain | venv-s3 |
+| **hand** (S2) | `systems/hand/**`, `systems/bridge/**`, publisher, contract copies under hand and `repo/contracts` | guardian, brain | venv-s2 (bridge tests: venv-s3) |
+| **brain** (S1) | `systems/brain/**` incl. producer fan-out, `signal_writer`, research emitter, contract copy under brain | guardian, hand | venv-s1 |
+| **ops** | ops worktree: `sb_service.ps1`, `register_instance_tasks.ps1`, `ledger_relay.py`, `account_relay.py`, `watchdog_relay.py`, `bell.py`, `bell_relay.py`, `backup\sb_backup.py`, `research_emit_job.py`, `alloc_sync.ps1` | service code in `systems/**` | venv-s1 / venv-s2 as the script uses |
+| **dashboard** | umbrella worktree: `telemetry-server/routes/**`, `services/**` (except migrations), `telemetry-dashboard/**`, `control-panel/**` | migrations (db agent) | venv-s1, node from the umbrella |
+| **reviewer** | nothing; read-only. Runs every acceptance check of the wave and the test suites, and reports pass/fail with output | — | all |
+
+The **reviewer** is a separate agent for each wave, started fresh so it does not share the
+builders' assumptions. It receives the wave's acceptance table and the branch names, nothing else.
+
+---
+
+## 5. Frozen contracts (decided in Wave 1, before any parallel coding)
+
+Several agents build against the same shapes. The lead freezes these as files in
+`data-model\10-build-plan\contracts\` at the end of Wave 1, and every later prompt quotes them.
+A change to a frozen contract needs the lead to stop the affected agents first.
+
+| Contract | Owner agent | Used by | Must contain |
+|---|---|---|---|
+| `settings_snapshot.schema.json` | config | guardian, hand, brain | top-level `instance` (key, id, type, runtime_env), `snapshot_version`, `published_at`, `settings` (key → value, scope, version), `enablements[]`, `constraints[]`, `model`, `aliases` (alias → strategy_key); the hash rule (sha256 of canonical JSON, sorted keys, no whitespace) |
+| `instances.schema.json` | config | ops (supervisor, task registration), dashboard | per instance: key, id, runtime_env, status, state_dir, queue_path, port_base, secrets_path, dashboard_url |
+| Wire contracts v1.1 | guardian (master copy) | hand, brain, bridge | the field additions in build plan §2.2, byte-identical in the three schema copies, `schema_version "1.1"`, new fields optional |
+| `trading.*`, `config.*`, `finance.*`, `ops.*` DDL | db | ops relays, dashboard | as in physical model §6.2-6.5, after the review fixes; applied to `scalable_brain_dev` |
+| Guardian `/commands` API per instance | guardian | dashboard, control panel | request and response shapes for pause, resume, reset breaker, flatten, with `instance_key` and operator id |
+
+---
+
+## 6. Waves
+
+Each wave lists its tasks (plan ids), the agent, what it must produce, and the gate. Tasks inside a
+wave run in parallel. The next wave starts only when the gate passes or the owner waives a line.
+
+### Wave 0: stop the bleeding (target W47, Mon-Wed)
+
+| Task | Agent | Output | Evidence |
+|---|---|---|---|
+| 0.1 backup includes `scalable_brain_dev`, downtime, config, panel and audit stores; excludes `.bak` copies | ops | patch to `backup\sb_backup.py` on `build/w0-ops` | dry-run listing of what the archive would contain |
+| 0.3 open-position strategy default `'41'` removed; reconciler lookup fixed | guardian (migration 0020a) + hand (bridge `broker_reconciler.py`) | two branches, one test each with a NULL `broker_trade_id` fixture | tests pass; a read-only query on a copy of prod `ams.db` shows 3025→36 and 3051→21 after a replayed reconciler pass |
+| 0.4 dashboard stops writing the queue and the risk ledger | dashboard | routes call the Guardian API / `ams.ctl` | `grep -rn "INSERT INTO queue\|UPDATE ams_" telemetry-server control-panel` returns nothing; route tests |
+| 0.7 Guardian outbox routes events to the bell | guardian | `risk_config.json` routing change | config load test; outbox rows created in DEV are not `dead` |
+| Owner queue items 0.2, 0.5, 0.6, 0.8 | lead | exact commands in `OWNER-STEPS.md` | — |
+
+Gate: reviewer passes every line; the lead cuts a narrow release branch from prod HEAD with 0.3,
+0.4 (dashboard), 0.7 and queues the owner's deploy.
+
+### Wave 1: schemas, seed, publisher, contracts (target W47 Wed - W48 Tue)
+
+| Task | Agent | Output |
+|---|---|---|
+| Migrations 020-026 (bootstrap ledger, roles file for DEV only, config, trading, finance, ops, seed); views `v_reconciliation`, `v_stuck_orders`, `v_source_freshness`, `v_instance_ledger` | db | applied to `scalable_brain_dev`; `021_roles.sql` applied in DEV only (prod waits for the superuser password) |
+| `gen_setting_defs.py`, `diff_resolved.py`; seed of settings, enablements, instances 1-3 | db | seed SQL |
+| `validator.py`, `config_publisher.py`, snapshot and `instances.json` writer; frozen contracts §5 | config | running against DEV; contract files committed |
+| Wire contract v1.1 in the three copies with the identity test | guardian (writes master), hand and brain (copy and test) | three branches |
+
+Gate: Phase 1 acceptance table (build plan §2.1), with the role lines run in DEV only, plus the
+contract identity test green in all three repos. Owner step: apply 020, 022-026 to
+`scalable_brain`.
+
+### Wave 2: the trade path reads settings and carries the instance (target W48 - W49)
+
+| Task | Agent |
+|---|---|
+| 2.1 snapshot loader with fallback flag; 2.2 layer K and `ams_instance_day`; 2.3 enablement from the snapshot; 2.4 instance and settings version on every row; Guardian `/commands` per instance | guardian |
+| 2.5 Hand limits from the snapshot, instance guard; 2.6 bridge stamps `instance_key` | hand |
+| 2.7 fan-out per enabled instance; 2.8 `signal_writer` into `trading.signal` | brain |
+| 2.9 strategy controls write enablement drafts; 2.10 panel instance actions | dashboard |
+
+Gate: Phase 2 acceptance table in DEV (DEV runtime started; instance 2 in shadow), including the
+`replay_gate.py` check: 0 outcome differences on the last 100 mirrored signals with the snapshot
+versus the files. Then the lead cuts the release (deploy order S2, S3, S1, flags off) and queues
+the owner deploy; flags flip only after a clean DEV week.
+
+### Wave 3: one writer per record, alerts (target W49)
+
+| Task | Agent |
+|---|---|
+| 3.1 `ledger_relay.py` and backfill (M3); 3.3 `account_relay.py` (M5, M6, and M4b's new paged read path with its allow-list test); 3.4 `watchdog_relay.py`, `bell.py` to `ops.alert` (M7, M8); stuck-order alert | ops |
+| Trades, Risk, Signals and the bell read `trading.*` / `ops.alert`; pre-ledger chip | dashboard |
+| M4 pre-ledger archive loader | db |
+
+Gate: build plan §2.3 rows 3.1-3.4 and migration rows M3-M8 in DEV, with fixtures for the known
+defects (order 3029, manual rows, NULL broker trade id, the NZD_CHF divergence replay, the 4.5-day
+stuck order replay): "if it reports clean, it is broken". Owner steps: install relays, disable the
+two old writers (3.2), run the backfills in prod.
+
+### Wave 4: instance runtime and switcher (target W50, before 2026-12-09)
+
+| Task | Agent |
+|---|---|
+| 4.1 instance-aware supervisor and `register_instance_tasks.ps1` | ops |
+| 4.2 `SB_INSTANCE` paths and queue guard | guardian, hand (in parallel, frozen `instances.schema.json`) |
+| 4.5 `X-SB-Instance` scope, switcher with the dev link to :18050 | dashboard |
+| 6.1 instance 3 rows as drafts (LR-04 numbers, constraints, enablement); 6.2 secrets path wired | db (rows), config (publisher picks them up) |
+
+Gate: §2.4 rows 4.1, 4.2, 4.4, 4.5. Owner steps: fill the live secrets file, register instance 3's
+tasks, activate instance 3 with `exec.mode=shadow`. Then the shadow rehearsal (6.3) starts.
+
+### Wave 5: drills and checklist (target W51 - W53)
+
+| Task | Agent |
+|---|---|
+| 4.3 isolation drill; 6.5 rollback drill; checklist B12 settings-unavailable drill | reviewer runs, with ops for scripts |
+| Checklist A1-A9, B1-B16, §F reconciliation checks: evidence column filled | reviewer |
+| Go/no-go pack for Sat 2027-01-02 (honest: December cannot prove an edge) | lead |
+| If time: 3.5-3.8, 4.6, Phase 5 | the owning agents |
+
+Gate: the checklist with every line resolved or signed by the owner.
+
+---
+
+## 7. Prompt template for a workstream agent
+
+The lead fills every field. Prompts that carried real numbers and file:line evidence produced far
+better work than prompts that pointed at documentation (umbrella CLAUDE.md §10).
+
+```text
+You are the <system> agent for wave <n> of the Scalable Brain build.
+Worktree: <path>  Branch: build/w<n>-<system>  Base: <branch>@<sha>
+Read first: <exact plan sections by file and heading>; frozen contracts: <files>.
+Your tasks: <plan ids, each restated in two lines>.
+You may edit only: <paths>. You must not edit: <paths owned by others>.
+Facts from the live system you need: <counts, file:line, current behaviour, with dates>.
+Acceptance (run each, paste the output): <commands with expected values>.
+Required test fixtures: <named defects that must be caught>.
+Standing invariants: <§3 pasted in full>.
+Out of scope: <list>.
+When done: commit on your branch (plain message, no footer), then report: files changed,
+tests run with counts, each acceptance command with its output, anything you could not do and why.
+Do not merge, deploy, apply migrations outside scalable_brain_dev, or start production services.
+```
+
+---
+
+## 8. Records the lead keeps
+
+| File (in `data-model\10-build-plan\`) | Contents | Updated |
+|---|---|---|
+| `STATUS.md` | per wave: tasks, agent, branch, commit, gate result, date; current blockers | after every agent report |
+| `OWNER-STEPS.md` | each owner step: why, exact command or click, expected result, rollback, needed by (date), done (date, by) | when a step is queued or done |
+| `contracts\*.json` | frozen contracts (§5) | Wave 1, then only with a recorded change |
+| `..\09-change-log\YYYY-MM-DD-<step>.md` | every applied database or production change: before counts, command, after counts, who, when | per change |
+| [05-open-questions-and-risks.md](#questions) | owner answers and new questions | as they arrive |
+
+At the end of each wave the lead regenerates the site page
+(`C:\SB\venv-s1\Scripts\python.exe data-model\tools\build_plan_page.py`) only if the plan text
+changed, and commits only `data-build-plan.html`.
+
+---
+
+## 9. Owner steps known in advance
+
+| When | Step |
+|---|---|
+| W47 | register the weekly off-machine backup copy (0.2); convert the five Interactive tasks to S4U (0.5); delete three dead tasks (0.6); choose and configure the phone channel (0.8, Q7); deploy the Wave 0 release |
+| W48 | apply migrations 020, 022-026 to `scalable_brain`; generate the live API token on the live side of OANDA and fill the live secrets file; deposit the first money; approve the LR-04 numbers (Q5) |
+| W49 | deploy Wave 2 (S2, S3, S1, flags off); install relays and disable the two old trade writers; run backfills in prod; research flip cutover (3.6, owner runs) |
+| W50 | install the instance-aware supervisor; register instance 3 tasks; activate instance 3 in shadow |
+| W51-W53 | flip feature flags after clean DEV weeks; sign or resolve checklist lines; supply the superuser password or sign off on B16 |
+| Sat 2027-01-02 | go/no-go; choose the first live strategy (Q17) |
+| Week of 2027-01-04 | smoke test (checklist §C), owner-run |
+
+Every step needs the owner's explicit approval at the time it is run. Approval of a wave does not
+carry over to the next.
+</script></section><section id="pending" class="bpl-doc"><script type="text/markdown"># 8. Pending owner decisions: a plan to work through later
+
+Saved 2026-11-15 at the owner's request ("save this as a plan, as this will be worked on later").
+These five decisions are still open. None blocks Waves 0 to 2 of the build; each has a latest date
+after which a wave waits. Until each is answered, the build uses the stated default **as a draft
+only**: nothing risk-related is activated without the owner.
+
+For each decision the session that picks this up should: prepare the inputs listed, present the
+options as a short table with the recommendation, get the owner's answer, record it in
+[05-open-questions-and-risks.md](#questions) with the date, and make the listed change.
+
+## Summary
+
+| # | Decision | Latest date | Blocks | Default until answered |
+|---|---|---|---|---|
+| D1 | Live risk numbers and first balance (Q5) | Fri 2026-12-04 | Wave 4 activation of instance 3; checklist B4 | LR-04 proposal loaded as instance-3 drafts, not active |
+| D2 | Does the nightly allocation review apply its changes automatically? (Q6) | Fri 2026-11-27 | Phase 2.3 (Guardian reads allocation from the snapshot) | changes arrive as drafts; the owner activates each |
+| D3 | Phone alert channel (Q7) | Fri 2026-11-20 | checklist A2; live is not acceptable without it | none: bell only, flagged on the dashboard as "no phone channel" |
+| D4 | First live strategy for the smoke test (Q17) | Sat 2027-01-02 (go/no-go) | Phase 6.4 smoke test | the checklist C2 default rule produces a candidate; the owner signs |
+| D5 | Goal details: start capital, monthly contribution, milestones (Q18) | Thu 2026-12-31 | finance projection; goal tiles | $200k profit in 2027, start capital = live balance on 2027-01-01, $2,000 a month, quarterly milestones, live instances only |
+
+## D1. Live risk numbers and the first balance
+
+**Question.** Approve, change or reject the proposed live numbers for `oanda-live-personal`, and
+confirm the first deposit and the rule for adding more.
+
+**Inputs to prepare.**
+- The LR-04 proposal (`C:\SB\Scalablebrainfullarchitecture\plans\LR-04-risk-config-live.md`):
+  0.5% max per trade, 0.10% research, soft/hard daily loss 1%/2%, weekly 5%, max drawdown 15%,
+  6 consecutive losses, 6 open, 6 per day, pair 1%, correlated 1.5%, total open risk 3%.
+- The tiny-account table re-run against the **real** deposited balance (W48 deposit), showing
+  which instruments can trade at 0.10% (at $200 on 2026-10-31: the 15 FX pairs, copper and the
+  2-year bond only).
+- The practice record of the December book's strategies, honestly labelled (no edge proven).
+- W46-D3 recommendation: $200 in December, about $5k in January only if the plumbing was clean.
+
+**Options.** (a) approve as proposed; (b) change named values; (c) smaller first step (for example
+0.25% max per trade).
+
+**Recommendation.** (a), with the `restricted_instruments` constraint set from the re-run table.
+
+**When answered.** The db agent writes the values as instance-3 `setting_value` and
+`instance_constraint` drafts; the owner activates them with the two-step confirm; checklist B4
+records the `diff_resolved.py --instance 3` output (0 differences).
+
+## D2. Nightly allocation review: automatic or owner-approved
+
+**Question.** The ALLOC-v1 review runs every night and computes each strategy's allocation
+multiplier. Should a changed multiplier take effect automatically, or wait for the owner each time?
+
+**Inputs to prepare.**
+- The frozen rule `ALLOC-v1.md` (bounds, probation half size, look-alike budgets, the monthly
+  safety-net flag the owner chose to keep as a flag only).
+- The last two weeks of `alloc\latest.json` showing how often multipliers changed and by how much.
+- Today's state: loaded by hand on 2026-11-12, stale since; the loader refuses files older than
+  3 days.
+
+**Options.** (a) automatic within [0, 1], each change logged in `config.change_log` with a bell
+note, and the owner can pin a strategy's value; (b) every change is a draft the owner activates;
+(c) automatic for decreases, owner approval for increases.
+
+**Recommendation.** (c). It keeps the rule working when the owner is away and never raises risk
+without a person.
+
+**When answered.** The config agent sets the activation rule in the publisher; the validator
+refuses any automatic increase if (c) is chosen.
+
+## D3. Phone alert channel
+
+**Question.** Which channel delivers critical alerts to the owner's phone?
+
+**Inputs to prepare.**
+- Current state: 290 of 290 Guardian alerts never delivered; no Telegram token; the public default
+  ntfy topic was removed because it was guessable; healthcheck ping unset.
+- The events that must reach the phone: breaker tripped, flatten issued, environment mismatch,
+  service down, reconciliation divergence, stuck order, settings stale or missing.
+
+**Options.** (a) a private ntfy topic (random name, kept in the secrets folder); (b) a Telegram bot
+the owner creates; (c) both, ntfy first.
+
+**Recommendation.** (a) now, (b) later as a second channel.
+
+**When answered.** The owner creates the topic or bot and puts its value in the secrets folder; the
+ops agent wires `ops.alert_delivery`; acceptance is a synthetic critical alert on the phone within
+60 seconds (checklist A2).
+
+## D4. First live strategy for the smoke test
+
+**Question.** Which single FX strategy places the first real-money trade in the week of
+2027-01-04?
+
+**Inputs to prepare** (the week before the go/no-go):
+- For each FX strategy in the December live book: closed forward-ledger trades since registration,
+  open `research.forward_divergence` rows, and whether its shadow decisions on instance 3 matched
+  its forward record during December.
+- The minimum trade size for each candidate pair at the real balance.
+
+**Default rule (checklist C2).** The FX strategy with the most closed forward-ledger trades, no
+open divergence, a clean shadow rehearsal, and a feasible minimum size. The smoke test proves the
+plumbing; it is not evidence of an edge.
+
+**When answered.** An instance-3 `strategy_enablement` override enables only that strategy; its
+`change_reason` names the evidence; `position_caps.max_open_positions=1`.
+
+## D5. Goal details
+
+**Question.** Fill in the figures behind the $200k profit goal for 2027.
+
+**Inputs to prepare.**
+- What the owner said on 2026-10-31: about $200 in month 1, about $5k in month 2, then irregular
+  top-ups of $1k to $10k; deposits at most about $2k a month; live account near $100k by month 7.
+- The recomputed vision arithmetic (30% a year deposit-neutral: about 6 years to $200k profit at
+  $2,000 a month). One year at $200k needs far more than the system has shown; the projection will
+  say so.
+
+**Questions to answer.** Start capital on 2027-01-01; monthly contribution plan (fixed or a
+schedule); target date (2027-12-31?); milestones (quarterly suggested); whether practice profit
+counts (recommended: no); goal currency (CAD).
+
+**When answered.** The owner enters the goal in the settings view, or the db agent inserts it as a
+draft the owner activates if the view is not built yet; the projection job starts the next day.
 </script></section>
 </main>
 <footer id="site-footer"></footer>
