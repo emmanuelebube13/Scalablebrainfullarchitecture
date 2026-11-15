@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "as_of": "2026-10-20",
+  "as_of": "2026-11-15",
   "register": "Forward-looking. No current-state numbers appear on this page \u2014 those live in `docs/critical/REPO_STATE.md` and on the Goals & tasks page, and change faster than prose can track.",
   "sources": [
     {
@@ -38,7 +38,7 @@
     "items": [
       {
         "title": "The first target is cumulative profit",
-        "text": "~$100k in **cumulative profit** \u2014 not account value, not capital deposited."
+        "text": "~$200k in **cumulative profit** \u2014 not account value, not capital deposited. Raised from $100k by the owner on 2026-11-15; the 2027 goal tracked in telemetry uses the same figure."
       },
       {
         "title": "Starting capital is $100, for testing",
@@ -595,7 +595,7 @@
   },
   "target": {
     "title": "The target is profit",
-    "statement": "$100k of cumulative profit, earned at a rate the system demonstrated before the capital was committed.",
+    "statement": "$200k of cumulative profit, earned at a rate the system demonstrated before the capital was committed.",
     "lede": {
       "technical": "This replaces an earlier revision that used account value as the target. That was wrong in a way that would have let the project declare victory having achieved nothing: an account holding $100k after $100k of deposits has produced no profit, and a target expressed as account value cannot tell the difference.",
       "plain": "An earlier version of this document aimed at a $100k balance. That is a target you can hit by depositing $100k and making nothing, so it was replaced by profit \u2014 the money the system actually earned."
@@ -634,40 +634,40 @@
       "title": "What it actually takes",
       "columns": [
         "Monthly deposit",
-        "Time to $100k profit",
+        "Time to $200k profit",
         "Capital deployed by then",
         "Profit per $ deposited"
       ],
       "rows": [
         [
           "$500",
-          "~7.6 years",
-          "~$46k",
-          "2.2\u00d7"
+          "~9.6 years",
+          "~$58k",
+          "3.5\u00d7"
         ],
         [
           "$2,000",
-          "~4.6 years",
-          "~$110k",
-          "0.9\u00d7"
+          "~6.0 years",
+          "~$144k",
+          "1.4\u00d7"
         ],
         [
           "$5,000",
-          "~3.1 years",
-          "~$190k",
-          "0.5\u00d7"
+          "~4.2 years",
+          "~$255k",
+          "0.8\u00d7"
         ]
       ],
-      "note": "Months to $100k cumulative profit at a sustained 30%/yr deposit-neutral return, from a $100 start."
+      "note": "Years to $200k cumulative profit at a sustained 30%/yr deposit-neutral return, from a $100 start, compounding monthly. Recomputed 2026-11-15 when the target moved from $100k to $200k."
     },
     "conclusions": [
       {
-        "title": "A three-to-five-year target at serious deposit rates, not a multi-decade one",
+        "title": "A four-to-six-year target at serious deposit rates, not a multi-decade one",
         "text": "The earlier revision's \"~26 years\" answered a different question \u2014 how long $100 takes to *become* $100,000 in account value with no deposits ever, which is 1,000\u00d7 on the stake. Correct arithmetic, irrelevant scenario. Retired."
       },
       {
         "title": "Deposits buy time; patience buys capital efficiency",
-        "text": "The last column is a real tradeoff, not a scoring system. $5k/month reaches the target in three years with the capital doing half the work; $500/month takes twice as long and earns $2.20 per dollar deposited. Both are legitimate. Choosing deliberately is the point."
+        "text": "The last column is a real tradeoff, not a scoring system. $5k/month reaches the target in about four years with the capital doing a little under half the work; $500/month takes more than twice as long and earns $3.50 per dollar deposited. Both are legitimate. Choosing deliberately is the point."
       },
       {
         "title": "$100 proves the rate, and the rate is everything at that size",
@@ -720,7 +720,7 @@
       "when": "owner, on evidence",
       "state": "not_started",
       "tagline": "A named gate, not a drift.",
-      "technical": "The owner decides, in writing, how much capital enters and at what monthly rate \u2014 on the strength of Phase 1's measured rate, not on enthusiasm. This is the decision that sets the horizon: the same system reaches the target in three years or seven depending only on this number.",
+      "technical": "The owner decides, in writing, how much capital enters and at what monthly rate \u2014 on the strength of Phase 1's measured rate, not on enthusiasm. This is the decision that sets the horizon: the same system reaches the target in four years or ten depending only on this number.",
       "plain": "Someone sits down and decides, in writing, how much money goes in and how fast. That single number moves the finish line by years \u2014 more than the strategy does.",
       "conditions": [
         "**Prerequisite:** deposit-event tracking exists and deposit-neutral return is computable. Funding an account whose rate cannot be measured converts a provable system into an unprovable one."
@@ -745,16 +745,16 @@
     },
     {
       "id": "Phase 4",
-      "name": "$100k of profit, proven",
+      "name": "$200k of profit, proven",
       "when": "the first destination",
       "state": "not_started",
       "tagline": "Cumulative profit, net of every deposit \u2014 not account value, not capital deployed.",
       "technical": "Reached at a rate demonstrated before the capital was committed, so the profit is attributable to the system rather than to the funding. Not the end \u2014 the point at which compounding is demonstrated rather than argued, every later figure becomes credible, and the conversation about what comes next is worth having.",
-      "plain": "A hundred thousand dollars the system earned, on top of everything that was put in. Not the end of anything \u2014 the point where the numbers start being believable.",
+      "plain": "Two hundred thousand dollars the system earned, on top of everything that was put in. Not the end of anything \u2014 the point where the numbers start being believable.",
       "conditions": [
         "Targets beyond this are deliberately not set here; they would be guesses made from the wrong rung."
       ],
-      "exit": "$100k of cumulative profit, net of every deposit, at a rate demonstrated in advance."
+      "exit": "$200k of cumulative profit, net of every deposit, at a rate demonstrated in advance."
     }
   ],
   "falsifiers": {
@@ -978,7 +978,7 @@
           [
             "**Fund the system on evidence, not enthusiasm**",
             "Because the funding decision sets the horizon more than the return rate does",
-            "Because at the same return rate, the target arrives in three years or seven depending only on the deposit level \u2014 but capital committed to an unproven rate is just a faster way to lose it"
+            "Because at the same return rate, the target arrives in four years or ten depending only on the deposit level \u2014 but capital committed to an unproven rate is just a faster way to lose it"
           ],
           [
             "**Measure profit, never account balance**",

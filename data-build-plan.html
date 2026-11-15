@@ -47,14 +47,14 @@
 <main id="main" class="bpl">
 <div class="bpl-head">
 <h1>Build Plan: instances, configuration, money, telemetry, live</h1>
-<p class="bpl-lede">Plan phase only, 15 Nov 2026. Finalised conceptual, logical and physical models, then an ordered build plan so December is plumbing and real money starts in January. Written for a build agent and a reviewer. Nothing in any database or service was changed to produce it. It builds on the <a href="data-blueprint.html">Data Blueprint</a>.</p>
-<p class="bpl-meta">Draft for owner review · decisions needed first: Q1 calendar, Q3 instance keys, Q4 research record, Q10 database password (section 6)</p>
+<p class="bpl-lede">Plan phase only. Finalised conceptual, logical and physical models, then an ordered build plan so December is plumbing and real money starts in January. Written for a build agent and a reviewer. Nothing in any database or service was changed to produce it. It builds on the <a href="data-blueprint.html">Data Blueprint</a>.</p>
+<p class="bpl-meta">Revised 15 Nov 2026 with the owner's answers and a review: December is plumbing and testing from 30 Nov, real money from the week of 4 Jan 2027, goal $200k. Open items are in section 6.</p>
 <p id="bpl-noscript" class="bpl-meta bpl-noscript">The sections below render from Markdown when the page's script loads.</p>
 </div>
 <nav class="bpl-toc" aria-label="Sections"><a href="#readme">Read me first</a><a href="#current">1 · Current state</a><a href="#conceptual">2a · Conceptual model</a><a href="#logical">2b · Logical model</a><a href="#physical">2c · Physical model</a><a href="#build">3 · Build plan</a><a href="#migration">4 · Migration</a><a href="#golive">5 · Go-live checklist</a><a href="#questions">6 · Open questions</a></nav>
 <section id="readme" class="bpl-doc"><script type="text/markdown"># Build plan 2026-11-15: instances, configuration out of code, money and goals, telemetry, live readiness
 
-Written 2026-11-15 (Saturday) in PLAN phase only. Nothing in any database, service, scheduled task
+Written 2026-11-15 (Sunday) in PLAN phase only. Revised the same day with the owner's answers and a reviewer's fixes (see [05-open-questions-and-risks.md](#questions)). Nothing in any database, service, scheduled task
 or file outside this folder was changed. The plan is written for two readers who were not in the
 conversation that produced it: a **build agent** that executes it phase by phase, and a **reviewer**
 that checks each phase against the acceptance criteria. Where something is the owner's to decide,
@@ -70,8 +70,8 @@ it is listed in [05-open-questions-and-risks.md](#questions) and the plan says w
 | Live-readiness plans LR-01..07 and their results | `C:\SB\Scalablebrainfullarchitecture\plans\LR-*.md` | read; LR-01, 03, 04, 05, 06, 07 have code in dev; LR-04 numbers unapproved |
 | December readiness register | `C:\SB\dev\DECEMBER-READINESS.md` | read; verification matrix has 14 open rows |
 | Demo-to-live roadmap | `C:\SB\scalablebrain-umbrella\deployment-guide\06-DEMO-TO-LIVE.md` | read; written for the GCP era, partly stale |
-| Week plans W46 to W49 | `../../data/week-plans/2026-W4*.json` | read; they plan live from Mon 2026-11-30, the brief says January (open question Q1) |
-| Owner's goals | memory notes of 2026-10-31 and `../../data/vision.json` | $200k profit in 2027 (owner, 10-31) versus $100k cumulative profit (vision page) (open question Q2) |
+| Week plans W46 to W49 | `../../data/week-plans/2026-W4*.json` | read; owner 2026-11-15: 11-30 starts December plumbing and testing, real money in January |
+| Owner's goals | memory notes of 2026-10-31 and `../../data/vision.json` | $200k profit (owner, confirmed 2026-11-15; the vision page was corrected from $100k the same day) |
 
 ## The files, in reading order
 
@@ -261,7 +261,7 @@ Environment and Risk Setting as entities (they become attributes of Instance and
 |---|---|---|
 | **Equity Sample** | Balance, equity, margin used and open-position count of one instance at a moment, read from the broker. One per minute. | instance + time |
 | **Cash Movement** | Money entering or leaving an instance that is not trading profit or loss: deposit, withdrawal, fee, financing, prop-firm challenge cost, payout, profit split, transfer between instances, correction. Kept apart so that performance is not distorted by cash. | movement id |
-| **Goal** | The owner's yearly target with its supporting figures: start capital, planned contributions, target profit, target date, milestones, method. Informs reporting only; never read by the trade path. | goal id |
+| **Goal** | The owner's yearly target with its supporting figures: start capital, planned contributions, target profit (2027: $200k, owner 2026-11-15), target date, milestones, method, and one goal currency. Personal instances count trading profit; prop instances count only payouts received minus challenge costs. Informs reporting only; never read by the trade path. | goal id |
 | **Goal Projection** | A dated estimate of where the goal stands: pace versus required pace, growth forecast, estimated odds, with the method and assumptions stated. | goal id + as-of |
 
 ### Market
@@ -298,7 +298,7 @@ Environment and Risk Setting as entities (they become attributes of Instance and
 - Strategy Version **produces** Signal **for** Instance **on** Instrument, **in** Regime context, **informed by** External Data and Price Bars.
 - Signal **is judged by** Risk Decision (exactly one), **under** a Settings snapshot and the Instance Constraints. Risk Decision **approves** Order. Order **is filled as** Fills. Fills **open, update and close** Trade. Trade **is held on** Instance.
 - A Trade deliberately has no direct link to Strategy. Its strategy and version are reached through Order, Risk Decision and Signal, so the two cannot disagree.
-- Instance **is sampled as** Equity Samples. Instance **receives and sends** Cash Movements. Goal **is measured against** Instances (each instance, and the total). Goal Projection **estimates** Goal from Trades and Cash Movements.
+- Instance **runs in** exactly one execution mode at a time (shadow, practice, live), held as a versioned Setting so every switch is recorded. Instance **is sampled as** Equity Samples. Instance **receives and sends** Cash Movements. Goal **is measured against** Instances (each instance, and the total). Goal Projection **estimates** Goal from Trades and Cash Movements.
 - Service **runs for** Instance (Guardian, Hand, bridge, relay) or for all (Brain, dashboard, watchdog). Service **emits** Heartbeats and **raises** Alerts. Operator Command **changes** Settings, Strategy Enablement, Instance state, or **closes or adjusts** Trades, and **is recorded** as an Alert when it matters.
 
 ## 4.3 Answers to the five reviewer questions
@@ -373,7 +373,9 @@ Constraint, Model Selection, Strategy Version and Goal.
 | `validated_at`, `validation` | result of the validator run that admitted the row |
 | `superseded_by` | the version that replaced it |
 
-Rows are never updated except `status`, `effective_to` and `superseded_by` by the activation
+Scoped tables (setting, enablement, model selection) use a surrogate primary key, because global rows
+have no instance and a primary key cannot hold a null; the business key is a unique index over
+`(key, scope, coalesce(instance_id, 0), version)`. Rows are never updated except `status`, `effective_to` and `superseded_by` by the activation
 function; every transition is also written to the Change Log (append-only).
 
 **Instance-bound fact.** Every row carries `instance_id` (not null, no default) and the natural key
@@ -402,7 +404,7 @@ comment and in `ops.source_registry`, its loader name, cadence and the query tha
 | Trade | Guardian journal as producer copy; **business record `trading.trade`** (see §5.3) | `trade`, `broker_trade` | ledger relay (`trade`); account reader relay (`broker_trade`) | none | `public.fact_live_trades`, `live.fact_live_trades`, `ForexBrainDB.fact_live_trades`, history JSON, guardian exports |
 | Equity Sample | `scalable_brain.trading` | `equity_sample` | account reader relay (per instance, 1/min) | none | `equity_history.db`, `history\equity\*.json`; Guardian `equity_curve` stays private |
 | Cash Movement | `scalable_brain.finance` | `cash_movement` | account reader relay (broker transfers); owner via settings view (manual kinds) | none | none |
-| Goal, Goal Projection | `scalable_brain.finance` | `goal`, `goal_milestone`, `goal_projection` | owner via settings view; projection job | none | Monte Carlo inputs in the Performance view become readers |
+| Goal, Goal Projection | `scalable_brain.finance` | `goal`, `goal_instance` (how each instance counts: trading P&L for personal accounts, net payouts for prop accounts), `goal_milestone`, `goal_projection`, `fx_rate` (daily conversion into the goal currency) | owner via settings view; projection job | none | Monte Carlo inputs in the Performance view become readers |
 | Price Bar, Regime | `ForexBrainDB` | `fact_market_prices`, `fact_regime_structural` (unchanged) | System 1 | `lab\data\*.parquet` (research bars, `bars_refresh`) | `public.fact_market_regime_v2` (9 seed rows) |
 | External Data | `scalable_brain.ext` (after the flip; today `scalable_brain_dev.ext`) | unchanged | research collectors | `scalable_brain_dev.ext` becomes the dev copy | nightly mirror |
 | Card, Backtest Run, Incubation, Forward Trade | `scalable_brain.research` (after the flip) | unchanged | research jobs | `scalable_brain_dev.research` (dev copy) | nightly mirror; old `shadow_incubator.db` |
@@ -452,7 +454,8 @@ Constraints are the union of the instance's active rows.
 
 **Validation before effect**: a row enters `validated` only when (a) its value passes the key's
 JSON schema, (b) cross-key rules pass (`validator.py`: e.g. soft daily loss < hard daily loss <
-weekly loss; min risk ≤ max risk; a `live` instance may not raise `max_risk_per_trade_pct` above
+weekly loss; min risk ≤ max risk; `exec.mode=live` only on a live-type instance in prod (one-directional:
+a live-type instance may still run in shadow); a `live` instance may not raise `max_risk_per_trade_pct` above
 the owner-signed cap; an instance of type `prop_*` must have a `daily_loss_limit` and
 `max_drawdown` constraint), and (c) for keys with `sensitivity=risk`, a dry run of the gate over the
 last 200 decisions of that instance is attached to the row (approved/reduced/rejected before and
@@ -604,18 +607,24 @@ CREATE TABLE config.instance (
   account_key     text NOT NULL REFERENCES config.account,
   runtime_env     text NOT NULL CHECK (runtime_env IN ('prod','dev')),
   instance_type   text NOT NULL CHECK (instance_type IN ('personal_demo','personal_live','prop_challenge','prop_funded','shadow')),
-  execution_mode  text NOT NULL CHECK (execution_mode IN ('shadow','practice','live')),
+  -- Execution mode is NOT a column. It is the instance-scoped, versioned setting `exec.mode` (shadow | practice | live),
+  -- sensitivity 'risk' (two-step confirm), so every switch has history and an audit row (review fix, 2026-11-15).
   status          text NOT NULL CHECK (status IN ('planned','active','paused','retired')) DEFAULT 'planned',
   started_at      timestamptz,                     -- first day of trading on this instance (basis for profit target)
+  ledger_from     timestamptz NOT NULL,            -- first instant the system's own ledger is complete for this instance; instance 1 = 2026-10-15 (Computer 4 cutover).
+                                                   -- Broker history before it is labelled pre_ledger and excluded from reconciliation alerts
   secrets_path    text NOT NULL,                   -- path only, e.g. <secrets folder, kept off the public site>
   state_dir       text NOT NULL,                   -- C:\SB\prod\instances\<key>  (instance 1 keeps C:\SB\prod today)
   queue_path      text NOT NULL,
   port_base       integer NOT NULL UNIQUE,         -- hand = base+2, guardian = base+300 ; instance 1 = 8000, dev shadow = 18000
   display_colour  text NOT NULL DEFAULT 'neutral' CHECK (display_colour IN ('neutral','live')),
+  dashboard_url   text NOT NULL,                   -- where this instance's own dashboard runs: prod instances http://127.0.0.1:8050, dev instances http://127.0.0.1:18050
   created_at      timestamptz NOT NULL DEFAULT now(),
   created_by      text NOT NULL,
-  CONSTRAINT one_runtime_per_account UNIQUE (account_key, runtime_env),
-  CONSTRAINT live_means_live CHECK ((execution_mode = 'live') = (instance_type IN ('personal_live','prop_challenge','prop_funded') AND runtime_env = 'prod'))
+  CONSTRAINT one_runtime_per_account UNIQUE (account_key, runtime_env)
+  -- The live rule is one-directional and lives in the validator, because exec.mode is a setting:
+  -- exec.mode = 'live' is valid only when instance_type IN ('personal_live','prop_challenge','prop_funded') AND runtime_env = 'prod'.
+  -- The reverse is NOT required: a live-type instance may run in 'shadow' (rehearsal 6.3, rollback drill 6.5, checklist E3).
 );
 COMMENT ON TABLE config.instance IS 'One trading context. Adding an instance is adding a row here plus its constraints, enablements, overrides and a secrets file.';
 
@@ -693,7 +702,12 @@ CREATE TABLE config.setting_def (
   description     text NOT NULL
 );
 
+-- Primary keys on scoped tables (review fix, 2026-11-15): global rows have instance_id NULL, and PostgreSQL
+-- refuses NULL in a primary key, so each scoped table has a surrogate id and the business key is a UNIQUE
+-- index over COALESCE(instance_id, 0) (expressions are allowed in an index, not in a PRIMARY KEY).
+-- instance_id 0 is never allocated to a real instance.
 CREATE TABLE config.setting_value (
+  value_id        bigserial PRIMARY KEY,
   setting_key     text NOT NULL REFERENCES config.setting_def,
   scope           text NOT NULL CHECK (scope IN ('global','instance')),
   instance_id     smallint REFERENCES config.instance,
@@ -703,13 +717,14 @@ CREATE TABLE config.setting_value (
   effective_from  timestamptz NOT NULL DEFAULT now(), effective_to timestamptz,
   created_at      timestamptz NOT NULL DEFAULT now(), created_by text NOT NULL, change_reason text NOT NULL,
   validated_at    timestamptz, validation jsonb, superseded_by integer,
-  PRIMARY KEY (setting_key, scope, instance_id, version),
   CONSTRAINT scope_instance CHECK ((scope = 'instance') = (instance_id IS NOT NULL))
 );
+CREATE UNIQUE INDEX setting_value_key ON config.setting_value (setting_key, scope, COALESCE(instance_id,0), version);
 -- one active row per key+scope+instance at any instant
 CREATE UNIQUE INDEX setting_value_one_active ON config.setting_value (setting_key, scope, COALESCE(instance_id,0)) WHERE status = 'active' AND effective_to IS NULL;
 
 CREATE TABLE config.strategy_enablement (
+  enablement_id bigserial PRIMARY KEY,
   strategy_key text NOT NULL REFERENCES config.strategy,
   scope text NOT NULL CHECK (scope IN ('global','instance')), instance_id smallint REFERENCES config.instance,
   version integer NOT NULL,
@@ -722,17 +737,21 @@ CREATE TABLE config.strategy_enablement (
   status config.row_status NOT NULL DEFAULT 'draft', effective_from timestamptz NOT NULL DEFAULT now(), effective_to timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(), created_by text NOT NULL, change_reason text NOT NULL,
   validated_at timestamptz, validation jsonb, superseded_by integer,
-  PRIMARY KEY (strategy_key, scope, instance_id, version)
+  CONSTRAINT scope_instance CHECK ((scope = 'instance') = (instance_id IS NOT NULL))
 );
+CREATE UNIQUE INDEX strategy_enablement_key ON config.strategy_enablement (strategy_key, scope, COALESCE(instance_id,0), version);
+CREATE UNIQUE INDEX strategy_enablement_one_active ON config.strategy_enablement (strategy_key, scope, COALESCE(instance_id,0)) WHERE status = 'active' AND effective_to IS NULL;
 
 CREATE TABLE config.model_selection (
-  scope text NOT NULL, instance_id smallint REFERENCES config.instance, version integer NOT NULL,
+  selection_id bigserial PRIMARY KEY,
+  scope text NOT NULL CHECK (scope IN ('global','instance')), instance_id smallint REFERENCES config.instance, version integer NOT NULL,
   model_set_id text NOT NULL, gatekeeper_version text, regime_map_version text,
   status config.row_status NOT NULL DEFAULT 'draft', effective_from timestamptz NOT NULL DEFAULT now(), effective_to timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(), created_by text NOT NULL, change_reason text NOT NULL,
   validated_at timestamptz, validation jsonb, superseded_by integer,
-  PRIMARY KEY (scope, instance_id, version)
+  CONSTRAINT scope_instance CHECK ((scope = 'instance') = (instance_id IS NOT NULL))
 );
+CREATE UNIQUE INDEX model_selection_key ON config.model_selection (scope, COALESCE(instance_id,0), version);
 
 CREATE TABLE config.instance_constraint (
   constraint_id   integer NOT NULL,                -- stable id across versions (sequence)
@@ -876,7 +895,8 @@ CREATE TABLE trading.trade (
   realized_pnl numeric(18,6), financing numeric(18,6), net_pnl numeric(18,6), slippage numeric(18,6),
   regime_at_entry text, balance_at_entry numeric(18,6), drawdown_at_entry numeric(8,5), streak_at_entry integer,
   status text NOT NULL CHECK (status IN ('OPEN','CLOSED')),
-  source text NOT NULL CHECK (source IN ('system','manual')),  -- manual = opened outside the system (no sb- client id)
+  source text NOT NULL CHECK (source IN ('system','manual','pre_ledger')),  -- manual = opened outside the system (no sb- client id);
+                                                   -- pre_ledger = archived from public.fact_live_trades, closed before the 2026-10-15 cutover (migration M4)
   first_seen_at timestamptz NOT NULL DEFAULT now(), closed_seen_at timestamptz,
   PRIMARY KEY (instance_id, broker_order_id)
 );
@@ -912,7 +932,10 @@ CREATE TABLE trading.instance_day (                  -- the instance's own tradi
 
 -- Views for the dashboard (examples; the build agent writes them against these tables):
 --   trading.v_trade_detail (trade ⨝ order ⨝ decision ⨝ signal ⨝ strategy ⨝ strategy_version)
---   trading.v_reconciliation (trade vs broker_trade: missing, extra, pnl mismatch per instance)
+--   trading.v_reconciliation (trade vs broker_trade: missing, extra, pnl mismatch per instance; only trades opened on or after
+--                             config.instance.ledger_from, 2026-10-15 for instance 1; older broker trades are labelled pre_ledger, never alerted)
+--   trading.v_stuck_orders (orders approved by the Guardian with no executor result: executor_status IS NULL or 'SUBMITTED'
+--                           and approved_at older than 5 minutes; feeds a critical alert)
 --   trading.v_pnl_daily (per instance per instance_day: realized, financing, net; and combined)
 ```
 
@@ -950,7 +973,7 @@ CREATE TABLE finance.goal (
   start_date date NOT NULL, target_date date NOT NULL,
   start_capital numeric(18,2) NOT NULL,            -- total across instances at start_date
   planned_contributions jsonb NOT NULL,            -- [{"from":"2027-01","to":"2027-12","monthly":2000}]
-  instances     smallint[] NOT NULL,               -- which instances count toward it (empty = all prod instances)
+  goal_currency char(3) NOT NULL DEFAULT 'CAD',    -- every figure on the goal is converted into this currency (rule below)
   method        text NOT NULL,                     -- projection method key, e.g. 'bootstrap_r_v1'
   method_params jsonb NOT NULL DEFAULT '{}',
   notes text,
@@ -958,6 +981,19 @@ CREATE TABLE finance.goal (
   created_at timestamptz NOT NULL DEFAULT now(), created_by text NOT NULL, change_reason text NOT NULL,
   validated_at timestamptz, validation jsonb, superseded_by integer,
   UNIQUE (year, version)
+);
+CREATE TABLE finance.goal_instance (                -- which instances count toward a goal, and HOW each one counts
+  goal_id integer REFERENCES finance.goal, instance_id smallint REFERENCES config.instance,
+  counts_as text NOT NULL CHECK (counts_as IN ('trading_pnl','net_payouts')),
+  -- trading_pnl : personal accounts. Trading P&L net of financing and fees counts; deposits do not.
+  -- net_payouts : prop instances. Only payouts and profit splits received, minus challenge costs and fees, count.
+  --               The funded account's own P&L is the firm's money and never counts (review fix, 2026-11-15).
+  PRIMARY KEY (goal_id, instance_id)
+);
+CREATE TABLE finance.fx_rate (                      -- daily close conversion rates, from the broker's pricing (account relay)
+  rate_date date NOT NULL, from_ccy char(3) NOT NULL, to_ccy char(3) NOT NULL,
+  rate numeric(18,8) NOT NULL, source text NOT NULL,   -- 'oanda:pricing:<instrument>' at the 17:00 New York close
+  PRIMARY KEY (rate_date, from_ccy, to_ccy)
 );
 CREATE TABLE finance.goal_milestone (
   goal_id integer REFERENCES finance.goal, milestone_date date NOT NULL, label text NOT NULL, target_amount numeric(18,2) NOT NULL,
@@ -984,6 +1020,18 @@ CREATE TABLE finance.goal_projection (              -- one row per daily run per
 --        finance.v_budget (planned vs actual contributions by month)
 ```
 
+**Currency rule.** Each instance keeps its own account currency in `trading.*` and `finance.cash_movement`.
+For a goal, every P&L amount and cash movement is converted at the `finance.fx_rate` of its own day
+(17:00 New York close); equity is converted at the rate of the as-of day. The difference between the two,
+caused only by exchange rates moving, is shown as its own line ("currency translation") and is never
+counted as trading profit. A missing rate for a day stops the projection run with an alert; it is never
+filled with a guess.
+
+**How each instance counts.** `finance.goal_instance.counts_as` decides it: personal instances count
+trading P&L; prop instances count only net payouts (payouts and profit splits received, minus challenge
+costs and fees). The `per_instance` field of each projection row shows both numbers for a prop instance,
+with only the counted one in the total.
+
 Projection method `bootstrap_r_v1` (stated in the assumptions of every row): take closed trades of
 the goal's instances in the window (default: since the goal start, minimum 50 trades; otherwise
 widen to the practice instance's closed trades and say so in `caveats`); bootstrap their R-multiples
@@ -999,18 +1047,20 @@ estimate" (honest rendering).
 CREATE SCHEMA ops;
 
 CREATE TABLE ops.service_status (                   -- latest per service, written by the watchdog relay every pass
+  status_id   bigserial PRIMARY KEY,
   service_key text NOT NULL,                       -- 'guardian', 'hand', 'bridge', 'relay', 'publisher', 'dashboard', 'panel', 'brain', 'account_reader', 'config_publisher', 'watchdog'
   instance_id smallint REFERENCES config.instance, -- null for shared services
   state text NOT NULL,                             -- running | stopped | degraded | crash_loop | unknown
   pid integer, running_commit text, dirty boolean, pinned_commit text,
   last_heartbeat_at timestamptz, restarts_24h integer, detail jsonb,
-  as_of timestamptz NOT NULL,
-  PRIMARY KEY (service_key, COALESCE(instance_id,0))
+  as_of timestamptz NOT NULL
 );
+CREATE UNIQUE INDEX service_status_key ON ops.service_status (service_key, COALESCE(instance_id,0));   -- relay upserts ON CONFLICT on this index
 CREATE TABLE ops.heartbeat (                        -- sampled history, one row per service per minute, 90-day retention by a scheduled delete (the only non-frozen ops table)
-  service_key text NOT NULL, instance_id smallint, at timestamptz NOT NULL, alive boolean NOT NULL, latency_ms integer,
-  PRIMARY KEY (service_key, COALESCE(instance_id,0), at)
+  heartbeat_id bigserial PRIMARY KEY,
+  service_key text NOT NULL, instance_id smallint REFERENCES config.instance, at timestamptz NOT NULL, alive boolean NOT NULL, latency_ms integer
 );
+CREATE UNIQUE INDEX heartbeat_key ON ops.heartbeat (service_key, COALESCE(instance_id,0), at);
 CREATE TABLE ops.alert (
   alert_id bigserial PRIMARY KEY,
   at timestamptz NOT NULL DEFAULT now(),
@@ -1074,14 +1124,14 @@ CREATE TABLE ops.source_registry (                  -- every store the dashboard
 
 | # | Today | Target | Kind | Phase |
 |---|---|---|---|---|
-| C1 | no `config` schema | `config.*` as §6.2, seeded: broker `oanda`; accounts `oanda-practice-main`, `oanda-live-personal`; instances 1 `oanda-practice-demo` (prod, practice, active), 2 `oanda-practice-shadow` (dev, shadow, paused), 3 `oanda-live-personal` (prod, live, planned) | additive | 1 |
+| C1 | no `config` schema | `config.*` as §6.2, seeded: broker `oanda`; accounts `oanda-practice-main`, `oanda-live-personal`; instances 1 `oanda-practice-demo` (prod, `exec.mode` practice, active, dashboard :8050), 2 `oanda-practice-shadow` (dev, `exec.mode` shadow, active when DEV runs, dashboard :18050), 3 `oanda-live-personal` (prod, `exec.mode` shadow until the January go-live, planned, dashboard :8050). Keys and ids confirmed by the owner 2026-11-15 | additive | 1 |
 | C2 | `risk_config.json`, `risk_config.live.json`, `.env.system2` limits, books, `keep_designations.py`, `ams_strategy_controls`, `ams_strategy_alloc` | `setting_def` + `setting_value` (global = today's practice values; instance 3 overrides = LR-04 proposal, status `draft` until the owner activates), `strategy_enablement`, `instance_constraint` | additive, then cutover | 1, 2 |
 | C3 | `ScoredSignal` v1 (3 copies), `ApprovedOrder`, `FillEvent`, `AccountSnapshot`, `Command` | v1.1: add optional `instance_key`, `strategy_version`, `settings_version` (ApprovedOrder), `execution_mode` (FillEvent); test asserts the three copies are identical | code | 2 |
 | C4 | Guardian reads `risk_config.json`, controls, alloc tables | Guardian reads the snapshot file; layer K; `instance_key` on every row; `ams_instance_day` | code + sqlite 0020 | 2 |
 | C5 | Hand reads `.env.system2` limits | Hand reads `exec.*` from the snapshot (credentials still from the secrets file) | code + sqlite 003 | 2 |
 | C6 | S1 publishes to one queue; research emitter reads book files | both publish per active prod instance (enablement from the snapshot); both write `trading.signal` through `signal_writer` | code | 2 |
 | C7 | `s1_scored_signals_log`, `research.live_intent` | `trading.signal` (ingester rewritten to write it; `live_intent` kept for parity until Phase 5 then folded) | additive, then retire | 3 |
-| C8 | publisher `--pg-stream` + `trade_journal_sync.py` → `public.fact_live_trades`; `live.fact_live_trades` | `ledger_relay.py` → `trading.*`; the two old writers switched off; old tables read-only, dropped after 30 days | cutover | 3 |
+| C8 | publisher `--pg-stream` + `trade_journal_sync.py` → `public.fact_live_trades`; `live.fact_live_trades` | `ledger_relay.py` → `trading.*`; the two old writers switched off; trades closed before 2026-10-15 archived permanently into `trading.trade` as `source='pre_ledger'` (M4); the old table is then left unwritten and unread (rename deferred until the owner supplies the superuser password) | cutover | 3 |
 | C9 | `equity_history.db`, history JSON, `accounts\*.json` | `account_relay.py` → `trading.equity_sample`, `broker_trade`, `finance.cash_movement`; JSON kept as the declared copy for one release | cutover | 3 |
 | C10 | `ForexBrainDB.dim_strategy` + `dim_strategy_registry` + `public.dim_strategy` + `research.strategy` + aliases in code | `config.strategy` master (seeded from `ForexBrainDB.dim_strategy` ⨝ `research.strategy`), `strategy_alias`; `strategy_sync.py` writes the copies; `allocate.py` calls `config.allocate_s1_strategy_id` | additive, then cutover | 3 |
 | C11 | research record in `scalable_brain_dev`; nightly truncate mirror | research jobs run pinned code against `scalable_brain`; mirror reversed (prod → dev, for dev's convenience) and no longer truncates `research.forward_trade`-class tables in prod; `scalable_brain_dev` in the backup until the flip | cutover (owner decision Q4) | 0 (backup), 3 (flip) |
@@ -1093,17 +1143,36 @@ CREATE TABLE ops.source_registry (                  -- every store the dashboard
 | C17 | dashboard writes `queue.db`, `ams.db` | dashboard writes `config.*`, `finance.*`; commands via Guardian API `:8300` per instance | code | 2 (commands), 5 (settings view) |
 | C18 | no finance tables; Monte Carlo inputs typed into the Performance view | `finance.*`; projection job | additive | 5 |
 | C19 | 24 relations without comments; four migration streams | comments on every new table; one PostgreSQL stream | hygiene | 1 onward |
-| C20 | roles: everything as the application login | `sb_app`, `sb_relay`, `sb_research`, `sb_reader` | additive (owner runs as `postgres` for `public` objects, Q10) | 1 |
+| C20 | roles: everything as the application login | `sb_app`, `sb_relay`, `sb_research`, `sb_reader`. **Deferred in prod** (owner, 2026-11-15: leave the password for now): the application login has no CREATEROLE, so creating roles needs the superuser. Until then every new job connects as the application login; the trade path still has no database login | additive | 1 (DEV), later (prod) |
 </script></section><section id="build" class="bpl-doc"><script type="text/markdown"># 2. Build plan: phases, dependencies, acceptance, tests
 
-Sequenced so that December is plumbing and live setup and real money starts in January (the
-brief). The existing week plans W47 to W49 planned a live switch on Monday 2026-11-30; this plan
-moves that to the first full week of January and keeps every W47-W49 task that is still needed
-(they are mapped in §2.9). The owner decides which calendar wins (open question Q1).
+**Calendar (owner, 2026-11-15).** Monday 2026-11-30 starts the December track: plumbing and
+testing, including the live instance in shadow mode. Real-money trading starts in January. The
+week plans' "switch to live on 11-30" therefore becomes "start December plumbing and testing on
+11-30"; the money switch moves to the week of Monday 2027-01-04, with the go/no-go on
+**Saturday 2027-01-02**. The shadow rehearsal runs through December, not in the holiday week, so it
+sees normal markets and the 9 December FOMC.
 
 Weeks: W47 Nov 16-22 · W48 Nov 23-29 · W49 Nov 30-Dec 6 · W50 Dec 7-13 · W51 Dec 14-20 ·
-W52 Dec 21-27 · W01 Dec 28-Jan 3 · W02 Jan 4-10. Dates are targets; the gate for each phase is
-its acceptance list, not the date.
+W52 Dec 21-27 · W53 Dec 28-Jan 3 · W01 Jan 4-10 (ISO weeks; 2026 has 53). Dates are targets; the
+gate for each phase is its acceptance list, not the date.
+
+**Critical path to real money** (review, 2026-11-15): Phases 0, 1, 2, 3.1-3.4, 4.1, 4.2, 4.5
+(the instance switcher, because the smoke test reads instance 3 on screen) and 6. Phase 3.5-3.8,
+4.6 and all of Phase 5 (telemetry overhaul and settings view) improve the system but do not block
+go-live; they may slip into January. The goal can be entered through the CLI until the settings
+view exists.
+
+| Week | Critical-path work | Off the critical path |
+|---|---|---|
+| W47 Nov 16-22 | Phase 0; Phase 1 in DEV | |
+| W48 Nov 23-29 | Phase 1 in prod; Phase 2 in DEV; live token and the first deposit (owner) | 3.5 strategy master in DEV |
+| W49 Nov 30-Dec 6 | December track starts. Phase 2 in prod; 3.1-3.4 in DEV then prod; account relay reads instance 3 (read-only) | 3.6 research flip in DEV |
+| W50 Dec 7-13 | 4.1, 4.2, 4.5; instance 3 starts its shadow rehearsal (6.3) before the 9 Dec FOMC | 3.6 research flip in prod (owner) |
+| W51 Dec 14-20 | isolation drill (4.3); rollback drill (6.5); checklist items | Phase 5 starts |
+| W52 Dec 21-27 | checklist closing; restore drill rerun | Phase 5 |
+| W53 Dec 28-Jan 3 | go/no-go pack; owner decision Sat 2027-01-02 | Phase 5 |
+| W01 Jan 4-10 | smoke test (6.4), then the first live week | Phase 5 if not finished |
 
 Owning-system scoping (so two agents never edit one file): **Dashboard** = telemetry-server +
 telemetry-dashboard + control panel; **S2** = hand + bridge + publisher; **S3** = guardian;
@@ -1125,7 +1194,7 @@ reversible and each item is its own small change.
 | 0.6 | Delete the three dead tasks (`r3run`, `SB research - month-end measure 2026-10-30`, `SB one-off forced retrain 2026-10-29`) | Ops (owner) | task list has none of them | re-import the exported XML |
 | 0.7 | Guardian outbox routing: route every event to channel `bell` in `risk_config.json` `notifications.routing` so new rows stop dying; the relay already copies new rows to the bell | S3 | `SELECT status, count(*) FROM notify_outbox WHERE created_at > <deploy time>` shows `delivered` or `sent`, not `dead` | revert config |
 | 0.8 | Decide and configure the off-screen channel (private `NTFY_TOPIC` per W45-D4, or Telegram token): owner decision Q7 | Ops (owner) | a synthetic critical alert reaches the owner's phone within 60 s (W47-WED-3 test) | unset the variable |
-| 0.9 | Owner decisions needed before Phase 1 starts: Q1 (calendar), Q3 (instance keys and ids), Q4 (research flip or backup-only for December), Q10 (`postgres` password for `public` object ownership) | Owner | recorded in [05-open-questions-and-risks.md](#questions) with the date | — |
+| 0.9 | Owner decisions before Phase 1: **answered 2026-11-15**. Q1 December is plumbing and testing from 11-30, real money in January. Q3 instance keys 1, 2, 3 confirmed; no instance 4. Q4 production is the official research copy. Q10 deferred: work that needs the superuser waits. Goal is $200k | Owner | recorded in [05-open-questions-and-risks.md](#questions) | — |
 
 Tests: 0.3 gets a bridge unit test with a journal row whose `broker_trade_id` is NULL; 0.4 gets a
 dashboard route test asserting the Guardian API client is called and no sqlite connection to
@@ -1134,7 +1203,12 @@ dashboard).
 
 ## 2.1 Phase 1: the configuration and ledger schemas, seeded, with the publisher (W47-W48)
 
-Depends on: 0.9 decisions Q3, Q10. Nothing in the trade path changes yet.
+Depends on: 0.9 decisions (answered). Nothing in the trade path changes yet. Because the
+superuser password is deferred (Q10) and the application login has no right to create roles,
+step 2 (`021_roles.sql`) is written and tested on DEV's database but **not applied in prod** until
+the owner supplies the password. The new schemas are created by the application login, which owns
+the database, so steps 3-6 do not wait. The two role checks in the acceptance table are run in DEV
+only until then.
 
 Work (Ops + Dashboard migrations):
 1. Migration runner: `telemetry-server/migrations/runner.py` records every applied file; the
@@ -1253,7 +1327,7 @@ Depends on: Phase 1 in prod; Phase 2 in DEV (prod optional for 3.1-3.4); owner d
 
 | # | Item | System | Acceptance | Rollback |
 |---|---|---|---|---|
-| 3.1 | `ledger_relay.py`: per instance, reads `ams.db` (`mode=ro`), `system2.db`, `fill_outbox.db`; upserts `trading.decision`, `order`, `fill`, `trade`; `config.instance_state`; idempotent on source row ids; runs every 30 s supervised | Ops | after the backfill (migration M3): per instance `count(trading.trade)` = `count(trade_journal)` (35) and `sum(realized_pnl)` of closed = journal's (-793.67 as of 11-13); `trading.v_reconciliation` lists the 3 known explanations (netting split 3029, two manual rows) and nothing else; relay lag in `ops.v_source_freshness` < 60 s | stop the service; old tables untouched |
+| 3.1 | `ledger_relay.py`: per instance, reads `ams.db` (`mode=ro`), `system2.db`, `fill_outbox.db`; upserts `trading.decision`, `order`, `fill`, `trade`; `config.instance_state`; idempotent on source row ids; runs every 30 s supervised | Ops | after the backfill (migration M3): per instance `count(trading.trade)` = `count(trade_journal)` (35) and `sum(realized_pnl)` of closed = journal's (-793.67 as of 11-13); `trading.v_reconciliation`, which covers only trades opened on or after the instance's `ledger_from` (2026-10-15 for instance 1), lists only explained rows (netting split 3029 and the manual rows), each with its explanation, and the full broker history before that date is labelled `pre_ledger` and raises no alert; `trading.v_stuck_orders` is empty or each row is alerted; relay lag in `ops.v_source_freshness` < 60 s | stop the service; old tables untouched |
 | 3.2 | Switch off the two old writers: publisher `--pg-stream` flag removed from `sb_service.ps1`, task `SB trade journal sync (5m)` disabled (not deleted) | S2 (publisher), Ops | `pg_stat_user_tables.n_tup_upd` on `public.fact_live_trades` stops increasing for 24 h; dashboard Trades view (now reading `trading.trade`) shows the same 35 rows | re-add the flag, re-enable the task |
 | 3.3 | `account_relay.py` replaces the account reader task: `trading.equity_sample` (1/min), `trading.broker_trade`, `finance.cash_movement` from `TRANSFER_FUNDS`, `config.instance_instrument`; still GET-only with the allow-list; still a separate process with the keys the dashboard never gets | Ops | `SELECT count(*) FROM trading.equity_sample WHERE instance_id=1 AND at > now()-interval '1 hour'` ≥ 55; `finance.cash_movement` holds every TRANSFER_FUNDS id of the practice account (compare with `accounts\practice.json`); the GET allow-list test still passes | re-enable the old task |
 | 3.4 | `watchdog_relay.py`: `ops.service_status`, `ops.heartbeat`, `ops.alert` (watchdog episodes, DLQ and `bridge.unrouted` rows), `ops.operator_command` (from `panel.db` and `override_audit`); `bell.py` writes `ops.alert`; dashboard bell reads `ops.alert`; `notifications.db` becomes read-only | Ops, Dashboard | stop DEV guardian: `ops.alert` gets `service_down` within 5 min with a `fix` text; `ops.heartbeat` has one row per service per minute for 24 h; bell shows alerts from `ops.alert`; DLQ backlog (6 + 2 + 49 rows) appears as alerts once and is then cleared by the owner (migration M7) | bell reads `notifications.db` again (flag) |
@@ -1277,10 +1351,10 @@ Depends on: Phase 2 in prod for instance 1; Phase 3.1, 3.3, 3.4 in prod.
 | # | Item | System | Acceptance |
 |---|---|---|---|
 | 4.1 | `sb_service.ps1 -Service <svc> -Instance <key>`: reads `instances.json`; sets `SB_INSTANCE`, state dir, queue path, ports, secrets path from the row; instance 1 resolves to today's paths (no move); `register_instance_tasks.ps1` generates `\ScalableBrain\<instance>\service_*` tasks | Ops | for instance 1 the running processes are byte-identical in command line except the added `--instance` and `SB_INSTANCE`; `running.json` carries `instance_key` per child |
-| 4.2 | Hand, Guardian, bridge, relay take `SB_INSTANCE`; every file path derives from the instance's `state_dir`; `queue_meta.instance` checked on open; `execution_mode.py` reads the instance's `execution_mode` from the snapshot and still requires the owner-confirmed mode file for `live` | S2, S3, Ops | DEV: instances 2 (`oanda-practice-shadow`) and a second dev instance 4 (`oanda-practice-shadow-b`, created by rows only, Q3) both run with their own queue, state, ports 18xxx/19xxx |
-| 4.3 | Isolation test in DEV: pause instance 2 via its Guardian API; send the same signal group to both | instance 4 decides, instance 2 rejects with `paused`; trip a daily-loss constraint on 4 | 4 latches, 2 keeps admitting; kill instance 4's Hand | instance 2's health unchanged, watchdog alerts name instance 4 only | S3, Ops | the three assertions hold; recorded in `09-change-log/` with timestamps |
-| 4.4 | "Adding an instance is rows": create instance 4 with `INSERT`s + a secrets file + `register_instance_tasks.ps1 -Instance oanda-practice-shadow-b`; nothing else | Ops | `git status` in `C:\SB\dev`, `dev-umbrella`, `devenv` shows no change; the instance appears in the dashboard switcher within 60 s |
-| 4.5 | Dashboard: `X-SB-Instance` header (values: an instance key or `all`); `account_scope.py` replaced by `instance_scope.py` that filters `instance_id` on every `trading.*`, `finance.*`, `ops.*` query; `all` aggregates; switcher lists `config.instance` rows with `display_colour` (live = red frame, per DECEMBER-READINESS §4); default = the only active prod instance | Dashboard | `ui-check/instance.mjs`: for each of the 12+ views, the API calls carry the header, responses for instance 2 and 4 differ where data differs, and `all` equals the union (trade counts add up); the live instance (planned, empty) renders "no data yet" everywhere, never practice data |
+| 4.2 | Hand, Guardian, bridge, relay take `SB_INSTANCE`; every file path derives from the instance's `state_dir`; `queue_meta.instance` checked on open; `execution_mode.py` reads the instance's `exec.mode` setting from the snapshot and still requires the owner-confirmed mode file for `live` | S2, S3, Ops | prod: instance 1 unchanged in behaviour; instance 3 (`oanda-live-personal`, `exec.mode=shadow`) runs beside it with its own queue, state, ports and secrets file. DEV: instance 2 runs on 18xxx as today |
+| 4.3 | Isolation drill in prod, during the shadow rehearsal (no instance 4; owner 2026-11-15): pause instance 3 through its Guardian API while instance 1 trades practice; trip a daily-loss constraint on instance 3 with a deliberately tiny limit; stop instance 3's Hand | instance 1 keeps admitting and filling while 3 is paused; 3 latches and 1 does not; instance 1's health is unchanged and the watchdog alerts name instance 3 only. Instance 3 is in shadow, so no real order is at risk | S3, Ops | the three assertions hold; recorded in `09-change-log/` with timestamps; the tiny limit is reverted (two-step) after the drill |
+| 4.4 | "Adding an instance is rows", proven by instance 3 itself: its `config.*` rows, its secrets file and `register_instance_tasks.ps1 -Instance oanda-live-personal`; nothing else | Ops | `git status` in `C:\SB\dev`, `dev-umbrella`, `devenv` and `prod\repo` shows no change made for instance 3; it appears in the dashboard switcher within 60 s |
+| 4.5 | Dashboard: `X-SB-Instance` header (values: an instance key or `all`); `account_scope.py` replaced by `instance_scope.py` that filters `instance_id` on every `trading.*`, `finance.*`, `ops.*` query; `all` aggregates; switcher lists `config.instance` rows with `display_colour` (live = red frame, per DECEMBER-READINESS §4); default = the only active prod instance. **Dev link (owner 2026-11-15):** the switcher on the prod dashboard (:8050) lists the dev instance 2 too, with a link that opens its own dashboard (`config.instance.dashboard_url`, :18050), and the dev dashboard links back; dev data is never mixed into prod views | Dashboard | `ui-check/instance.mjs`: for each of the 12+ views, the API calls carry the header, responses for instances 1 and 3 differ where data differs, and `all` equals the union of prod instances (trade counts add up); instance 3 shows only its own shadow decisions and "no trades yet", never practice data; choosing instance 2 on :8050 opens :18050 |
 | 4.6 | Control panel: instance selector on every instance-bound action (pause, resume, reset breaker, flatten) with the instance key echoed in the confirm text | Dashboard (panel) | `panel.db` audit rows carry `instance_key`; a flatten preview names the instance and its account suffix |
 
 Tests: supervisor self-test child with two instances; Guardian/Hand `test_instance_paths.py`
@@ -1307,17 +1381,19 @@ follows `design/` and the redesign brief; the dataviz rules apply to every chart
 Tests: API contract tests per tile (shape, as-of present, null stays null); dataviz validator on
 the palette; phone-width check (no sideways scroll, 44 px targets) per the site conventions.
 
-## 2.6 Phase 6: live instance setup and go-live (W52-W02)
+## 2.6 Phase 6: live instance setup and go-live (W48-W01)
 
-Depends on: Phases 2-5 in prod; owner decisions Q2 (goal figures), Q5 (live numbers = LR-04 table),
-Q6 (ALLOC activation rule). The checklist itself is [04-go-live-checklist.md](#golive).
+Depends on: Phases 0, 1, 2, 3.1-3.4, 4.1, 4.2, 4.5 in prod (the critical path). **Not** on Phase 5.
+Owner decisions Q5 (live numbers = LR-04 table), Q6 (ALLOC activation rule) and Q17 (the first
+live strategy, see 6.4). Steps 6.1 and 6.2 can start in W48; 6.3 starts in W50. The checklist
+itself is [04-go-live-checklist.md](#golive).
 
 | # | Item | Acceptance |
 |---|---|---|
 | 6.1 | Instance 3 rows complete: constraints (`daily_loss_limit`, `max_drawdown`, `position_caps`, `restricted_instruments` = the LR-04 tiny-account list), setting overrides = LR-04 numbers signed by the owner (activated with the two-step), enablement = the live book the owner names (W46-D2), `started_at` set on go-live | `config.resolve(3)` diff against the owner-signed table = 0 differences; every override's `change_log` row has `by` = the owner and `reason` quoting the decision |
 | 6.2 | Secrets file `<secrets folder, kept off the public site>` filled by the owner (live token generated on the live side; the 2026-10-25 test showed the practice key gets 401) | the account relay reads the live summary GET-only; `trading.equity_sample` for instance 3 shows the deposited balance |
-| 6.3 | Rehearsal: instance 3's Hand boots in `shadow` execution mode against the live account (reads only); `broker_env` and `execution_mode` preflights pass; one full week of shadow decisions recorded | `trading.decision` for instance 3 has rows; `trading."order".executor_status='SHADOW'` for each approved one; zero broker orders (`trading.broker_trade` unchanged) |
-| 6.4 | Smoke test (owner-run, after go/no-go): mode file `mode=live` confirmed; `execution_mode=live` activated; one minimum-size order on one FX pair; verify fill, journal, `trading.trade`, `broker_trade`, equity; close it; verify close path and P&L | the eight checks in the checklist §C pass with values recorded |
+| 6.3 | Rehearsal from W50 to the end of December: instance 3's Hand boots with `exec.mode=shadow` against the live account (reads only); `broker_env` and `execution_mode` preflights pass; at least three weeks of shadow decisions recorded, including the 9 Dec FOMC | `trading.decision` for instance 3 has rows; `trading."order".executor_status='SHADOW'` for each approved one; zero broker orders (`trading.broker_trade` unchanged) |
+| 6.4 | Smoke test (owner-run, week of 2027-01-04, after the go/no-go on Sat 2027-01-02): mode file `mode=live` confirmed; `exec.mode=live` activated (two-step); one minimum-size order on one FX pair from the one strategy chosen under checklist C2; verify fill, journal, `trading.trade`, `broker_trade`, equity; close it; verify close path and P&L | the eight checks in the checklist §C pass with values recorded |
 | 6.5 | Rollback drill before the smoke test: switch instance 3 back to `shadow` by the runbook; confirm no orders possible | `trading."order"` for instance 3 shows `SHADOW` after the switch; the mode file refusal test passes |
 
 ## 2.7 Phase 7: after January (not in the December scope, listed so nothing is lost)
@@ -1352,12 +1428,12 @@ inference (ON-01); `audit.db` replaced by `ops.*`.
 | W47-WED-3 phone push | Phase 0.8 |
 | W47-THU-3 cold restore drill | checklist §B3, do it in W47 as planned |
 | W47-FRI-4 two weeks clean parity | continues; parity reads `trading.signal` after 3.7 |
-| W48-MON-2 live rehearsal in shadow | Phase 6.3 (moved to W01) |
+| W48-MON-2 live rehearsal in shadow | Phase 6.3 (from W50 through December) |
 | W48-TUE-2 first $200 deposit | Phase 6.2 (owner, any time after the live token works) |
 | W48-WED-2 live numbers against the real balance | Phase 6.1 |
 | W48-THU-1 close the demo-to-live checklist | checklist §A |
-| W48-FRI-1 go/no-go pack; W48-SAT-1 decision | moved to W01-SAT 2027-01-03 (Q1) |
-| W49-MON-1 switch to live | Phase 6.4, week of 2027-01-05 (Q1) |
+| W48-FRI-1 go/no-go pack; W48-SAT-1 decision | moved to Sat 2027-01-02 (owner, Q1) |
+| W49-MON-1 switch to live | becomes "start December plumbing and testing"; the money switch is Phase 6.4, week of 2027-01-04 |
 | W49-FRI-1 FOMC 9 Dec dry run | unchanged (research path; instance 1) |
 </script></section><section id="migration" class="bpl-doc"><script type="text/markdown"># 3. Migration plan for existing data, with rollback
 
@@ -1371,8 +1447,9 @@ they are dropped. Row counts below are as of 2026-11-13 and must be re-measured 
 |---|---|---|---|---|---|---|
 | M1 | `risk_config.json` (prod, practice values), `risk_config.live.json`, `.env.system2` limit names, `signals/defer.py` default, `risk_config.json notifications.routing` | `config.setting_def`, `config.setting_value` (global active; instance 3 draft) | `gen_setting_defs.py` emits SQL; reviewer diffs | `diff_resolved.py --instance 1` = 0 differences; `--instance 3 --status draft` = 0 | `DELETE FROM config.setting_value WHERE created_by='migration'` (nothing consumes them until Phase 2) | 1 |
 | M2 | `regime_strategy_map.json` (5 strategies, 11 cells), `live_book.prod.json` (1), `live_book.prod.fomc.json` (1), `keep_designations.py` DESIGNATIONS (4 strategies, 10 cells), `ams_strategy_controls` (12 rows; 4 for strategies no longer in the map), `ams_strategy_alloc` (7) | `config.strategy_enablement` (global) | script: one row per strategy; `basis` from the map's `selection_basis`; `risk_pct` from `strategy_target_risk_pct`; `allocation_multiplier` from alloc; `max_slots` from controls; the 4 stale control rows become `enabled=false` with reason "left the map 2026-10-30" | 7 active rows; every row's values equal the source (reviewer table); Guardian in DEV makes the same decisions on the last 100 mirrored signals with snapshot versus files (`replay_gate.py` diff = 0 outcome differences) | drop the rows; flags keep Guardian on files | 1-2 |
-| M3 | `ams.db trade_journal` (35), `ams_decision_log` (185), `ams_order_watch` (48), `system2.db Fact_Live_Trades` (42), `fill_outbox.db` (127 messages) | `trading.decision`, `order`, `fill`, `trade` for instance 1 | `ledger_relay.py --backfill --instance oanda-practice-demo` reads the same files it will read live | counts equal per table; `sum(realized_pnl)` closed = journal's; `v_reconciliation` lists exactly: order 3029 (netting split, hand-inserted 2026-11-12), the rows with `source='manual'`, and nothing else | `TRUNCATE trading.*` for instance 1 (relay off); old tables untouched | 3 |
-| M4 | `public.fact_live_trades` (est 74 rows, two writers), `live.fact_live_trades` (0), `ForexBrainDB.fact_live_trades` (est 37, no writer found), telemetry `history\day\*.json` | nothing (superseded by M3) | after M3 passes and the dashboard reads `trading.trade`: `REVOKE` writes, rename to `public.zz_fact_live_trades_retired_20261213`; drop after 30 days; `live` schema dropped with it | the Trades view shows 35 system trades + manual rows from `trading.trade`; the daily P&L view equals `finance.v_instance_ledger` (no more three answers) | rename back; re-enable the two writers | 3 |
+| M3 | `ams.db trade_journal` (35), `ams_decision_log` (185), `ams_order_watch` (48), `system2.db Fact_Live_Trades` (42), `fill_outbox.db` (127 messages) | `trading.decision`, `order`, `fill`, `trade` for instance 1 | `ledger_relay.py --backfill --instance oanda-practice-demo` reads the same files it will read live | counts equal per table; `sum(realized_pnl)` closed = journal's; `v_reconciliation` (trades on or after `ledger_from` = 2026-10-15 only) lists order 3029 (netting split, hand-inserted 2026-11-12) and the rows with `source='manual'`, each with an explanation, and no unexplained row | `TRUNCATE trading.*` for instance 1 (relay off); old tables untouched | 3 |
+| M4 | `public.fact_live_trades` (catalog estimate 74 rows, two writers; the dashboard shows 67 closed trades totalling about −8,103 back to July, review 2026-11-15, to be re-measured), `live.fact_live_trades` (0), `ForexBrainDB.fact_live_trades` (est 37, no writer found), telemetry `history\day\*.json` | **Pre-ledger history is kept, not lost.** Every `public.fact_live_trades` row closed before 2026-10-15 is archived permanently into `trading.trade` with `source='pre_ledger'`, `instance_id=1`, never relayed or edited. Rows from 2026-10-15 on are covered by M3 and are cross-checked against it (count and P&L) instead of copied | one-off loader after M3 passes; then the two old writers are off and the dashboard reads `trading.trade` only. The old table is left in place, unwritten and unread; its rename and the `live` schema drop wait for the superuser password (Q10 deferred) | `count(*) WHERE source='pre_ledger'` + `count(*)` of M3 = rows of `fact_live_trades` (with every difference listed); the Trades view shows pre-ledger rows with a "pre-ledger" chip; P&L views show pre-ledger as its own line, never mixed into the January goal | delete `source='pre_ledger'` rows; re-enable the two writers | 3 |
+| M4b | Broker history outside any system ledger (review 2026-11-15: about −12,261, much of it from before the system's own records) | `trading.broker_trade` with the full history of the practice account | the account relay pages `trades?state=CLOSED` back to the account's first trade. This needs one new GET path in the reader's allow-list (`/v3/accounts/{id}/trades?state=CLOSED&beforeID=<n>&count=500`), reviewed with its allow-list test | `count(*)` and `sum(realized_pnl)` of `broker_trade` equal the OANDA statement for the account's life; trades before `ledger_from` with no `trading.trade` match show as "pre-ledger, broker only" in the Trades view and raise no alert | delete the backfilled rows | 3 |
 | M5 | `equity_history.db equity_samples` (39,429 rows since 2026-10-15), `history\equity\*.json` (derived), Guardian `equity_curve` (62, stays private) | `trading.equity_sample` instance 1 | one-off loader (`ts_epoch` → `at` minute); then the account relay continues | row count equal; `max(equity)` 80,554.26 reproduced; no duplicate minutes | `DELETE ... WHERE source='backfill'` | 3 |
 | M6 | `accounts\practice.json` TRANSFER_FUNDS history (the reader already fetches all pages) | `finance.cash_movement` instance 1 (`source='broker_transfer'`) | account relay first run | every TRANSFER_FUNDS id present once; `sum(amount)` equals the account's net deposits (owner confirms against the OANDA statement) | delete rows with `source='broker_transfer'` | 3 |
 | M7 | `notifications.db notification_history` (897), `notify_outbox` (290, all `dead`), `watchdog_state.json` episodes, DLQ topics (`ams-outbound.executor.dlq` 6, `ams-inbound.ams.dlq` 2), `bridge.unrouted` (49), `scored-signals.heartbeat` (649 ready) | `ops.alert` (history as `resolved`), `ops.alert` for each DLQ/unrouted row once; the heartbeat topic rows deleted after `ops.heartbeat` runs | loaders; the owner resolves the 57 parked messages (close as "reviewed 2026-12") | `ops.alert` count = 897 + 290 + 57 (+ new); bell shows only unresolved; queue has 0 rows in the three parked topics after the owner's review; `scored-signals.heartbeat` has 0 rows and S1 no longer publishes to it | `notifications.db` is untouched (read-only); queue rows are exported to `lab\backups\queue-parked-<date>.json` before deletion | 3 |
@@ -1384,7 +1461,7 @@ they are dropped. Row counts below are as of 2026-11-13 and must be re-measured 
 | M13 | SQLite `ams.db`, `system2.db` of instance 1 and DEV | add `instance_key` columns (migrations 0020 / 003), fill with the file's instance | migration runner at service start (already how Guardian and Hand migrate) | `SELECT DISTINCT instance_key FROM trade_journal` = one value | columns are additive; the old release ignores them | 2 |
 | M14 | `prod\state`, `prod\queue`, `prod\logs` layout for instance 1 | unchanged (instance row points at today's paths) | none | — | — | 4 |
 | M15 | `C:\SB\prod\state\ams.db` schema drift (prod has 0019 not 0018; DEV has 0018 not 0019) | both have 0001-0021 | apply the missing file on each side (0018 is a seed of nnfx controls that becomes irrelevant after M2; apply it as a no-op record) | `schema_migrations` identical on prod and DEV | — | 2 |
-| M16 | `public` objects owned by `postgres` | owned by the application login | owner runs `REASSIGN OWNED BY postgres TO <application login>` in `scalable_brain` as `postgres` (Q10) | `\dt+ public.*` shows owner the application login; hand migration 002 (fractional units) can then be applied to the retiring tables if still wanted (not needed once M4 retires them) | `REASSIGN` back | 1 |
+| M16 | `public` objects owned by `postgres` | owned by the application login | **Deferred (owner 2026-11-15).** Later, the owner runs `REASSIGN OWNED BY postgres TO <application login>` in `scalable_brain` as `postgres`. Nothing on the critical path depends on it | `\dt+ public.*` shows owner the application login; hand migration 002 (fractional units) can then be applied to the retiring tables if still wanted (not needed once M4 retires them) | `REASSIGN` back | 1 |
 
 ## Data quality rules applied during migration (reviewer checks each)
 
@@ -1402,7 +1479,7 @@ they are dropped. Row counts below are as of 2026-11-13 and must be re-measured 
 
 ## Order of execution
 
-M16 → M1 → M2 → M13, M15 → M3 → M4 → M5 → M6 → M10 → M11 → M7 → M8 → M12 → M9. Each step in
+M1 → M2 → M13, M15 → M3 → M4 → M4b → M5 → M6 → M10 → M11 → M7 → M8 → M12 → M9 (M16 later, when the owner supplies the superuser password). Each step in
 DEV first, then prod by the owner, each with a `09-change-log/` entry (before counts, command,
 after counts, who, when).
 </script></section><section id="golive" class="bpl-doc"><script type="text/markdown"># 4. Go-live checklist: instance `oanda-live-personal`
@@ -1444,18 +1521,19 @@ trouble spots the brief names; ■ are the other blueprint trouble spots.
 | B12 | Settings snapshot health | instance 3 snapshot younger than 1 h; hash verified in the Guardian log; `settings.snapshot_max_age_hours` set; "settings unavailable" drill done (stop the publisher 2 h: alert; delete the file: in-memory kept; live-mode fixture refuses new entries) | drill record in `09-change-log/` |
 | B13 | Instance isolation | the Phase 4.3 drill recorded; instance 1 (practice) keeps trading while instance 3 is paused and vice versa | drill record |
 | B14 | Accounting baseline | `finance.cash_movement` for instance 3 shows the deposit(s); `finance.goal` active with the owner's figures (Q2); `goal_projection` row says "not enough trades" | SQL |
+| B16 | Least-privilege database roles | applied in prod (needs the superuser password, Q10), or the owner accepts going live with the dashboard on the full-rights login | `\du` lists the four roles, or owner sign-off |
 | B15 | Public page | the exporter reads only `sb_reader` sources; the live instance's existence is shown only as the owner decides (Q11) | `status.json` diff |
 
 ## C. Small-size live smoke test (owner-run, week of 2027-01-05 if go)
 
 Preconditions: A1-A9 and B1-B15 resolved or signed; `config.instance` row 3 `status='active'`,
-`execution_mode='live'` activated with the two-step; mode file written by the owner; the kill
+`exec.mode=live` activated for instance 3 with the two-step; mode file written by the owner; the kill
 switch (D1) tested in shadow the same day.
 
 | Step | Action | Check (value recorded) |
 |---|---|---|
 | C1 | Owner confirms balance via the Overview (instance 3) equals the OANDA statement | equity_sample latest = statement |
-| C2 | Enable exactly one FX strategy on instance 3 (`strategy_enablement` instance override), all others disabled; `position_caps.max_open_positions=1` | `config.resolve(3)` shows one enabled strategy |
+| C2 | Enable exactly one FX strategy on instance 3 (`strategy_enablement` instance override), all others disabled; `position_caps.max_open_positions=1`. **The owner chooses the strategy** (Q17) and the choice states its evidence in `change_reason`. The plan's default rule: an FX strategy in the December live book with the most closed forward-ledger trades since registration, no open `research.forward_divergence`, a clean shadow rehearsal on instance 3 (its live decisions matched its forward record), and a minimum-size trade feasible at the real balance (tiny-account table). The smoke test proves the plumbing; it is not evidence of an edge | `config.resolve(3)` shows one enabled strategy; its `change_log` reason names the evidence |
 | C3 | Wait for the next natural signal of that strategy or inject one through the S1 drill path with `drill=false` only if the owner explicitly chooses (default: wait) | `trading.signal` row for instance 3 |
 | C4 | Decision | `trading.decision` outcome `REDUCED`/`APPROVED`, `settings_version` = current, `constraints_checked` lists the instance constraints |
 | C5 | Order and fill | `trading."order".executor_status='FILLED'`, `trading.fill` open row, `trading.trade` OPEN, broker `clientExtensions.id` = `sb-<key>`; units = minimum for the instrument at 0.10% or the owner's chosen size |
@@ -1471,18 +1549,18 @@ If any step fails, stop; follow §E; the next attempt needs a `09-change-log/` e
 | Control | Scope | Mechanism (exists today unless noted) | Test before go-live |
 |---|---|---|---|
 | Emergency STOP | whole host | `C:\SB\prod\state\control\STOP` sentinel (Hand and Guardian honour it; absolute, W45-D3) | write it in DEV: both instances stop admitting and Hand cancels pending within 60 s |
-| Emergency flatten | one instance (new: instance-scoped) | control panel `emergency.flatten` with press-and-hold, instance selected; Guardian `flatten_all` → bridge → Hand | DEV instance 4 flatten leaves instance 2's positions untouched |
+| Emergency flatten | one instance (new: instance-scoped) | control panel `emergency.flatten` with press-and-hold, instance selected; Guardian `flatten_all` → bridge → Hand | an instance 3 flatten (shadow, during the rehearsal) leaves instance 2's positions untouched |
 | Pause instance | one instance | Guardian API `/commands pause` for that instance (state PAUSED; layer A rejects); panel and dashboard buttons | pause 3 → 1 keeps trading (B13) |
 | Resume | one instance | Guardian `/commands resume` (owner only; S2 DOWNTIME_HALT clears per the 2026-11-06 rule) | audit row |
 | Disable a strategy | one instance or global | `strategy_enablement` version with `enabled=false` (normal key, immediate) | the next signal of that strategy is rejected `strategy_disabled` |
-| Shadow the live instance | instance 3 | activate `execution_mode='shadow'` override (risk key, two-step) + remove the mode file; Hand restarts in shadow | `trading."order"` shows `SHADOW` |
+| Shadow the live instance | instance 3 | activate an `exec.mode=shadow` version (risk key, two-step) + remove the mode file; Hand restarts in shadow | `trading."order"` shows `SHADOW` |
 | Kill S3 commands to S2 | per instance | `feature.s3_commands_enabled=false` (today `S3_COMMANDS_ENABLED` env) | Hand ignores `flatten_all` in DEV |
 
 ## E. Rollback steps (one page, in order of severity)
 
 1. **Bad fill or wrong size, orderly**: panel `flatten_trade` (instance 3) → confirm in `trading.fill` and the broker → pause instance 3 → write a `09-change-log/` incident entry.
 2. **Live misbehaving, now**: STOP sentinel (stops every instance) → panel `emergency.flatten` on instance 3 → read `trading.broker_trade` to confirm flat → remove STOP only after the cause is known.
-3. **Back to practice-only**: deactivate instance 3 (`status='paused'`), set its `execution_mode` override to `shadow`, remove the mode file, restart its Hand; instance 1 is unaffected. Verify with `trading."order".executor_status` for the next decision.
+3. **Back to practice-only**: deactivate instance 3 (`status='paused'`), activate `exec.mode=shadow` for it, remove the mode file, restart its Hand; instance 1 is unaffected. Verify with `trading."order".executor_status` for the next decision.
 4. **Bad settings version**: `config.activate` the previous version (every version is kept); the publisher republishes within 60 s; Guardian logs the version; or stop the publisher and the services keep the last-known-good.
 5. **Bad release**: `deploy.ps1 -Commit <previous tag>` by the owner; relays and publisher are in the pinned set; migrations are additive so no database rollback is needed for a code rollback.
 6. **Database fault**: PostgreSQL down stops reporting, relays and settings publishing, not trading (invariant I8); restore from the daily dump into a scratch database first (B3), then swap.
@@ -1496,49 +1574,77 @@ If any step fails, stop; follow §E; the next attempt needs a `09-change-log/` e
 | Closed trades and P&L | `trading.trade` CLOSED versus `broker_trade` closed, by `client_order_id`; realized_pnl to the cent | hourly | warning, with the pair of values |
 | Equity | `equity_sample` versus `balance + unrealized` from broker; `finance.goal_projection.unexplained` | daily | warning when |unexplained| > financing + 1.00 |
 | Cash | `finance.cash_movement` broker transfers versus the OANDA statement total | daily | warning |
+| Stuck orders | `trading.v_stuck_orders`: any order the Guardian approved with no executor result (filled, rejected, cancelled, expired or shadow) after 5 minutes, per instance. The dashboard showed one stuck for 4.5 days on 2026-11-15; a replay of that case must raise the alert | every relay pass | critical `order_stuck`, with the order id, instance and age |
 | Settings | Guardian `/health settings_version` versus `config.snapshot` max version per instance | 5 min | warning after 1 h, critical after `snapshot_max_age_hours` |
-</script></section><section id="questions" class="bpl-doc"><script type="text/markdown"># 5. Open questions and risks for the owner
+</script></section><section id="questions" class="bpl-doc"><script type="text/markdown"># 5. Decisions, open questions and risks for the owner
 
-Each question states the assumption the plan proceeds under until the owner answers. Record the
-answer and date here; the build agent reads this file before each phase.
+The build agent reads this file before each phase. Answered questions stay listed with the answer
+and date, so the reason for each choice is not lost.
 
-## Questions
+## Answered by the owner, 2026-11-15
 
-| # | Question | Why it matters | Options | Plan assumes | Needed by |
-|---|---|---|---|---|---|
-| Q1 | Which calendar is authoritative: the week plans (live from Mon 2026-11-30 after a Sat 11-28 go/no-go) or this brief (December plumbing, real money in January)? | Decides whether Phases 2-5 must finish before a live switch or can run alongside a small live book | (a) January, per the brief; (b) 11-30 at $200 on today's code with Phases 1-5 landing underneath it; (c) other date | (a): first live smoke test the week of 2027-01-05, go/no-go Sat 2027-01-03 | before Phase 1 |
-| Q2 | The goal figures. The owner said $200k profit for 2027 (10-31), the vision page says $100k cumulative profit; deposits were put at about $2k/month | Needed to seed `finance.goal` and the required pace; the projection will show the gap honestly either way | target amount; start capital at 2027-01-01; monthly contributions; target date; milestones; whether practice P&L counts (recommended: no, live instances only) | $200,000 profit, start capital = live balance on 2027-01-01, $2,000/month, 2027-12-31, live instances only | Phase 5.2 |
-| Q3 | Instance keys and ids: `1 oanda-practice-demo` (prod), `2 oanda-practice-shadow` (dev), `3 oanda-live-personal` (prod), `4 oanda-practice-shadow-b` (dev, isolation test). Does the dev shadow instance stay on the shared practice account (today it adopts prod's open trades read-only)? | Keys appear in every row, file path, task name and the switcher; renaming later is a migration | confirm or rename; keep or separate the DEV broker account | as listed; DEV stays on the shared account in shadow mode | Phase 1 |
-| Q4 | Research system of record: flip to `scalable_brain` in December (M12) or back up `scalable_brain_dev` and flip in January? | The flip touches every research task and the emitters; the backup alone removes the data-loss risk but leaves prod depending on dev | flip in W50 (plan); backup-only for December | flip in W50 after 7 clean days in DEV; backup from W47 regardless | Phase 3 |
-| Q5 | The live risk numbers (LR-04 table: 0.5% max, 0.10% research, 1%/2%/5% loss limits, 15% max drawdown, 6 open, 6 per day, 1%/1.5%/3% exposure) and the first balance ($200 then about $5k) | They become instance-3 overrides and constraints; the tiny-account table says which instruments can trade at each size | approve as proposed; change values | as proposed, FX pairs plus copper and the 2-year bond at $200 | Phase 6.1 |
-| Q6 | ALLOC-v1 multipliers: does the nightly review auto-activate `allocation_multiplier` changes (within the frozen rule's bounds), or does each change wait for the owner? | Today the table is hand-loaded and stale after 3 days; auto-activation is what the rule intended | auto within [0, 1] with a bell note; owner activates each | auto within bounds, logged, with the owner able to pin a value | Phase 2.3 |
-| Q7 | Off-screen alert channel: private `NTFY_TOPIC` (decision W45-D4 pending), Telegram bot token (never configured), or both | Live without a phone channel is not acceptable (A2) | ntfy; Telegram; both | ntfy private topic, Telegram kept configured as second channel if the owner supplies a token | Phase 0.8 |
-| Q8 | Prop-firm rule packs: which firm(s) and which rules exactly (daily loss basis and day boundary, trailing or static drawdown, consistency rule, news restrictions, weekend holding, min trading days)? The owner said prop firms are for January 2027 after an edge | The constraint types are modelled; the parameters and a synthetic "prop-sim" instance on the practice account would validate layer K now | name a firm to model now; defer the parameters | model the eight rule types with a synthetic prop-sim instance in DEV; no real prop instance in this plan | Phase 2.2 |
-| Q9 | Operator identity for the audit record: a single owner identity (the owner's Windows account, from the loopback session) is enough today. Should the dashboard gain a login before a second person or agent gets write access? | `change_log.by` and `operator_command.by` are only as honest as the identity | single identity now; add login later | single identity; every write refuses a missing operator header | Phase 1 |
-| Q10 | The `postgres` superuser password is needed once to reassign `public` objects to the application login and to grant the new roles on them (M16) | Without it, migrations touching `public` keep needing hand sessions | owner runs the two statements | owner runs them in W47 | Phase 1 |
-| Q11 | Should `finance.*` be readable by the public exporter (`sb_reader`) and the status page? | The page today publishes gate counts and data volumes; money figures are a new exposure | no (default); yes with the owner's redaction rules | no | Phase 5.5 |
-| Q12 | Retention: `ops.heartbeat` 90 days, `trading.equity_sample` forever (about 0.5M rows/year/instance), `audit.db` retired after Phase 5, logs 5 archives | Storage and the backup size | confirm or change | as listed | Phase 3 |
-| Q13 | Retire the old shadow incubator (`shadow_incubator.db`, 89 MB, 94% frozen, still an hourly job step and a panel)? ADR-006 P4 says retire | Removes a dead store and 180 MB/day from backups | retire in M9; keep the panel as "legacy" | retire | Phase 3-4 |
-| Q14 | Should the DEV runtime autostart after a reboot (it has been down since 2026-11-11 while its tasks run)? | B11 requires DEV to be honest: running and watched, or stopped and saying so | autostart with the watchdog watching it; keep manual and stop the DEV tasks when it is down | autostart, watched | Phase 4 |
-| Q15 | The two unused read-only PostgreSQL roles the two unused read-only logins: drop them? | Hygiene; they hold SELECT on all of `ForexBrainDB` | drop; keep | drop after Phase 1 roles exist | Phase 1 |
+| # | Question | Answer | What changed in the plan |
+|---|---|---|---|
+| Q1 | Calendar: live from 11-30 (week plans) or January (brief)? | Monday 11-30 starts December, which is for plumbing and testing. Real-money trading starts in January | Live instance runs in shadow through December; go/no-go Sat 2027-01-02; smoke test week of 2027-01-04 (build plan header) |
+| Q2 | Goal figure: $200k (owner, 10-31) or $100k (vision page)? | $200k for now; correct the vision page | Vision page corrected (target, arithmetic table recomputed at 30%/yr, Phase 4 name); goal seeds at $200k profit |
+| Q3 | Instance keys and ids | `1 oanda-practice-demo` and `3 oanda-live-personal` are needed. `2 oanda-practice-shadow` is the dev instance; it has its own dashboard on port 18050, which can be linked from the instance switcher on the prod dashboard (8050). A second dev instance is not needed; leave it | Instance 4 removed. The isolation drill and the "adding an instance is rows" proof now use instance 3 in shadow beside instance 1 (Phase 4.3, 4.4). `config.instance.dashboard_url` added; the switcher links to the dev dashboard (Phase 4.5) |
+| Q4 | Research system of record | Production is the official copy | Phase 3.6 / M12 flip stays in the plan (DEV W49, prod W50) |
+| Q10 | Superuser password for `public` objects | Leave it for now | M16 deferred. The application login cannot create roles, so the four least-privilege roles wait too; until then the new schemas are used through the current application login. The old trade table is left unwritten and unread instead of renamed |
+| Plan | Is the plan accepted? | Yes, with the reviewer's fixes below | Fixes applied (next table) |
+
+## Reviewer's fixes, applied 2026-11-15
+
+| # | Finding | Fix in the plan |
+|---|---|---|
+| F1 | Global rows have a null `instance_id` inside a primary key, which PostgreSQL refuses | Surrogate primary keys plus unique indexes over `coalesce(instance_id, 0)` on `setting_value`, `strategy_enablement`, `model_selection` (physical §6.2) |
+| F2 | Expressions are not allowed in a primary key (`ops.service_status`, `ops.heartbeat`) | Same pattern (physical §6.5) |
+| F3 | The live check forced every live-type instance into live mode, blocking the shadow rehearsal, the rollback drill and "back to shadow" | One-directional rule: live mode needs a live-type prod instance, not the reverse. It lives in the validator (physical §6.2, logical §5.4) |
+| F4 | Two dev instances on one practice account broke the one-runtime-per-account rule | Instance 4 dropped (owner Q3); the constraint stays |
+| F5 | Execution mode was both a column and a setting | It is only the instance-scoped setting `exec.mode` (risk key, two-step, versioned) |
+| F6 | Dates off by a day | Today is Sunday 2026-11-15; go/no-go is Saturday 2027-01-02 |
+| F7 | Pre-October trade history would disappear | Archived permanently as `pre_ledger` trades (M4) and the full broker history backfilled (M4b); reconciliation covers only trades from each instance's `ledger_from` (2026-10-15 for instance 1). Figures quoted from the dashboard (67 closed, about −8,103; about −12,261 outside any ledger) are re-measured during M4 |
+| F8 | Prop-firm profit overcounted | `finance.goal_instance.counts_as`: prop instances count net payouts, not account P&L |
+| F9 | No currency rule | One goal currency (CAD); each amount converted at its own day's broker rate; exchange-rate movement shown as a separate "currency translation" line, never as profit; a missing rate stops the run (physical §6.4) |
+| F10 | No check for approved orders that never reach the broker | `trading.v_stuck_orders` and a critical alert after 5 minutes (checklist §F) |
+| F11 | Go-live step C2 gave no evidence rule for the first strategy | C2 now states the default rule and that the owner chooses (Q17) |
+| F12 | Phase 6 dependencies contradicted risk R1; the holiday rehearsal would see few signals | Critical path stated (Phases 0, 1, 2, 3.1-3.4, 4.1, 4.2, 4.5, 6); Phase 5 may slip into January; the rehearsal runs through December |
+
+## Still open
+
+| # | Question | Why it matters | Plan assumes | Needed by |
+|---|---|---|---|---|
+| Q5 | The live risk numbers (LR-04 table: 0.5% max, 0.10% research, 1%/2%/5% loss limits, 15% max drawdown, 6 open, 6 per day, 1%/1.5%/3% exposure) and the first balance ($200, then about $5k) | They become instance-3 overrides and constraints; the tiny-account table says which instruments can trade at each size | as proposed; FX pairs plus copper and the 2-year bond at $200 | Phase 6.1 (W48) |
+| Q6 | ALLOC-v1 multipliers: auto-activate the nightly review's allocation changes within the rule's bounds, or wait for the owner each time? | Today the table is loaded by hand and goes stale | auto within [0, 1], logged, with the owner able to pin a value | Phase 2.3 |
+| Q7 | Off-screen alert channel: private ntfy topic, Telegram bot token, or both | Live without a phone channel is not acceptable (checklist A2) | private ntfy topic | Phase 0.8 (W47) |
+| Q8 | Which prop firm to model, and its exact rules | Layer K models eight rule types; a firm's real parameters validate them | a synthetic "prop-sim" rule set tested on instance 2 in DEV; no real prop instance in this plan | Phase 2.2 |
+| Q9 | Operator identity: one owner identity is enough today. Add a dashboard login before anyone else gets write access? | The audit record is only as honest as the identity | single identity; every write refuses a missing operator header | Phase 1 |
+| Q11 | Should money figures (`finance.*`) appear on the public status page? | New public exposure | no | Phase 5.5 |
+| Q12 | Retention: heartbeat history 90 days, equity samples forever | Storage and backup size | as stated | Phase 3 |
+| Q13 | Retire the old shadow incubator? | Removes a frozen 89 MB store and about 180 MB a day from backups | retire (M9) | Phase 3-4 |
+| Q14 | Should DEV start automatically after a reboot? It was down from 11-11 while its tasks kept running | The checklist requires DEV to be running and watched, or stopped and saying so | autostart, watched | Phase 4 |
+| Q15 | Drop the two unused read-only database logins? | Hygiene | drop together with creating the new roles | with Q10 |
+| Q16 | Pre-ledger history: archive it and backfill the broker history (plan default), or archive only? | The broker backfill needs one new read-only path in the account reader's allow-list | archive and backfill (M4, M4b) | Phase 3 |
+| Q17 | The first live strategy for the smoke test (checklist C2) | Real money; the choice should cite evidence even if it is the owner's call | the C2 default rule, owner signs | Sat 2027-01-02 |
+| Q18 | Goal details beyond the figure: start capital on 2027-01-01, monthly contributions (about $2k said on 10-31), target date, milestones, and whether practice profit counts (plan: no, live instances only) | Needed for pace and odds | live balance on 2027-01-01, $2k/month, 2027-12-31, quarterly milestones, live only | before 2027-01-01 |
 
 ## Risks
 
 | # | Risk | Likelihood | Impact | Mitigation in the plan |
 |---|---|---|---|---|
-| R1 | **Scope versus calendar.** Six workstreams in six weeks beside the existing December tasks, with one owner approving every prod change and running every deploy | high | Phases 4-5 slip into January | Phases are independently valuable and additive; the go-live checklist does not require Phase 5 (telemetry) beyond the Overview tiles for instance 3; the owner can accept B-items with sign-off |
-| R2 | **Trade-path regression** from the snapshot loader, layer K and the instance guard (Guardian 760 tests, Hand 598, bridge 230 already exist; 10 Guardian tests fail on HEAD today for stale reasons) | medium | a wrong rejection or acceptance on prod practice | feature flags default off; `replay_gate.py` must show 0 outcome differences on the last 100 signals before the flag flips; DEV week first; deploy order S2→S3→S1 |
-| R3 | **Dirty trees and skew**: prod repo had 16 modified tracked files; dev is 262 commits ahead with live-path brain changes; publisher one release behind | high | a release cut from the wrong base, or the gate refusing | each release is cut from live prod HEAD (pre-demo rule) as a narrow branch; `running.json`=`pins.json` is a checklist item (B9) |
-| R4 | **The research flip (M12)** moves the system of record while research jobs run nightly | medium | lost research rows if done mid-job | quiet-hour cutover, dump/restore with row counts, dev untouched for 7 days, one-env-var rollback |
-| R5 | **Single machine, single PostgreSQL**: a disk or Postgres fault stops reporting and settings publishing; backups are on the same disk until 0.2 runs | medium | hours of blindness; data loss if the disk dies | trading continues on last-known-good (I8); off-machine copy weekly (0.2); restore drill (B3) |
-| R6 | **Settings centralisation becomes a new single point of failure** (a bad activation hits every instance) | low with validation | wrong risk on live | per-scope versions, dry-run for `risk` keys, two-step confirm, instant rollback to the previous version, live instance refuses snapshots that raise caps beyond the signed values |
-| R7 | **Instance isolation is process-level, not machine-level**: a CPU or disk saturation on the host affects all instances | accepted | slower decisions everywhere | out of scope (owner: server in 7-8 months); the watchdog alerts on latency |
-| R8 | **Strategy parameters stay in code** until Phase 7; the version row is a mirror | certain in December | a code edit changes behaviour without a version row | the mirror test fails the build when params differ from the recorded version; `code_sha` on every signal makes the change visible |
-| R9 | **Honest projections will look bad**: with fewer than 50 live trades the odds tile says "not enough trades"; with December's practice record (-793 CAD on 30 trades) a bootstrap from practice shows odds near zero | certain | owner disappointment, temptation to loosen risk | the goal is reporting-only by construction (I10); the tile states the method and window |
-| R10 | **Interactive-logon tasks** keep running only while logged on until 0.5 is done | certain today | missed emits and syncs after a lock | Phase 0.5 is first |
-| R11 | **App Control** blocks new packages; `plpython` is unavailable, so validation lives in Python outside the database | certain | a direct SQL insert can bypass validation | `sb_app` cannot UPDATE; activation is a SQL function that checks `status='validated'` and the validator's signature in `validation`; direct inserts by the application login are a migration-only path |
-| R12 | **Prop-firm rules modelled without a firm**: the eight rule types may miss a firm's specific computation (e.g. drawdown including floating P&L at a specific time) | medium | a breach the gate did not predict | `buffer_pct` and `include_unrealized` parameters; the firm's own dashboard remains the arbiter; no real prop instance until Q8 |
-| R13 | **Reviewer load**: every acceptance check is a command with an expected value; some need prod access the agent does not have (owner-run deploys, elevated tasks) | medium | phases wait on the owner | the plan groups owner steps per phase (0.2, 0.5, 0.6, 0.9, 1.2, 3.6, 4.1, 6.x) so they can be done in one sitting |
+| R1 | **Scope versus calendar.** Six workstreams in seven weeks beside the existing December tasks, with one owner approving every prod change | high | Phase 5 slips into January | Critical path excludes Phase 5 and parts of 3 and 4; every phase is additive and useful alone |
+| R2 | **Trade-path regression** from the snapshot loader, layer K and the instance guard (10 Guardian tests fail on HEAD today for stale reasons) | medium | a wrong rejection or acceptance on prod practice | feature flags default off; a replay of the last 100 signals must show 0 outcome differences before a flag flips; a DEV week first; deploy order S2, S3, S1 |
+| R3 | **Dirty trees and version skew** between prod, dev and the publisher | high | a release cut from the wrong base | releases cut from live prod HEAD as narrow branches; running code equal to pins is a checklist item (B9) |
+| R4 | **Research flip** moves the system of record while nightly jobs run | medium | lost research rows | quiet-hour cutover, dump and restore with row counts, dev untouched for 7 days, one-variable rollback |
+| R5 | **Single machine, single PostgreSQL**; backups on the same disk until the weekly off-machine copy runs | medium | hours of blindness; loss if the disk dies | trading continues on last-known-good settings; weekly off-machine copy (0.2); restore drill (B3) |
+| R6 | **Central settings** make one bad activation reach every instance | low | wrong risk on live | per-scope versions, dry run for risk keys, two-step confirm, one-step rollback, live refuses caps above the signed values |
+| R7 | **Isolation is per process, not per machine** | accepted | slower decisions everywhere under load | out of scope until the server move; the watchdog alerts on latency |
+| R8 | **Strategy parameters stay in code** until Phase 7 | certain | a code edit changes behaviour without a version row | a mirror test fails the build when parameters differ from the recorded version; every signal carries the code hash |
+| R9 | **Honest projections will look bad** at first: under 50 live trades the odds tile says "not enough trades" | certain | temptation to loosen risk | the goal is reporting-only by construction; the tile states its method and window |
+| R10 | **Interactive-logon tasks** run only while the owner is logged on until 0.5 is done | certain today | missed emits and syncs | Phase 0.5 first |
+| R11 | **No database-side Python** (App Control), so validation runs outside the database | certain | a direct SQL insert could skip validation | the dashboard role cannot update; activation checks the validator's signature; direct inserts are migration-only |
+| R12 | **Prop rules modelled without a firm** | medium | a breach the gate did not predict | safety buffers and unrealised-P&L options; no real prop instance until Q8 |
+| R13 | **Owner steps** gate several phases (deploys, elevated tasks, the research cutover) | medium | phases wait | owner steps grouped per phase so they can be done in one sitting |
+| R14 | **Superuser password deferred**: no least-privilege roles yet, so the dashboard keeps a login that can write every table, and the old trade table stays in place | certain until Q10 | a dashboard bug could write where it should not; an old reader could use stale data | the dashboard code writes only through the audited `config`/`finance` endpoints (tested); append-only triggers protect the ledgers whatever the login; the trade path has no database login at all, so the goal-never-touches-risk rule does not depend on roles; a grep check in Phase 3.2 confirms nothing reads `public.fact_live_trades`. Recommend supplying the password before go-live (checklist B16) |
 </script></section>
 </main>
 <footer id="site-footer"></footer>
