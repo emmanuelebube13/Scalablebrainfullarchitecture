@@ -180,6 +180,7 @@ const NAV_GROUPS = [
       ['system.html?id=system-1',   'Subsystems (S1-S3)','systems'],
       ['system-tree.html',          'System Tree Guide', 'system-tree'],
       ['vision.html',               'Vision & Roadmap',  'vision'],
+      ['ai-layer.html',             'AI Layer (S4)',     'ai-layer'],
       ['design.html',               'Design system',     'design'],
     ],
   },
