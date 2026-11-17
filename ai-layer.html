@@ -97,6 +97,14 @@ money is in section 3.
 The plan spends design effort in that order. Item 6 is what "rapid capital optimisation" sounds
 like, and it is the last thing to automate.
 
+**AI as a source of strategies, not only a judge of them.** Item 2 has a second use that is
+at least as valuable as reviewing trades. The FOMC tone strategy works by turning text into a
+number and trading the number. Every tag the Reader writes (direction hint, importance,
+surprise against expectation) is such a number. Those go to the lab as features, and a
+strategy built on one goes through the normal card, pre-registration and kill rules, forward
+only (text before the model's training cutoff never counts). This path needs no authority
+ladder: a text strategy is a strategy, and the Guardian treats it like any other.
+
 ## 4. Architecture
 
 ```
@@ -150,7 +158,8 @@ Design rules that hold for every part:
 
 | Role | Trigger | Reads | Produces | Path to effect |
 |---|---|---|---|---|
-| **Reader** (many small workers) | new document, headline, calendar change | outside text | tagged event rows: instrument, direction hint, importance, source | context store only |
+| **Reader** (many small workers) | new document, headline, calendar change | outside text | tagged event rows: instrument, direction hint, importance, source | context store; the same rows are features for the lab (section 3) |
+| **Loss reviewer** | weekly, over closed losing trades | the trade's context pack and what happened after | reason codes and a two-line note per loss; a weekly tally | dashboard and the research backlog; no trade effect, no rung |
 | **Daily brief** | 06:00 UTC and before major events | context store, positions, calendar | per-currency and per-index bias with reasons | `research.market_context` (ADR-008 factor 5) |
 | **Trade reviewer** | every signal, before publish | context pack: setup, strategy card and record, events near the hold window, open exposure, data quality | proceed / shrink (multiplier) / skip | signal `probability` factor `llm_<model>` → Guardian Layer X |
 | **Position monitor** | event hits an open trade, health change, price near stop, timed checks | context pack for that trade | hold / tighten / close advice | dashboard drawer + bell; later `ams.ctl` reduce-only |
@@ -201,6 +210,12 @@ monitoring open trades, bulk reading and one daily brief comes to roughly **$150
 month** at list prices, depending on model tier. The research work runs on the existing Claude
 subscription. A hard monthly cap in the gateway is part of the design.
 
+**Halving the shadow cost.** A verdict at the observe rung on an incubator signal does not need
+an answer in 60 seconds: the context pack is frozen at decision time, so an answer hours later
+has seen nothing extra. Those calls go through the provider's batch service, listed at half
+price, and only live-book signals and roles at rung 1 or above are answered in real time. The
+saving is the list discount; it has not been measured on our volumes.
+
 **The uncomfortable arithmetic.** At 25% a year, a $5,000 account earns about $100 a month.
 S4 at full scope costs more than the account earns until the balance is somewhere above
 $15,000 to $20,000. So in December and early 2027 S4 is an investment in evidence, and its
@@ -242,6 +257,23 @@ years. That is why the incubator stream is the test bed.
 Demotion is automatic: a breach of the same measures over a rolling window drops the role one
 rung and rings the bell.
 
+**Additions agreed 2026-11-16** (details in contract C3):
+
+- **Champion and challengers.** Evidence belongs to one model with one prompt (a "trial").
+  Because packs are frozen, other trials can answer the same packs in the background. When a
+  better prompt appears or the provider retires a model, the replacement already has its own
+  record and takes over without an 8-week restart. One challenger at a time under the
+  December and January budget.
+- **A trial record for prompts and models.** Every trial is registered before its first
+  decision, and the gate gets stricter with each one tried in the past 12 months. Trying ten
+  and promoting the best scorer is the same overfitting we guard against with strategies.
+- **What the owner did with the advice.** At rung 1 every shown verdict records whether it was
+  seen and whether it was followed, and the scorecard compares three results on the same
+  trades: the strategy untouched, the AI alone, and the owner with the AI. Advice that is never
+  opened is a delivery problem; it depends on the phone alert channel (build-plan decision D3).
+- **Confidence has to earn its place.** If "high confidence" verdicts do no better than "low"
+  ones after 200 scored decisions, the label is hidden.
+
 ## 8. Phases
 
 This is a separate workstream. It does not sit on the critical path of the 11-15 build plan
@@ -250,7 +282,7 @@ This is a separate workstream. It does not sit on the critical path of the 11-15
 | Phase | What | Trade influence | Earliest |
 |---|---|---|---|
 | P0 Foundations | gateway with budget cap and kill switch; `ai` schema and decision ledger; context pack builder; scorekeeper; replay tool | none | after Wave 2 |
-| P1 Observe | Reader + context store; Daily brief; Trade reviewer and Position monitor at rung 0 on incubator and practice signals; Operator read-only | none | December |
+| P1 Observe | Reader + context store, with its tags offered to the lab as features; Daily brief; Trade reviewer and Position monitor at rung 0 on incubator and practice signals (batch where timing allows), one challenger; Loss reviewer weekly; Operator read-only | none | December |
 | P2 Advise | verdicts in the trade drawer and Overview rows; Operator answers the owner's messages; phone channel | owner clicks | January, after go-live is stable |
 | P3 Reduce | rung 2 for whichever role passes the gate, practice instance first, then live | automatic, risk-down only | when the gate passes |
 | P4 Expand | rung 3, one strategy at a time | automatic, bounded | after P3 has a clean quarter |
@@ -267,6 +299,9 @@ For the people who take this into design:
 | Verdict contract and Guardian clamps | **Invest heavily** | the safety boundary; small surface, must be exact |
 | Operator role | **Invest** | clear need, low risk, value from day one |
 | Reader + context store | **Invest moderately** | start with 3 or 4 free sources; do not build a news empire before a verdict uses it |
+| Trial record, champion and challengers | **Invest heavily** (part of the ledger) | without it every prompt change costs 8 weeks, and picking the best of many is self-deception |
+| Reader tags as lab features | **Invest moderately** | the one AI path with a promising result already (FOMC tone); reuses the lab's rules |
+| Loss reviewer | **Design light** | cheap, no risk, and it tests whether the reason codes are the right ones |
 | Trade reviewer | **Design light, run early** | the prompt will change weekly; the evidence decides if it deserves more |
 | Position monitor | **Design light** | reuse ADR-004 inputs; advice only until the gate |
 | D. Gateway | **Keep thin** | a few hundred lines; do not adopt an agent framework for it |
@@ -281,7 +316,9 @@ For the people who take this into design:
 | A convincing but wrong verdict moves money | rungs, schema, Guardian clamp, reduce-only first |
 | Look-ahead: model "remembers" the outcome | forward-only scoring; nothing before the model's training cutoff counts (TX-04 guard) |
 | Prompt injection from a news page | judging roles have no web access; readers can only write tagged rows |
-| Model changes under us (vendor update) | model id and prompt version pinned and logged; a change resets the role's evidence clock |
+| Model changes under us (vendor update or retirement) | model id and prompt version pinned and logged; a change is a new trial, and a challenger running beside the champion is ready to take over |
+| Picking the best of many prompts by luck | every trial registered first; the gate tightens with the number tried |
+| Advice nobody reads | seen and followed rates on the scorecard; phone channel before rung 1 |
 | The system is starved of trades | skip rate is capped per strategy per week; owner's "couple of trades a week" is a hard floor |
 | Cost creep | monthly cap in the gateway; cost per verdict on the dashboard |
 | API outage | "unassessed" path: trading continues on today's rules |
@@ -351,7 +388,8 @@ part A), a thin model gateway, the scorekeeper, a replay tool, and the tests and
 in the contracts.
 
 **Out of scope for P0:** any change to Guardian, Hand, bridge, the wire contracts or
-`ams.ctl`; the Reader, Daily brief, Operator and Researcher roles; any dashboard screen; C2
+`ams.ctl`; the Reader (and its feature feed to the lab), Daily brief, Loss reviewer, Operator
+and Researcher roles, which are P1; any dashboard screen; C2
 part B (rung 2 clamps); pgvector; a local language model; a second provider.
 
 **Stop and report to the owner when:**
@@ -390,6 +428,10 @@ A9), sends the pack as data in a single request asking for JSON that matches the
 enforces the deadline, and returns. It holds the only copy of the API key in memory, read from
 a file under the secrets folder at start. A kill-switch file (`run\s4.disabled`) makes every
 call return `budget_blocked` without contacting the provider.
+
+Two delivery modes behind the same function: **realtime** (deadline enforced) and **batch**
+(the provider's batch service at half list price, answers within 24 h) for observe-rung
+decisions off the live book and for challengers. Both write the same `ai.decision` row.
 
 Design questions to settle:
 - **SDK or plain HTTP.** The provider's official Python SDK is the normal choice, but it is not
@@ -464,6 +506,14 @@ Design work:
    index-reversal cluster (17 SHADOW cards that are mostly one bet).
 6. **Registering the gate** before the first real decision is stored: one row per role in
    `ai.gate_registration`, numbers from C3 section 3 (owner decision A6).
+7. **Trials, champion and challengers** (`ai.trial`, `ai.trial_event`). A decision cannot be
+   stored without a trial registered before it. Check the tightening rule (`1 - 0.10 / k`)
+   against the fixtures: it must stop a best-of-ten coin flip and still let a real effect
+   through at k = 3. In P0 and P1 run at most one challenger, so the $150 cap holds.
+8. **Owner follow-through** (`ai.owner_action`). The table is created in P0 so the schema is
+   stable; it is filled from P2. Decide how "seen" is recorded (drawer opened, bell item
+   opened, phone notification tapped).
+9. **Confidence check** on the scorecard, for information only.
 
 ---
 
@@ -475,8 +525,8 @@ Design work:
 | D2 `ai` schema migrations, triggers, views | db agent | applied to `scalable_brain_dev` | C3 fixture rows for triggers and `v_unscored` |
 | D3 pack builder + replay | s4 agent (new package `systems/brain/src/ai_layer/`, or its own top-level system: lead decides at D1) | packs for the last 200 mirrored signals, no model call | hash reproduces on replay for all 200; privacy test; `known_at` test |
 | D4 verdict checker + gateway with a **fake provider** | s4 agent | end-to-end with canned answers | every C2 part A status produced by a fixture |
-| D5 scorekeeper | s4 agent | scorecard from synthetic reviewers | all seven C3 section 4 fixtures behave as stated |
-| D6 first real calls | after OS-AI-1 | 50 packs through the real seat, in DEV | 0 `invalid_schema`; cost per decision measured; month projection under the cap |
+| D5 scorekeeper | s4 agent | scorecard from synthetic reviewers | every C3 section 4 fixture behaves as stated |
+| D6 first real calls | after OS-AI-1 | 50 packs through the real seat in DEV, 25 realtime and 25 batch | 0 `invalid_schema`; cost per decision measured for both modes; month projection under the cap |
 
 D2 to D5 need no API key and no spend. P1 (verdicts on the live incubator stream, rung 0)
 starts only after D6 and a new owner go-ahead.
@@ -727,11 +777,14 @@ A verdict that fails any check is stored with its status and treated everywhere 
 | A4 | every `evidence_ids` entry is an id present in the pack that was sent | `invalid_evidence` |
 | A5 | a non-proceed, non-hold action has at least one evidence id and a reason other than `NO_CONCERN` | `invalid_evidence` |
 | A6 | `INSUFFICIENT_CONTEXT` only with `proceed` or `hold` (not knowing is never a reason to act) | `invalid_schema` |
-| A7 | answered within the role's deadline (reviewer: 60 s from `as_of`, owner decision A3; monitor: 300 s) | `timeout` |
+| A7 | realtime decisions: answered within the role's deadline (reviewer: 60 s from `as_of`, owner decision A3; monitor: 300 s). Batch decisions (observe rung, not on a live book, and all challengers unless the lead says otherwise): answered within 24 h | `timeout` |
 | A8 | provider refused or errored | `refused` / `error` |
 | A9 | monthly budget cap reached before the call (owner decision A2: $150) | `budget_blocked`, no call made |
 
-One model call per decision. No retry on A1 to A6: a retry is a second opinion chosen after
+A batch decision can never be shown or applied: it arrives too late by design. Any role at
+rung 1 or above, and every signal on a live book, is answered in real time by the champion.
+
+One model call per trial per decision. No retry on A1 to A6: a retry is a second opinion chosen after
 seeing the first. One transport retry is allowed on a network error if the deadline still holds.
 
 ## B. Clamps at rung 2 (Guardian side, P3, not built yet)
@@ -810,6 +863,31 @@ CREATE TABLE ai.prompt_version (
   UNIQUE (role, version)
 );
 
+-- Every model + prompt combination ever tried for a role, registered BEFORE its first decision.
+-- This is the trial record: the gate counts these (section 3), so trying many and promoting
+-- the best scorer is paid for. Exactly one trial per role is the champion at any time; the
+-- rest are challengers answering the same packs.
+CREATE TABLE ai.trial (
+  trial_id       bigserial PRIMARY KEY,
+  role           text        NOT NULL,
+  seat_id        bigint      NOT NULL REFERENCES ai.seat,
+  prompt_id      bigint      NOT NULL REFERENCES ai.prompt_version,
+  track          text        NOT NULL CHECK (track IN ('champion','challenger')),
+  hypothesis     text        NOT NULL,          -- why this one is expected to do better, in a sentence
+  registered_at  timestamptz NOT NULL DEFAULT now(),
+  registered_by  text        NOT NULL,
+  UNIQUE (role, seat_id, prompt_id)
+);
+-- A trial ends, or a challenger takes the champion's place, by a new row here (never an update).
+CREATE TABLE ai.trial_event (
+  event_id       bigserial PRIMARY KEY,
+  trial_id       bigint      NOT NULL REFERENCES ai.trial,
+  event          text        NOT NULL CHECK (event IN ('retired','became_champion','became_challenger')),
+  at             timestamptz NOT NULL DEFAULT now(),
+  by             text        NOT NULL,
+  reason         text        NOT NULL
+);
+
 -- What the model saw. Body validates against c1-context-pack.schema.json.
 CREATE TABLE ai.context_pack (
   pack_id        uuid        PRIMARY KEY,
@@ -824,14 +902,18 @@ CREATE TABLE ai.context_pack (
   body           jsonb       NOT NULL
 );
 
--- One row per model call, valid or not.
+-- One row per model call, valid or not. Several trials may answer one pack: one row each.
 CREATE TABLE ai.decision (
   decision_id    uuid        PRIMARY KEY,
   pack_id        uuid        NOT NULL REFERENCES ai.context_pack,
+  trial_id       bigint      NOT NULL REFERENCES ai.trial,
   role           text        NOT NULL,
   instance_key   text        NOT NULL,
   seat_id        bigint      NOT NULL REFERENCES ai.seat,
   prompt_id      bigint      NOT NULL REFERENCES ai.prompt_version,
+  delivery       text        NOT NULL CHECK (delivery IN ('realtime','batch')),
+                                                 -- batch: observe-rung decisions off the live book,
+                                                 -- answered up to 24 h later from the same frozen pack
   requested_at   timestamptz NOT NULL,
   answered_at    timestamptz,
   status         text        NOT NULL CHECK (status IN
@@ -847,7 +929,21 @@ CREATE TABLE ai.decision (
   output_tokens  integer,
   cost_usd       numeric(10,5),
   rung           smallint    NOT NULL,           -- the role's rung on this instance at request time
-  effect         text        NOT NULL CHECK (effect IN ('none','shown','applied','ignored_clamp'))
+  effect         text        NOT NULL CHECK (effect IN ('none','shown','applied','ignored_clamp')),
+                                                 -- only a champion's decision can be shown or applied
+  UNIQUE (pack_id, trial_id)
+);
+
+-- What the owner did with advice that was shown (rung 1). One row per shown decision,
+-- written when the trade closes or the advice expires.
+CREATE TABLE ai.owner_action (
+  decision_id    uuid        PRIMARY KEY REFERENCES ai.decision,
+  shown_at       timestamptz NOT NULL,
+  channel        text        NOT NULL,           -- 'drawer', 'bell', 'phone'
+  seen_at        timestamptz,                    -- NULL = never opened
+  action         text        NOT NULL CHECK (action IN ('followed','ignored','opposite','not_seen')),
+  acted_at       timestamptz,
+  r_as_owner_traded numeric(8,4)                 -- net R of what actually happened
 );
 
 -- Baselines drawn AT decision time, so they cannot be chosen after the outcome is known.
@@ -905,10 +1001,15 @@ than 24 h ago with no outcome row: must be empty, alert if not).
 
 ## 2. What the scorekeeper computes
 
-Evidence set for a role = decisions with `status='ok'`, an outcome row, on the role's current
-seat `model_id` and current prompt **major** version, with `as_of` after the model's training
-cutoff and after `ai.gate_registration.registered_at`. A seat or major prompt change starts a
-new, empty evidence set.
+Evidence belongs to a **trial** (one model + one prompt major version), never to a role as a
+whole. Evidence set for a trial = its decisions with `status='ok'` and an outcome row, with
+`as_of` after the model's training cutoff, after `ai.gate_registration.registered_at` and after
+the trial's own `registered_at`. A new model or a major prompt change is a new trial with an
+empty set. Because challengers answer the same packs as the champion from the day they are
+registered, a replacement can already hold its own 200 scored decisions when it is needed
+(a better prompt, or the provider retiring a model): it becomes champion by a `trial_event`,
+with no gap and no restart. Realtime and batch decisions both count; the pack is frozen at
+`as_of`, so a late answer has seen nothing extra.
 
 Trade reviewer, per decision *i* with multiplier *m_i* and unfiltered result *R_i*:
 
@@ -926,12 +1027,27 @@ week; status counts (how often the role failed to answer); cost per ok decision.
 Position monitor: `d_i = r_after_exit_advice - r_unfiltered` for close advice, 0 for hold, with
 the same clustering, against a random-close baseline at the same rate.
 
+Also on the scorecard, for information and never part of the gate:
+
+- **Champion against each challenger** on the packs both answered: paired difference in `b`,
+  clustered interval, and how often they disagree.
+- **Confidence check:** mean `d` split by `confidence`. If after 200 scored decisions "high" does
+  not beat "low" (interval on the difference spans 0), the field is hidden from the owner's
+  view and noted as uninformative; it stays in the record.
+- **Owner follow-through** (rung 1, from `ai.owner_action`): share of advice seen, share
+  followed, and three results on the same trades: the strategy untouched, the AI's verdict
+  alone, and what the owner actually did. Advice that is never seen is a delivery problem and
+  is reported as such, not as the role's failure.
+
 ## 3. Promotion gate, as registered (owner decision A6)
 
-A role may be proposed for the next rung on an instance when, on its evidence set:
+A role may be proposed for the next rung on an instance when its **champion trial**, on its
+own evidence set, shows:
 
 1. n ≥ 200 scored decisions over ≥ 8 calendar weeks;
-2. lower bound of the 90% interval on mean `d` > 0 against **both** baselines;
+2. lower bound of the interval on mean `d` > 0 against **both** baselines, where the interval
+   level is `1 - 0.10 / k` and `k` is the number of trials registered for the role in the
+   trailing 12 months (k = 1 gives 90%; ten trials give 99%). Trying more costs certainty;
 3. no strategy and no week supplies more than 50% of total benefit;
 4. on live-book signals in the last 4 weeks: 0 `invalid_*` and 0 `timeout`;
 5. `ai.v_unscored` empty.
@@ -950,6 +1066,11 @@ rung down, flags the role in the snapshot, and rings the bell.
 | a reviewer that sees the outcome (planted look-ahead) | pack builder refuses: `known_at > as_of` |
 | a synthetic reviewer that removes the worst 20% by construction | gate passes; proves the harness can pass |
 | 200 decisions that are 20 moves × 10 correlated legs | clustered interval much wider than the naive one |
+| ten coin-flip reviewers registered as ten trials; the best one is put forward | gate fails: the level for k = 10 is 99%, and the best of ten random ones does not clear it |
+| the same best-of-ten with the other nine trials left unregistered | refused: a decision cannot be stored without a `trial_id` registered before it |
+| a challenger with 200 scored decisions replaces a retired champion | role keeps its rung with no gap; the old trial's evidence is not counted for the new one |
+| a batch decision answered 20 h after `as_of` on a trade that closed after 2 h | scored normally; the pack hash proves the model saw only what was known at `as_of` |
+| advice shown but never opened | `owner_action.action = 'not_seen'`; excluded from "followed" and "ignored" shares |
 | UPDATE or DELETE on any `ai` table | error from the trigger |
 | a decision whose trade closed 25 h ago, no outcome | appears in `ai.v_unscored` |
 </script></section>
