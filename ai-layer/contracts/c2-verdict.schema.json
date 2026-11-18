@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sb/ai-layer/c2-verdict.schema.json",
+  "title": "S4 verdict (the only thing a judging role may say)",
+  "description": "DRAFT 2026-11-16 (not frozen). This is the model's answer. The envelope (decision id, pack hash, seat, prompt version, timings, cost, rung) is added by code and lives in ai.decision; the model never supplies it. The model never supplies a price, a size in units, an instrument or a trade id. Checks beyond this schema are in c2-verdict-and-clamps.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["action", "size_multiplier", "confidence", "reason_codes", "evidence_ids"],
+  "properties": {
+    "action": {
+      "enum": ["proceed", "shrink", "skip", "hold", "lock_be", "close"],
+      "description": "trade_reviewer: proceed | shrink | skip. position_monitor: hold | lock_be | close."
+    },
+    "size_multiplier": {
+      "enum": [0, 0.25, 0.5, 0.75, 1],
+      "description": "trade_reviewer: proceed = 1, shrink = 0.25, 0.5 or 0.75, skip = 0. position_monitor: always 1 (it does not resize)."
+    },
+    "confidence": { "enum": ["low", "medium", "high"] },
+    "reason_codes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "NO_CONCERN",
+          "EVENT_RISK_IN_HOLD",
+          "NEWS_CONTRADICTS_SETUP",
+          "SPREAD_ABNORMAL",
+          "DATA_STALE_OR_SUSPECT",
+          "EXPOSURE_DUPLICATED",
+          "STRATEGY_OUT_OF_CONTEXT",
+          "THESIS_INVALIDATED",
+          "PAST_PLANNED_HOLD",
+          "INSUFFICIENT_CONTEXT"
+        ]
+      }
+    },
+    "evidence_ids": {
+      "type": "array",
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 },
+      "description": "ids of items in the context pack that support the verdict. Empty only with NO_CONCERN or INSUFFICIENT_CONTEXT."
+    },
+    "note": {
+      "type": "string",
+      "maxLength": 280,
+      "description": "One or two plain sentences for the owner. Display only; nothing parses it."
+    }
+  }
+}

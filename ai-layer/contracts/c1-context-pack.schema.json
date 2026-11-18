@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sb/ai-layer/c1-context-pack.schema.json",
+  "title": "S4 context pack",
+  "description": "DRAFT 2026-11-16 (not frozen). The complete, frozen input one AI role sees for one decision. Built by code, never by a model. Stored whole in ai.context_pack; pack_hash = sha256 of the canonical JSON of this object without the pack_hash field (same rule as settings_snapshot.HASH.md: sorted keys, no whitespace, UTF-8). Rules the builder enforces and tests: (1) every item carries an id and a known_at, and known_at <= as_of, else the build fails; (2) a section with no data is null and its name is listed in absent with a reason, never defaulted; (3) no account id, login, secret, file path under the secrets folder, or currency balance: money appears only as R or percent of equity; (4) outside text appears only as Reader summaries, each at most 600 characters, never raw pages; (5) the serialized pack is at most 48,000 characters.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "pack_id", "pack_hash", "role", "instance_key", "subject", "as_of", "built_at", "builder_version", "sections", "absent"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "pack_id": { "type": "string", "format": "uuid" },
+    "pack_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "role": { "enum": ["trade_reviewer", "position_monitor"] },
+    "instance_key": { "type": "string", "minLength": 1, "description": "config.instance.instance_key. No default (invariant I9)." },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id"],
+      "properties": {
+        "type": { "enum": ["signal", "open_trade"] },
+        "id": { "type": "string", "minLength": 1, "description": "signal_id, or broker_trade_id for an open trade" },
+        "signal_group_id": { "type": ["string", "null"] }
+      }
+    },
+    "as_of": { "type": "string", "format": "date-time", "description": "The decision instant. Nothing known after it may be in the pack." },
+    "built_at": { "type": "string", "format": "date-time" },
+    "builder_version": { "type": "string", "minLength": 1 },
+    "sections": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["setup", "strategy", "market", "events", "exposure", "data_quality", "position", "brief"],
+      "properties": {
+        "setup": {
+          "type": ["object", "null"],
+          "description": "The trade as proposed: pair, direction, entry, stop, target, exit_by, risk in R terms, reward:risk, timeframe, the probability object from the signal if present (unchanged).",
+          "required": ["id", "known_at", "pair", "direction", "timeframe"],
+          "properties": {
+            "id": { "type": "string" },
+            "known_at": { "type": "string", "format": "date-time" },
+            "pair": { "type": "string" },
+            "direction": { "enum": ["long", "short"] },
+            "timeframe": { "type": "string" },
+            "entry": { "type": ["number", "null"] },
+            "stop": { "type": ["number", "null"] },
+            "target": { "type": ["number", "null"] },
+            "exit_by": { "type": ["string", "null"], "format": "date-time" },
+            "reward_risk": { "type": ["number", "null"] },
+            "probability": { "type": ["object", "null"] }
+          }
+        },
+        "strategy": {
+          "type": ["object", "null"],
+          "description": "Strategy key, card id, lifecycle stage, the rule in at most 600 characters, and its honest record: forward-ledger n and mean R with interval, backtest n and mean R, typical hold. Counts below 20 are shown as counts with no mean.",
+          "required": ["id", "known_at", "strategy_key"],
+          "properties": {
+            "id": { "type": "string" },
+            "known_at": { "type": "string", "format": "date-time" },
+            "strategy_key": { "type": "string" },
+            "card_id": { "type": ["string", "null"] },
+            "lifecycle_stage": { "type": ["string", "null"] },
+            "rule_summary": { "type": ["string", "null"], "maxLength": 600 },
+            "forward": { "type": ["object", "null"] },
+            "backtest": { "type": ["object", "null"] }
+          }
+        },
+        "market": {
+          "type": ["object", "null"],
+          "description": "Numbers only: last close, ATR, distance to recent high/low in ATR, spread now and its 20-day median for this hour, realised volatility percentile, session.",
+          "required": ["id", "known_at"],
+          "properties": { "id": { "type": "string" }, "known_at": { "type": "string", "format": "date-time" } }
+        },
+        "events": {
+          "type": ["array", "null"],
+          "maxItems": 40,
+          "description": "Scheduled events inside the hold window and Reader-tagged items from the last 48 h that touch either currency or the index.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "known_at", "kind", "instruments", "importance", "source"],
+            "properties": {
+              "id": { "type": "string" },
+              "known_at": { "type": "string", "format": "date-time" },
+              "scheduled_for": { "type": ["string", "null"], "format": "date-time" },
+              "kind": { "enum": ["calendar", "central_bank", "headline", "data_release", "positioning"] },
+              "instruments": { "type": "array", "items": { "type": "string" } },
+              "importance": { "enum": ["low", "medium", "high"] },
+              "direction_hint": { "enum": ["up", "down", "none", null] },
+              "summary": { "type": ["string", "null"], "maxLength": 600 },
+              "source": { "type": "string" }
+            }
+          }
+        },
+        "exposure": {
+          "type": ["object", "null"],
+          "description": "Open positions on this instance as pair, direction, strategy, R at risk; total open risk percent; same-currency and correlated risk percent; slots used.",
+          "required": ["id", "known_at"],
+          "properties": { "id": { "type": "string" }, "known_at": { "type": "string", "format": "date-time" } }
+        },
+        "data_quality": {
+          "type": ["object", "null"],
+          "description": "Age of the newest bar against its expected close, quarantine flags, missing bars in the lookback, feed heartbeat age.",
+          "required": ["id", "known_at"],
+          "properties": { "id": { "type": "string" }, "known_at": { "type": "string", "format": "date-time" } }
+        },
+        "position": {
+          "type": ["object", "null"],
+          "description": "position_monitor only: age, planned hold, R now, best and worst R so far, stop state, the ADR-004 trade-health verdict and E_rest if published.",
+          "required": ["id", "known_at"],
+          "properties": { "id": { "type": "string" }, "known_at": { "type": "string", "format": "date-time" } }
+        },
+        "brief": {
+          "type": ["object", "null"],
+          "description": "The latest daily brief rows for the instruments involved, with the brief's own id and known_at.",
+          "required": ["id", "known_at"],
+          "properties": { "id": { "type": "string" }, "known_at": { "type": "string", "format": "date-time" } }
+        }
+      }
+    },
+    "absent": {
+      "type": "array",
+      "description": "One entry per null section.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["section", "reason"],
+        "properties": {
+          "section": { "type": "string" },
+          "reason": { "enum": ["not_applicable", "source_down", "source_stale", "not_built_yet", "no_rows"] }
+        }
+      }
+    }
+  }
+}

@@ -288,6 +288,30 @@ This is a separate workstream. It does not sit on the critical path of the 11-15
 | P4 Expand | rung 3, one strategy at a time | automatic, bounded | after P3 has a clean quarter |
 | P5 Own models | fine-tune a local model on the decision ledger; second machine | as earned | 2027 H2 at the earliest |
 
+### Selected feature expansion from the local-LLM specification
+
+The following are compatible additions to the accepted plan. They reuse the same frozen context,
+audit, authority and kill-switch boundaries; they do not create a second trading system.
+
+| Addition | How it fits S4 | Phase and limit |
+|---|---|---|
+| **Local Ollama runtime for bulk work** | Run a private 7B–14B model for document tagging, field extraction, code templates and replayed research summaries. No local model performs trade judgment in P0–P2. | P1; shared GPU is allowed to idle or be evicted, with no effect on live trading |
+| **Live state and local RAG** | Index signals, open trades, trade logs, strategy cards, news tags and calendar rows in the existing context store. Queries retrieve a point-in-time slice and return only a structured result. | P1; no web access in judging roles; account identifiers stay out of prompts |
+| **News, central-bank and calendar scoring** | Turn source text into the existing Reader tags: instrument, direction hint, importance and known-at time. Store confidence and source provenance, but do not make a broker call. | P1; tags become lab features only; news is never treated as a price prediction |
+| **Open-trade diagnostic view** | Read the entry criteria, market change, news catalysts, unrealized drawdown and carry from the frozen context pack; return hold, tighten-toward-profit or close advice. | P1 rung 0; P2 owner-visible only; P3 requires a separate authority decision |
+| **Read-only operator interface** | Answer owner questions about forming signals, regime, sentiment, system health and open trades through the local web UI or CLI. | P1/P2; tool allow-list contains read-only state only |
+| **Sandboxed research and backtesting** | Let the Researcher propose strategy variations and run them against historical and forward fixtures in an isolated subprocess. | P1; syntax, unit, timeout and risk-boundary checks are mandatory |
+| **Autonomous backtest ranking** | Rank candidate rules using Sharpe, drawdown, win rate, profit factor and expectancy in the lab ledger. | P1; every candidate still uses the existing card, pre-registration and kill rules |
+
+**Deliberately not adopted:** a model may not place or modify orders in P0–P2, automatically
+raise size, hot-load rewritten live logic, tune active strategy parameters, route orders, or
+hold broker keys. Direct execution is a future P3/P4 action only if it passes the existing
+Guardian clamps and a new owner decision. The LLM is one evidence source, not the strategy.
+
+**Known limits to carry into design:** local 7B–14B models are not trusted for trade judgment;
+API judgment may remain the scorer for P1–P2; the 250 ms probability path is unchanged; and
+Ollama or RAG downtime must fall through to "unassessed" without affecting S1–S3.
+
 ## 9. What is worth designing heavily
 
 For the people who take this into design:
@@ -298,7 +322,9 @@ For the people who take this into design:
 | B. Context pack (what the model sees, frozen) | **Invest heavily** | fixes look-ahead, replay, injection and cost in one place |
 | Verdict contract and Guardian clamps | **Invest heavily** | the safety boundary; small surface, must be exact |
 | Operator role | **Invest** | clear need, low risk, value from day one |
-| Reader + context store | **Invest moderately** | start with 3 or 4 free sources; do not build a news empire before a verdict uses it |
+| Reader + context store + live-state RAG | **Invest moderately** | start with 3 or 4 free sources and the existing ledgers; retrieve frozen slices, not a live database dump |
+| Local Ollama bulk runtime | **Invest moderately** | useful for extraction, tagging and code templates; never the live judgment seat until a forward record earns it |
+| Sentiment and regime text tags | **Invest moderately** | add to the lab as features; require source, known-at time and confidence; no direct sizing from the model |
 | Trial record, champion and challengers | **Invest heavily** (part of the ledger) | without it every prompt change costs 8 weeks, and picking the best of many is self-deception |
 | Reader tags as lab features | **Invest moderately** | the one AI path with a promising result already (FOMC tone); reuses the lab's rules |
 | Loss reviewer | **Design light** | cheap, no risk, and it tests whether the reason codes are the right ones |
@@ -386,6 +412,12 @@ owner yet.
 **In scope:** the `ai` schema (C3), the context pack builder (C1), the verdict checker (C2
 part A), a thin model gateway, the scorekeeper, a replay tool, and the tests and fixtures named
 in the contracts.
+
+**Selected P1 feature additions:** a local Ollama seat for extraction and bulk text only; a
+point-in-time state store for signals, trades, logs, strategy cards and tagged text; read-only
+operator queries; open-trade diagnostic summaries; and isolated, validated backtesting. Reader
+tags become lab features, not direct position sizing. Live judgment stays on an API trial until
+the evidence gate passes.
 
 **Out of scope for P0:** any change to Guardian, Hand, bridge, the wire contracts or
 `ams.ctl`; the Reader (and its feature feed to the lab), Daily brief, Loss reviewer, Operator
