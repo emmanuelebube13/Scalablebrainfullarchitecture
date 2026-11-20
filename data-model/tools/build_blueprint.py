@@ -531,12 +531,13 @@ CT = {
 
 TT = {
     "signal": ([(PK, "signal_id", "uuid"), (UQ, "signal_group_id", "+ instance"), (FK, "instance_id", ""), (FK, "strategy_key", ""), (FK, "symbol", ""), ("", "strategy_version", "")], 22, "insert-only", False),
-    "decision": ([(PK, "signal_id", "FK"), (FK, "instance_id", ""), ("", "outcome", ""), ("", "rejected_at_layer", ""), ("", "settings_version", ""), ("", "decided_at", "")], 9, "insert-only", False),
-    "order": ([(PK, "order_request_id", ""), (FK, "instance_id", ""), (FK, "signal_id", ""), ("", "executor_status", ""), ("", "execution_mode", ""), ("", "approved_at", "")], 12, "result update", False),
-    "fill": ([(PK, "instance_id", "FK"), (PK, "broker_txn_id", ""), (FK, "order_request_id", ""), ("", "kind", ""), ("", "fill_price", ""), ("", "net_pnl", "")], 14, "insert-only", False),
-    "trade": ([(PK, "instance_id", "FK"), (PK, "broker_order_id", ""), (FK, "order_request_id", ""), (FK, "signal_id", ""), (FK, "strategy_key", ""), ("", "status", "")], 22, "close update", False),
+    "decision": ([(PK, "instance_id", "FK"), (PK, "signal_id", ""), ("", "outcome", ""), ("", "rejected_at_layer", ""), ("", "settings_version", ""), ("", "decided_at", "")], 9, "insert-only", False),
+    "order": ([(PK, "instance_id", "FK"), (PK, "order_request_id", ""), ("", "signal_id", ""), ("", "executor_status", ""), ("", "execution_mode", ""), ("", "approved_at", "")], 12, "result update", False),
+    "fill": ([(PK, "instance_id", "FK"), (PK, "broker_txn_id", ""), (FK, "order_request_id", "+ instance"), ("", "kind", ""), ("", "fill_price", ""), ("", "net_pnl", "")], 14, "link once", False),
+    "trade": ([(PK, "instance_id", "FK"), (PK, "broker_order_id", ""), (FK, "order_request_id", "+ instance"), (FK, "signal_id", ""), (FK, "strategy_key", ""), ("", "status", "")], 22, "close update", False),
     "equity_sample": ([(PK, "instance_id", "FK"), (PK, "at", ""), ("", "balance", ""), ("", "equity", ""), ("", "open_positions", ""), ("", "source", "")], 3, "insert-only", False),
     "instance_day": ([(PK, "instance_id", "FK"), (PK, "day_start", ""), ("", "day_start_balance", ""), ("", "day_end", ""), ("", "realized_pnl", ""), ("", "trades", "")], 3, "day-end update", False),
+    "reconciliation_explanation": ([(PK, "instance_id", "FK"), (PK, "broker_trade_id", ""), (PK, "divergence", ""), ("", "explanation", ""), ("", "explained_by", ""), ("", "explained_at", "")], 1, "", False),
     "broker_trade": ([(PK, "instance_id", "FK"), (PK, "broker_trade_id", ""), ("", "client_order_id", ""), ("", "symbol", ""), ("", "state", ""), ("", "seen_at", "")], 8, "close update", False),
 }
 
@@ -617,23 +618,21 @@ def phys_trading():
     for n in ("decision", "order", "fill", "trade"):
         e.append(arrow(p, [(rA[n]["cx"], yA), (rA[n]["cx"], 48)]))
     ya = yA + 12
-    e.append(arrow(p, [(rA["decision"]["x"], ya), (rA["signal"]["r"], ya)]))
     e.append(arrow(p, [(rA["fill"]["x"], ya), (rA["order"]["r"], ya)]))
-    xs1, xs2 = rA["signal"]["x"] + 150, rA["signal"]["x"] + 60
-    xo1, xo2 = rA["order"]["x"] + 40, rA["order"]["x"] + 170
+    xs2 = rA["signal"]["x"] + 60
+    xo2 = rA["order"]["x"] + 170
     xt1, xt2 = rA["trade"]["x"] + 60, rA["trade"]["x"] + 150
-    e.append(arrow(p, [(xo1, rA["order"]["b"]), (xo1, bA + 14), (xs1, bA + 14), (xs1, rA["signal"]["b"])]))
     e.append(arrow(p, [(xt1, rA["trade"]["b"]), (xt1, bA + 28), (xo2, bA + 28), (xo2, rA["order"]["b"])]))
     e.append(arrow(p, [(xt2, rA["trade"]["b"]), (xt2, bA + 42), (xs2, bA + 42), (xs2, rA["signal"]["b"])]))
     yB = bA + 64
-    rB, bB = trow(s, TT, yB, W, X, [(0, "equity_sample"), (1, "instance_day"), (4, "broker_trade")])
-    s.append(f'<text x="{X[2]}" y="{yB + 14}" class="sb">Views: v_reconciliation compares trade with broker_trade;</text>')
-    s.append(f'<text x="{X[2]}" y="{yB + 30}" class="sb">v_stuck_orders lists approved orders with no executor result.</text>')
-    s.append(f'<text x="{X[2]}" y="{yB + 52}" class="sb">Every table here also has instance_id, a key to config.instance.</text>')
-    H = bB + 16
-    head = (f'<svg viewBox="0 0 1224 {H}" role="img" aria-label="Schema trading as built: 8 tables. Signal, decision, order, fill and trade form '
-            f'the trade path in a row; decision and order refer to the signal, fill refers to the order, trade refers to the order and the signal. '
-            f'Broker trade, equity sample and instance day sit below. All refer to config instance; signal also refers to strategy and instrument.">'
+    rB, bB = trow(s, TT, yB, W, X, [(0, "equity_sample"), (1, "instance_day"), (2, "reconciliation_explanation"), (4, "broker_trade")])
+    s.append(f'<text x="{X[0]}" y="{bB + 20}" class="sb">Views: v_reconciliation compares trade with broker_trade (pnl and financing only when both are closed) and joins reconciliation_explanation;</text>')
+    s.append(f'<text x="{X[0]}" y="{bB + 36}" class="sb">v_stuck_orders lists approved orders with no executor result; v_unlinked_signal_refs lists decisions and orders whose signal row is missing.</text>')
+    s.append(f'<text x="{X[0]}" y="{bB + 58}" class="sb">Decision and order have no key to signal (dropped in 030); fill and trade link to order by (instance_id, order_request_id). Every table here also has instance_id, a key to config.instance.</text>')
+    H = bB + 76
+    head = (f'<svg viewBox="0 0 1224 {H}" role="img" aria-label="Schema trading as built: 9 tables. Signal, decision, order, fill and trade form '
+            f'the trade path in a row; decision and order carry a signal id but have no key to the signal table; fill refers to the order and trade refers to the order, both by instance and order request id; trade also refers to the signal. '
+            f'Broker trade, equity sample, instance day and reconciliation explanation sit below. All refer to config instance; signal also refers to strategy and instrument.">'
             + defs(p))
     return head + "".join(e) + "".join(s) + "</svg>"
 
@@ -733,7 +732,7 @@ PHYS_ROWS = [
     ("config", "strategy_version", "One code and parameter version of a strategy", "(strategy_key, version)", "Unique (strategy_key, code_sha, params)", "Empty"),
     ("config", "instrument", "A tradable instrument, synced from the broker", "symbol", "None", "Empty until the instrument sync runs"),
     ("config", "instance_instrument", "Which instruments an instance may trade, with the margin rate", "(instance_id, symbol)", "Keys to instance and instrument", "Empty"),
-    ("config", "setting_def", "One configurable key with its type, scope and validation schema", "setting_key", "None", "177 keys from 027, plus feature flags from 028 and 029"),
+    ("config", "setting_def", "One configurable key with its type, scope and validation schema", "setting_key", "None", "184 keys: 177 from 027, plus 7 feature flags from 028 and 029"),
     ("config", "setting_value", "One version of one setting at one scope", "value_id", "Unique (key, scope, instance, version); one active row per key and scope; scope and instance must agree; trigger lets only status and validity columns change", "Seeded; Wave 2 flags are off"),
     ("config", "strategy_enablement", "One version of one strategy's enablement at one scope", "enablement_id", "Same version rules as setting_value; allocation_multiplier in (0, 1]; control_status ACTIVE, PAUSED or DRAINING", "9 rows from 027; 028 adds control fields"),
     ("config", "model_selection", "One version of the model choice at one scope", "selection_id", "Unique (scope, instance, version); same update trigger", "Empty"),
@@ -742,11 +741,12 @@ PHYS_ROWS = [
     ("config", "change_log", "One transition of any versioned config row", "change_id", "Append-only trigger: update and delete are refused", "Written by migrations and activations"),
     ("config", "snapshot", "One published, hashed settings set for one instance", "(instance_id, snapshot_version)", "Key to instance", "Empty until the config publisher runs"),
     ("trading", "signal", "One signal for one instance", "signal_id", "Unique (signal_group_id, instance_id); insert-only trigger; truncate refused", "Empty; the signal writer flag is off"),
-    ("trading", "decision", "The Guardian's verdict on one signal", "signal_id", "Key to signal; insert-only trigger", "Empty until the ledger relay runs"),
-    ("trading", "order", "One approved order and its executor result", "order_request_id", "Only executor_status and result fields may change; delete refused", "Empty until the ledger relay runs"),
-    ("trading", "fill", "One broker fill transaction", "(instance_id, broker_txn_id)", "Insert-only trigger", "Empty until the ledger relay runs"),
-    ("trading", "trade", "One trade from open to close", "(instance_id, broker_order_id)", "Only close columns may change, and only by the relay; delete refused", "Empty until the ledger relay runs"),
+    ("trading", "decision", "The Guardian's verdict on one signal", "(instance_id, signal_id)", "Key per instance (031); no key to signal since 030; settings_version may be null; insert-only trigger", "Empty until the ledger relay runs"),
+    ("trading", "order", "One approved order and its executor result", "(instance_id, order_request_id)", "Key per instance (031); no key to signal since 030; sl_price may be null; only executor_status and result fields may change; delete refused", "Empty until the ledger relay runs"),
+    ("trading", "fill", "One broker fill transaction", "(instance_id, broker_txn_id)", "Composite key to order (031); order_request_id may be set once, from null to a value (030); nothing else changes; delete refused", "Empty until the ledger relay runs"),
+    ("trading", "trade", "One trade from open to close", "(instance_id, broker_order_id)", "Composite key to order (031); only close columns may change, and only by the relay; signal_id, order_request_id and strategy_key may be set once, from null to a value (030); delete refused", "Empty until the ledger relay runs"),
     ("trading", "broker_trade", "A trade as the broker reports it", "(instance_id, broker_trade_id)", "Only close-out columns may change (migration 028); delete refused", "Empty until the account relay runs"),
+    ("trading", "reconciliation_explanation", "Why a divergence in v_reconciliation is known and accepted", "(instance_id, broker_trade_id, divergence)", "Key to instance; insert-only trigger; truncate refused (migration 030)", "Empty"),
     ("trading", "equity_sample", "Balance and equity of one instance per minute", "(instance_id, at)", "Insert-only trigger", "Empty until the account relay runs"),
     ("trading", "instance_day", "One trading day of one instance, for daily-loss rules", "(instance_id, day_start)", "Only day-end columns may change (migration 028); delete refused", "Empty until the ledger relay runs"),
     ("finance", "cash_movement", "Money in or out of one instance", "movement_id", "Unique (instance_id, broker_txn_id); update, delete and truncate refused", "Empty until the account relay runs"),
@@ -760,7 +760,7 @@ PHYS_ROWS = [
     ("ops", "alert", "One alert; the dashboard bell reads it", "alert_id", "Unique dedup_key; severity is info, warning or critical", "Empty until the bell library writes it"),
     ("ops", "alert_delivery", "One delivery attempt of one alert on one channel", "(alert_id, channel, attempted_at)", "Key to alert", "Empty"),
     ("ops", "operator_command", "One operator command, from any surface", "command_id", "None", "Empty until the relays run"),
-    ("ops", "source_registry", "Every store the dashboard reads, with how its age is measured", "source_key", "None", "14 rows"),
+    ("ops", "source_registry", "Every store the dashboard reads, with how its age is measured", "source_key", "None", "15 rows"),
 ]
 
 SQLITE_ROWS = [
@@ -816,7 +816,7 @@ def physical_section():
     return f"""
 <section>
   <h2>Physical model, as built in production</h2>
-  <p>On 16 November 2026 migrations 020 and 022 to 029 were applied to the production database <strong>scalable_brain</strong>. They created the four schemas, 37 tables, four views and the functions that validate, activate and resolve settings, then seeded the reference rows and the settings. <strong>The trade path does not read any of this yet.</strong> The feature flags that switch it on are all off, so production behaves as it did before.</p>
+  <p>On 16 November 2026 migrations 020 and 022 to 029 were applied to the production database <strong>scalable_brain</strong>, and 030 to 032 on 19 November 2026. Migration 021 (the roles) is written but not applied. Together they created the four schemas, 38 tables, five views and the functions that validate, activate and resolve settings, then seeded the reference rows and the settings. <strong>The trade path does not read any of this yet.</strong> The feature flags that switch it on are all off, so production behaves as it did before.</p>
   <div class="key">
     <span><b class="kpk">PK</b>Primary key</span><span><b class="kfk">FK</b>Key to another table</span><span><b class="kuq">UQ</b>Unique</span>
     <span><b class="kv">v</b>Versioned rows</span><span><i class="kx"></i>Table in another schema</span>
@@ -829,7 +829,7 @@ def physical_section():
   <h3>Schema trading</h3>
   <figure>
     <div class="scroll">{phys_trading()}</div>
-    <figcaption>8 tables, all empty. Rows arrive only when the Wave 3 relays run. A tag in a box header says what a trigger lets happen after insert. The heavy boxes are the trade path.</figcaption>
+    <figcaption>9 tables, all empty. Rows arrive only when the Wave 3 relays run. A tag in a box header says what a trigger lets happen after insert: "close update" and "result update" change the close or result columns, "link once" sets one link column once, from null to a value. Broker trade and instance day allow close-out updates only; reconciliation_explanation is insert-only (its name leaves no room for the tag). The heavy boxes are the trade path.</figcaption>
   </figure>
   <h3>Schema finance</h3>
   <figure>
@@ -839,7 +839,7 @@ def physical_section():
   <h3>Schema ops</h3>
   <figure>
     <div class="scroll">{phys_ops()}</div>
-    <figcaption>6 tables. Only source_registry holds rows (14). The others stay empty until the watchdog relay, the bell library and the relays run in Wave 3.</figcaption>
+    <figcaption>6 tables. Only source_registry holds rows (15). The others stay empty until the watchdog relay, the bell library and the relays run in Wave 3.</figcaption>
   </figure>
   <div class="tscroll"><table>
     <thead><tr><th>Schema</th><th>Table</th><th>Grain, in one line</th><th>Key</th><th>Notable rules</th><th>In production now</th></tr></thead>
